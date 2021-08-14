@@ -19,8 +19,8 @@ jobs:
       run: dotnet restore
     - name: Build
       run: dotnet build --configuration Release --no-restore
-    - name: Publish FluentEmail.Core
+    - name: Publish MockWebApi.Client
       uses: brandedoutcast/publish-nuget@v2.5.2
       with:
-          PROJECT_FILE_PATH: src/MockWebApi.Client/MockWebApi.Client.csproj
+          PROJECT_FILE_PATH: MockWebApi.Client/MockWebApi.Client.csproj
           NUGET_KEY: ${{secrets.NUGET_API_KEY}}
