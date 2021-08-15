@@ -13,6 +13,11 @@ jobs:
       - name: Check Out Repo 
         uses: actions/checkout@v2
 
+      - name: Get Docker Image Version
+        shell: pwsh
+        run: |
+          .\Docker\GetProjectVersion.ps1
+
       - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
