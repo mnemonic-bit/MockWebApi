@@ -79,6 +79,7 @@ namespace MockWebApi
             //{
             //    var endPoint = context.GetEndpoint();
             //    var routes = context.Request.RouteValues;
+            //    await next();
             //});
 
             app.UseEndpoints(endpoints =>
