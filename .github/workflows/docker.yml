@@ -16,6 +16,7 @@ jobs:
       - name: Show Env
         run: |
           echo $GITHUB_ENV
+          cat $GITHUB_ENV
 
       - name: Get Docker Image Version
         shell: pwsh
