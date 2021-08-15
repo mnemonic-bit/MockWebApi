@@ -32,5 +32,13 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/mockwebapi:latest
 
+      - name: Docker Hub Description
+        uses: peter-evans/dockerhub-description@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+          repository: mnemonicbit/mockwebapi
+          readme-filepath: ./MockWebApi/README.md
+
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
