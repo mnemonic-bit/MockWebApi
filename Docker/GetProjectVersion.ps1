@@ -15,13 +15,8 @@ function GetProjectVersion($ProjectFileName)
 }
 
 
-Push-Location
-
 Set-Location $PSScriptRoot\..
-
 
 $PackageVersion = GetProjectVersion $ProjectFileName
 
-Write-Host "DOCKER_CONTAINER_IMAGE_VERSION=$PackageVersion"
-
-Pop-Location
+"DOCKER_CONTAINER_IMAGE_VERSION=$PackageVersion"
