@@ -13,6 +13,10 @@ jobs:
       - name: Check Out Repo 
         uses: actions/checkout@v2
 
+      - name: Show Env
+        run: |
+          echo $GITHUB_ENV
+
       - name: Get Docker Image Version
         shell: pwsh
         run: |
