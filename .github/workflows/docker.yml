@@ -20,7 +20,7 @@ jobs:
       - name: Get Docker Image Version
         shell: pwsh
         run: |
-          .\Docker\GetProjectVersion.ps1 | Out-File -append -FilePath $GITHUB_ENV
+          .\Docker\GetProjectVersion.ps1 | Out-File -append -FilePath $env:GITHUB_ENV
 
       - name: Check Container Version From Env
         run: |
