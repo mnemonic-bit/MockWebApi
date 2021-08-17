@@ -14,5 +14,15 @@ namespace MockWebApi.Model
 
         public string ContentType { get; set; }
 
+        public override string ToString()
+        {
+            string result = "Response:\n"
+                + $"  Status Code: {StatusCode}\n"
+                + $"  Content Type: {ContentType}"
+                + $"  Body: {Body}";
+
+            return result;
+        }
+
     }
 }

@@ -27,13 +27,18 @@ namespace MockWebApi.Controller
 
         public async Task MockResults()
         {
+            _logger.LogInformation($"{nameof(MockResults)}: Received request: ");
+
             if (!_configStore.TryGet(Request.Path, out EndpointDescription endpointDescription))
             {
-                Response.StatusCode = _serverConfig.Get<int>(ServerConfiguration.Parameters.DefaultHttpStatusCode);
+                int defaultStatusCode = _serverConfig.Get<int>(ServerConfiguration.Parameters.DefaultHttpStatusCode); ;
+                _logger.LogInformation($"{nameof(MockResults)}: returning default HTTP status code '{defaultStatusCode}'");
+                Response.StatusCode = defaultStatusCode;
                 return;
             }
 
             HttpResult response = endpointDescription.Results.FirstOrDefault();
+            _logger.LogInformation($"{nameof(MockResults)}: Sending customized response:\n{response}");
             await FillResponse(response);
 
             ManageRouteLifeCycle(endpointDescription);

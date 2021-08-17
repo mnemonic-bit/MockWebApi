@@ -14,11 +14,8 @@ namespace MockWebApi
     public class Startup
     {
 
-        private readonly ILogger<Startup> _logger;
-
-        public Startup(ILogger<Startup> logger, IConfiguration configuration)
+        public Startup(IConfiguration configuration)
         {
-            _logger = logger;
             Configuration = configuration;
         }
 
@@ -42,7 +39,7 @@ namespace MockWebApi
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger)
         {
             if (env.IsDevelopment())
             {
@@ -53,7 +50,7 @@ namespace MockWebApi
 
             app.Use(next => context =>
             {
-                _logger.LogDebug($"Endpoint before UserRouting(): {context.GetEndpoint()?.DisplayName ?? "(null)"}");
+                logger.LogDebug($"Endpoint before UserRouting(): {context.GetEndpoint()?.DisplayName ?? "(null)"}");
                 return next(context);
             });
 
@@ -64,7 +61,7 @@ namespace MockWebApi
 
             app.Use(next => context =>
             {
-                _logger.LogDebug($"Endpoint after UseRouting(): {context.GetEndpoint()?.DisplayName ?? "(null)"}");
+                logger.LogDebug($"Endpoint after UseRouting(): {context.GetEndpoint()?.DisplayName ?? "(null)"}");
                 return next(context);
             });
 

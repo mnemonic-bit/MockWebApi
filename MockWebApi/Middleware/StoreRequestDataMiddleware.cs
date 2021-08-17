@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using MockWebApi.Data;
 using MockWebApi.Extension;
@@ -21,11 +22,18 @@ namespace MockWebApi.Middleware
 
         private readonly IDataStore _dataStore;
 
-        public StoreRequestDataMiddleware(RequestDelegate next, IServerConfiguration serverConfig, IDataStore dataStore)
+        private readonly ILogger<StoreRequestDataMiddleware> _logger;
+
+        public StoreRequestDataMiddleware(
+            RequestDelegate next,
+            IServerConfiguration serverConfig,
+            IDataStore dataStore,
+            ILogger<StoreRequestDataMiddleware> logger)
         {
             _nextDelegate = next;
             _serverConfig = serverConfig;
             _dataStore = dataStore;
+            _logger = logger;
         }
 
         public async Task InvokeAsync(HttpContext context)
@@ -53,6 +61,8 @@ namespace MockWebApi.Middleware
             requestInfos.Body = await request.GetBody();
             
             _dataStore.Store(requestInfos);
+
+            _logger.LogInformation($"{nameof(StoreRequestDataMiddleware)}: Received HTTP request\n{requestInfos}");
 
             await _nextDelegate(context);
         }
