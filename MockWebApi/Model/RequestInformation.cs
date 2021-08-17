@@ -32,11 +32,11 @@ namespace MockWebApi.Model
         {
             string result = "HTTP request:\n"
                 + $"  HTTP Verb: {HttpVerb}\n"
-                + $"  Date: {Date}"
-                + $"  Path: {Path}"
-                + $"  Uri: {Uri}"
-                + $"  Content Type: {ContentType}"
-                + $"  Body:\n{IndentLines(Body, "    ")}";
+                + $"  Date: {Date}\n"
+                + $"  Path: {Path}\n"
+                + $"  Uri: {Uri}\n"
+                + $"  Content Type: {ContentType}\n"
+                + $"  Body:\n{IndentLines(Body, "    ")}\n";
 
             return result;
         }
