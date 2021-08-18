@@ -1,6 +1,6 @@
-﻿using System;
+﻿using MockWebApi.Extension;
+using System;
 using System.Collections.Generic;
-using System.Linq;
 using YamlDotNet.Core;
 using YamlDotNet.Serialization;
 
@@ -36,14 +36,9 @@ namespace MockWebApi.Model
                 + $"  Path: {Path}\n"
                 + $"  Uri: {Uri}\n"
                 + $"  Content Type: {ContentType}\n"
-                + $"  Body:\n{IndentLines(Body, "    ")}\n";
+                + $"  Body:\n{Body.IndentLines("    ")}\n";
 
             return result;
-        }
-
-        private string IndentLines(string lines, string indention)
-        {
-            return string.Join("\n", lines.Split(new string[] { "\n\r", "\n", "\r" }, StringSplitOptions.None).Select(l => $"{indention}{l}"));
         }
 
     }

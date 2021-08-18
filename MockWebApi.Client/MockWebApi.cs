@@ -18,12 +18,13 @@ namespace MockWebApi.Client
             _webApi = RestClient.For<IMockWebApiClient>(uri);
         }
 
-        public async Task<bool> Configure(int? defaultHttpStatusCode = null, string defaultContentType = null, bool? trackServiceApiCalls = null)
+        public async Task<bool> Configure(int? defaultHttpStatusCode = null, string defaultContentType = null, bool? trackServiceApiCalls = null, bool? logServiceApiCalls = null)
         {
             Response<string> response = await _webApi.Configure(
                 DefaultHttpStatusCode: defaultHttpStatusCode,
                 DefaultContentType: defaultContentType,
-                TrackServiceApiCalls: trackServiceApiCalls);
+                TrackServiceApiCalls: trackServiceApiCalls,
+                LogServiceApiCalls: logServiceApiCalls);
 
             if (!response.ResponseMessage.IsSuccessStatusCode)
             {

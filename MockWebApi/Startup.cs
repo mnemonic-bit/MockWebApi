@@ -8,6 +8,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using MockWebApi.Data;
 using MockWebApi.Middleware;
+using MockWebApi.Model;
+using MockWebApi.Routing;
 
 namespace MockWebApi
 {
@@ -24,11 +26,11 @@ namespace MockWebApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSingleton<IRouteMatcher<EndpointDescription>>(new RouteMatcher<EndpointDescription>());
             services.AddSingleton<IRouteConfigurationStore>(new RouteConfigurationStore());
             services.AddSingleton<IServerConfiguration>(new ServerConfiguration());
 
             services.AddSingleton<IDataStore>(new DataStore());
-            //services.AddTransient<GenericRouteTransformer>();
 
             services.AddControllers();
 
@@ -65,9 +67,8 @@ namespace MockWebApi
                 return next(context);
             });
 
-            //app.Map("/calculator", random => random.UseMiddleware<DemoMiddleware>());
-            //app.Map("/store", random => random.UseMiddleware<StoreRequestDataMiddleware>());
             app.UseMiddleware<StoreRequestDataMiddleware>();
+            app.UseMiddleware<LoggingMiddleware>();
 
             app.UseAuthorization();
 
@@ -87,10 +88,6 @@ namespace MockWebApi
                     name: "some-route-name",
                     pattern: "{**slug}",
                     defaults: new { controller = "MockWebApi", action = "MockResults" });
-
-                //endpoints.Map().WithMetadata();
-
-                //endpoints.MapDynamicControllerRoute<GenericRouteTransformer>("{**slug}"); // this pattern works as a catch-all for all URLs that are not matched by the routing
             });
         }
 

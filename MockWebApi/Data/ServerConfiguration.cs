@@ -1,6 +1,6 @@
 ﻿using MockWebApi.Extension;
-using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MockWebApi.Data
 {
@@ -52,9 +52,19 @@ namespace MockWebApi.Data
             _config[key] = value.ToString();
         }
 
+        public override string ToString()
+        {
+            IEnumerable<string> configItems = _config.Select(item => $"{item.Key}: {item.Value}");
+
+            string result = string.Join("\n",configItems);
+
+            return result;
+        }
+
         private void InitServerConfiguration()
         {
             Set(Parameters.TrackServiceApiCalls, false);
+            Set(Parameters.LogServiceApiCalls, false);
             Set(Parameters.DefaultHttpStatusCode, 200);
             Set(Parameters.DefaultContentType, "text/plain");
         }
@@ -63,6 +73,7 @@ namespace MockWebApi.Data
         {
             public static readonly string DefaultHttpStatusCode = "DefaultHttpStatusCode";
             public static readonly string TrackServiceApiCalls = "TrackServiceApiCalls";
+            public static readonly string LogServiceApiCalls = "LogServiceApiCalls";
             public static readonly string DefaultContentType = "DefaultContentType";
         }
 

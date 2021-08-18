@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
+using Serilog.Filters;
 
 namespace MockWebApi
 {
@@ -19,6 +20,7 @@ namespace MockWebApi
         {
             Log.Logger = new LoggerConfiguration()
                 .WriteTo.Console()
+                .Filter.ByExcluding(Matching.FromSource("Microsoft"))
                 .CreateLogger();
 
             return Host

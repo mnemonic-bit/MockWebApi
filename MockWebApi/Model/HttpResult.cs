@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using MockWebApi.Extension;
+using System.Collections.Generic;
 using System.Net;
 
 namespace MockWebApi.Model
@@ -18,8 +19,8 @@ namespace MockWebApi.Model
         {
             string result = "Response:\n"
                 + $"  Status Code: {StatusCode}\n"
-                + $"  Content Type: {ContentType}"
-                + $"  Body: {Body}";
+                + $"  Content Type: {ContentType}\n"
+                + $"  Body:\n{Body.IndentLines("    ")}\n";
 
             return result;
         }
