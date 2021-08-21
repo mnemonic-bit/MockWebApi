@@ -104,32 +104,18 @@ namespace MockWebApi.Routing
             return result;
         }
 
-        private ICollection<(RouteGraphNode, TInfo, bool)> AggregatePart(ICollection<(RouteGraphNode, TInfo, bool)> nodes, Route.Part part, bool isLastNode)
+        private bool TryMatch(IEnumerable<Route.Part> parts, bool isLastNode, out (RouteGraphNode, TInfo, bool) node)
         {
-            bool found = TryMatch(graph, part, isLastNo, out ICollection<(RouteGraphNode, TInfo, bool)> nextNodeCandidates);
+            node = (null, default(TInfo), false);
 
-            if (found)
-            {
-                nodes.Add(nextNodeCandidates);
-            }
+            ICollection<(RouteGraphNode, TInfo, bool)> nodeCandidates = parts.Aggregate(new HashSet<(RouteGraphNode, TInfo, bool)>(), (a, b, c) => a);
 
-            nodes = nodes.Where((node, info, lastNode) => lastNode == isLastNode);
-
-            return nodes;
-        }
-
-        private bool TryMatch(IEnumeration<Route.Part> parts, bool isLastNode, out (RouteGraphNode, TInfo, bool) node)
-        {
-            node = (null, null, false);
-
-            ICollection<(RouteGraphNode, TInfo, bool)> nodeCandidates = parts.Aggregate(new HashSet<ICollection<(RouteGraphNode, TInfo, bool)>>(), AggregatePart);
-
-            if (nodeCandidates.Length == 0)
+            if (nodeCandidates.Count() == 0)
             {
                 return false;
             }
 
-            if (nodeCandidates.Length > 1)
+            if (nodeCandidates.Count() > 1)
             {
                 return false;
             }
@@ -139,23 +125,88 @@ namespace MockWebApi.Routing
             return true;
         }
 
+        /// <summary>
+        /// Aggregates all possible graph nodes wich can be reached by the given
+        /// set of start nodes from the graph, and a path-part. This method returns
+        /// null if no further nodes can be matched.
+        /// </summary>
+        /// <param name="nodes"></param>
+        /// <param name="part"></param>
+        /// <param name="isLastNode"></param>
+        /// <returns></returns>
+        private ICollection<(RouteGraphNode, TInfo, bool)> TryMatchAggregate(ICollection<(RouteGraphNode, TInfo, bool)> nodes, Route.Part part, bool isLastNode)
+        {
+            if (nodes == null)
+            {
+                return null;
+            }
+
+            if (!TryMatchAggregate(nodes, part, isLastNode, out ICollection<(RouteGraphNode, TInfo, bool)> nextNodes))
+            {
+                return null;
+            }
+
+            return nextNodes;
+        }
+
+        /// <summary>
+        /// Tries to match the part of a path with a collection of graph alternatives.
+        /// If any node can be matched, this method returns true. Otherwise false is
+        /// returned.
+        /// </summary>
+        /// <param name="nodes"></param>
+        /// <param name="part"></param>
+        /// <param name="isLastNode"></param>
+        /// <param name="nextNodes"></param>
+        /// <returns></returns>
+        private bool TryMatchAggregate(ICollection<(RouteGraphNode, TInfo, bool)> nodes, Route.Part part, bool isLastNode, out ICollection<(RouteGraphNode, TInfo, bool)> nextNodes)
+        {
+            nextNodes = nodes;
+
+            bool notFoundInAnyNode = true;
+            foreach (var node in nodes)
+            {
+                if (!TryMatch(node.Item1, part, isLastNode, out ICollection<(RouteGraphNode, TInfo, bool)> nextNodeCandidates))
+                {
+                    continue;
+                }
+
+                notFoundInAnyNode = false;
+
+                _ = nextNodes.AddAll(nextNodeCandidates.Where(((RouteGraphNode, TInfo, bool) tuple) => tuple.Item3 == isLastNode));
+            }
+
+            return !notFoundInAnyNode;
+        }
+
+        /// <summary>
+        /// Tries to match a single part of the path with a single node of the
+        /// match-graph. Filters the result, according to the position of the
+        /// path-part inside the path (i.e. if the part is the last part of the
+        /// path), and returns only those nodes which are meeting this condition.
+        /// </summary>
+        /// <param name="graph"></param>
+        /// <param name="part"></param>
+        /// <param name="isLastNode"></param>
+        /// <param name="nodes"></param>
+        /// <returns></returns>
         private bool TryMatch(RouteGraphNode graph, Route.Part part, bool isLastNode, out ICollection<(RouteGraphNode, TInfo, bool)> nodes)
         {
-            bool found = TryMatchPart(_matchGraph, firstPart, out nodes);
+            bool found = TryMatchPart(_matchGraph, part, out nodes);
 
             if (!found)
             {
                 return false;
             }
 
-            nodes = nodes.Where((node, info, lastNode) => lastNode == isLastNode);
+            nodes = nodes.Where(((RouteGraphNode, TInfo, bool) tuple) => tuple.Item3 == isLastNode).ToList();
 
-            if (nextNodeCandidates.Length == 0)
+            if (nodes.Count() == 0)
             {
                 return false;
             }
 
-            if (isLastNode && nextNodeCandidates.Length > 1)
+            if (isLastNode && nodes.Count() > 1)
             {
                 return false;
             }
@@ -171,6 +222,7 @@ namespace MockWebApi.Routing
             }
             else if (part is Route.VariablePart variablePart)
             {
+                //TODO: refactor, this should not happen
                 return TryMatchVariablePart(graph, variablePart, out nodes);
             }
             else
@@ -186,7 +238,8 @@ namespace MockWebApi.Routing
                 return false;
             }
 
-
+            // extens this by loading all variable-bindings to the
+            // list of nodes before returning
 
             return true;
         }
@@ -195,6 +248,9 @@ namespace MockWebApi.Routing
         {
             nodes = null;
 
+            //TODO: refactor, this should not happen
+            // This case may not happen, because a match must only
+            // have literals.
 
             return false;
         }
