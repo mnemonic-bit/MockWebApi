@@ -32,9 +32,25 @@ namespace MockWebApi.Routing
             RouteParser routeParser = new RouteParser();
             Route parsedRoute = routeParser.Parse(route);
 
-            RouteGraphNode leafNode = parsedRoute.Parts.Aggregate(_matchGraph, (graph, part) => TryMatchPart(graph, part, out RouteGraphNode leafNode, out routeInfo));
+            routeInfo = default(TInfo);
+            //bool found = parsedRoute.Parts.Aggregate(_matchGraph, (graph, part) => TryMatchPart(graph, part, out ICollection<(RouteGraphNode, TInfo, bool)> nodes));
+            Route.Part firstPart = parsedRoute.Parts.First();
+            bool found = TryMatchPart(_matchGraph, firstPart, out ICollection<(RouteGraphNode, TInfo, bool)> nodes);
 
-            return false;
+            if (nodes.Count() == 0)
+            {
+                throw new Exception($"No route matches the pattern");
+            }
+
+            if (nodes.Count() > 1)
+            {
+                throw new Exception($"More than one route match the pattern");
+            }
+
+            bool isLastNode;
+            (_, routeInfo, isLastNode) = nodes.First();
+
+            return isLastNode;
         }
 
         private void AddRouteToMatchGraph(Route route, TInfo routeInfo)
@@ -88,15 +104,74 @@ namespace MockWebApi.Routing
             return result;
         }
 
-        private bool TryMatchPart(RouteGraphNode graph, Route.Part part, out RouteGraphNode leafNode, out TInfo routeInfo)
+        private ICollection<(RouteGraphNode, TInfo, bool)> AggregatePart(ICollection<(RouteGraphNode, TInfo, bool)> nodes, Route.Part part, bool isLastNode)
+        {
+            bool found = TryMatch(graph, part, isLastNo, out ICollection<(RouteGraphNode, TInfo, bool)> nextNodeCandidates);
+
+            if (found)
+            {
+                nodes.Add(nextNodeCandidates);
+            }
+
+            nodes = nodes.Where((node, info, lastNode) => lastNode == isLastNode);
+
+            return nodes;
+        }
+
+        private bool TryMatch(IEnumeration<Route.Part> parts, bool isLastNode, out (RouteGraphNode, TInfo, bool) node)
+        {
+            node = (null, null, false);
+
+            ICollection<(RouteGraphNode, TInfo, bool)> nodeCandidates = parts.Aggregate(new HashSet<ICollection<(RouteGraphNode, TInfo, bool)>>(), AggregatePart);
+
+            if (nodeCandidates.Length == 0)
+            {
+                return false;
+            }
+
+            if (nodeCandidates.Length > 1)
+            {
+                return false;
+            }
+
+            node = nodeCandidates.Single();
+
+            return true;
+        }
+
+        private bool TryMatch(RouteGraphNode graph, Route.Part part, bool isLastNode, out ICollection<(RouteGraphNode, TInfo, bool)> nodes)
+        {
+            bool found = TryMatchPart(_matchGraph, firstPart, out nodes);
+
+            if (!found)
+            {
+                return false;
+            }
+
+            nodes = nodes.Where((node, info, lastNode) => lastNode == isLastNode);
+
+            if (nextNodeCandidates.Length == 0)
+            {
+                return false;
+            }
+
+            if (isLastNode && nextNodeCandidates.Length > 1)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool TryMatchPart(RouteGraphNode graph, Route.Part part, out ICollection<(RouteGraphNode, TInfo, bool)> nodes)
         {
             if (part is Route.LiteralPart literalPart)
             {
-                return TryMatchLiteralPart(graph, literalPart, out leafNode, out routeInfo);
+                return TryMatchLiteralPart(graph, literalPart, out nodes);
             }
             else if (part is Route.VariablePart variablePart)
             {
-                return TryMatchVariablePart(graph, variablePart, out leafNode, out routeInfo);
+                return TryMatchVariablePart(graph, variablePart, out nodes);
             }
             else
             {
@@ -104,12 +179,9 @@ namespace MockWebApi.Routing
             }
         }
 
-        private bool TryMatchLiteralPart(RouteGraphNode graph, Route.LiteralPart literalPart, out RouteGraphNode leafNode, out TInfo routeInfo)
+        private bool TryMatchLiteralPart(RouteGraphNode graph, Route.LiteralPart literalPart, out ICollection<(RouteGraphNode, TInfo, bool)> nodes)
         {
-            leafNode = null;
-            routeInfo = default(TInfo);
-
-            if (!graph.Parts.TryGetValue(literalPart, out ICollection<(RouteGraphNode, TInfo, bool)> nodes))
+            if (!graph.Parts.TryGetValue(literalPart, out nodes))
             {
                 return false;
             }
@@ -119,10 +191,9 @@ namespace MockWebApi.Routing
             return true;
         }
 
-        private bool TryMatchVariablePart(RouteGraphNode graph, Route.VariablePart variablePart, out RouteGraphNode leafNode, out TInfo routeInfo)
+        private bool TryMatchVariablePart(RouteGraphNode graph, Route.VariablePart variablePart, out ICollection<(RouteGraphNode, TInfo, bool)> nodes)
         {
-            leafNode = null;
-            routeInfo = default(TInfo);
+            nodes = null;
 
 
             return false;
