@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MockWebApi.Client\MockWebApi.Client.csproj" />
+    <ProjectReference Include="..\MockWebApi\MockWebApi.csproj" />
   </ItemGroup>
 
 </Project>
