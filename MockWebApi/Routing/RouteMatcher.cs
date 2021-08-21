@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace MockWebApi.Routing
 {
@@ -25,10 +22,13 @@ namespace MockWebApi.Routing
             return _routeMap.Remove(routeTemplate);
         }
 
-        public bool TryMatch(string route, out TInfo routeInfo)
+        public bool TryMatch(string route, out RouteMatch<TInfo> routeMatch)
         {
-            if (_routeMap.TryGetValue(route, out routeInfo))
+            routeMatch = default(RouteMatch<TInfo>);
+
+            if (_routeMap.TryGetValue(route, out TInfo info))
             {
+                routeMatch = new RouteMatch<TInfo>(info, null);
                 return true;
             }
 

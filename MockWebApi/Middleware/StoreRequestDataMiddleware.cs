@@ -61,7 +61,7 @@ namespace MockWebApi.Middleware
         {
             bool trackServiceApiCalls = _serverConfig.Get<bool>(ServerConfiguration.Parameters.TrackServiceApiCalls);
             bool startsWithServiceApi = request.Path.StartsWithSegments("/service-api");
-            bool routeOptOut = _routeMatcher.TryMatch(request.Path, out EndpointDescription endpointDescription) && !endpointDescription.PersistRequestInformation;
+            bool routeOptOut = _routeMatcher.TryMatch(request.Path, out RouteMatch<EndpointDescription> routeMatch) && !routeMatch.RouteInformation.PersistRequestInformation;
 
             return startsWithServiceApi && !trackServiceApiCalls || routeOptOut;
         }

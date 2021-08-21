@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
 namespace MockWebApi.Routing
 {
     public interface IRouteMatcher<TInfo>
@@ -12,7 +7,7 @@ namespace MockWebApi.Routing
 
         bool Remove(string routeTemplate);
 
-        bool TryMatch(string route, out TInfo routeInfo);
+        bool TryMatch(string route, out RouteMatch<TInfo> routeMatch);
 
     }
 }

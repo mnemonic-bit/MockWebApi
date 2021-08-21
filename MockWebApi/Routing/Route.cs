@@ -44,12 +44,16 @@ namespace MockWebApi.Routing
 
             public override string ToString()
             {
-                return Literal.ToString();
+                return Literal;
             }
 
             public override bool Equals(object obj)
             {
-                return Literal.Equals(obj);
+                if (obj is LiteralPart literalPart)
+                {
+                    return Literal.Equals(literalPart.Literal);
+                }
+                return false;
             }
 
             public override int GetHashCode()
@@ -76,7 +80,11 @@ namespace MockWebApi.Routing
 
             public override bool Equals(object obj)
             {
-                return VariableName.Equals(obj);
+                if (obj is VariablePart variablePart)
+                {
+                    return VariableName.Equals(variablePart.VariableName);
+                }
+                return false;
             }
 
             public override int GetHashCode()

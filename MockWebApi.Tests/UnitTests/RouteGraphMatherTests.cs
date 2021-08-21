@@ -1,10 +1,5 @@
 ﻿using MockWebApi.Model;
 using MockWebApi.Routing;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace MockWebApi.Tests.UnitTests
@@ -35,21 +30,53 @@ namespace MockWebApi.Tests.UnitTests
         }
 
         [Theory]
-        [InlineData("/some/path", "/some/path")]
-        [InlineData("/some/path/", "/some/path")]
-        [InlineData("/some/{variable}/path", "/some/other/path")]
-        public void TryMatch_ShouldExtensTheGraph(string pathTemplate, string path)
+        [InlineData(new string[] { "/some/path" }, "/some/path")]
+        [InlineData(new string[] { "/some/path/" }, "/some/path")]
+        [InlineData(new string[] { "/some/other/path", "/some/path/" }, "/some/path")]
+        [InlineData(new string[] { "/some/{variable}/path", "/some/different/path" }, "/some/other/path")]
+        public void TryMatch_ShouldExtensTheGraph(string[] pathTemplates, string path)
         {
             // Arrange
             RouteGraphMatcher<EndpointDescription> graphMatcher = new RouteGraphMatcher<EndpointDescription>();
-            EndpointDescription endpointDescription = new EndpointDescription();
-            graphMatcher.AddRoute(pathTemplate, endpointDescription);
+
+            foreach (string pathTemplate in pathTemplates)
+            {
+                EndpointDescription endpointDescription = new EndpointDescription()
+                {
+                    Route = pathTemplate
+                };
+                graphMatcher.AddRoute(pathTemplate, endpointDescription);
+            }
 
             // Act
-            bool result = graphMatcher.TryMatch(path, out EndpointDescription routeInfo);
+            bool result = graphMatcher.TryMatch(path, out RouteMatch<EndpointDescription> routeMatch);
 
             // Assert
+            Assert.True(result);
+        }
 
+        [Theory]
+        [InlineData(new string[] { "/some/other/path" }, "/some/path")]
+        [InlineData(new string[] { "/some/{variable}/path" }, "/some/path")]
+        public void TryMatch_ShouldNotFindMatch(string[] pathTemplates, string path)
+        {
+            // Arrange
+            RouteGraphMatcher<EndpointDescription> graphMatcher = new RouteGraphMatcher<EndpointDescription>();
+
+            foreach (string pathTemplate in pathTemplates)
+            {
+                EndpointDescription endpointDescription = new EndpointDescription()
+                {
+                    Route = pathTemplate
+                };
+                graphMatcher.AddRoute(pathTemplate, endpointDescription);
+            }
+
+            // Act
+            bool result = graphMatcher.TryMatch(path, out RouteMatch<EndpointDescription> routeMatch);
+
+            // Assert
+            Assert.False(result);
         }
 
     }
