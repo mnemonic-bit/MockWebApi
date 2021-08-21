@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MockWebApi.Extension;
+using System;
 using System.Collections.Generic;
 using YamlDotNet.Core;
 using YamlDotNet.Serialization;
@@ -26,6 +27,19 @@ namespace MockWebApi.Model
 
         [YamlMember(ScalarStyle = ScalarStyle.Literal)]
         public string Body { get; set; }
+
+        public override string ToString()
+        {
+            string result = "HTTP request:\n"
+                + $"  HTTP Verb: {HttpVerb}\n"
+                + $"  Date: {Date}\n"
+                + $"  Path: {Path}\n"
+                + $"  Uri: {Uri}\n"
+                + $"  Content Type: {ContentType}\n"
+                + $"  Body:\n{Body.IndentLines("    ")}\n";
+
+            return result;
+        }
 
     }
 }

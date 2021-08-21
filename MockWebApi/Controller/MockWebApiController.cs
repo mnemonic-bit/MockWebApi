@@ -1,9 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using MockWebApi.Data;
+using MockWebApi.Middleware;
 using MockWebApi.Model;
+using MockWebApi.Routing;
 using System;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -18,22 +21,33 @@ namespace MockWebApi.Controller
 
         private readonly IRouteConfigurationStore _configStore;
 
-        public MockWebApiController(ILogger<ServiceApiController> logger, IServerConfiguration serverConfig, IRouteConfigurationStore configStore)
+        private readonly IRouteMatcher<EndpointDescription> _routeMatcher;
+
+        public MockWebApiController(
+            ILogger<ServiceApiController> logger,
+            IServerConfiguration serverConfig,
+            IRouteConfigurationStore configStore,
+            IRouteMatcher<EndpointDescription> routeMatcher)
         {
             _logger = logger;
             _serverConfig = serverConfig;
             _configStore = configStore;
+            _routeMatcher = routeMatcher;
         }
 
         public async Task MockResults()
         {
             if (!_configStore.TryGet(Request.Path, out EndpointDescription endpointDescription))
             {
-                Response.StatusCode = _serverConfig.Get<int>(ServerConfiguration.Parameters.DefaultHttpStatusCode);
+                int defaultStatusCode = _serverConfig.Get<int>(ServerConfiguration.Parameters.DefaultHttpStatusCode);
+                HttpContext.Items.Add(MiddlewareConstants.MockWebApiHttpResponse, new HttpResult() { StatusCode = (HttpStatusCode)defaultStatusCode });
+                Response.StatusCode = defaultStatusCode;
                 return;
             }
 
             HttpResult response = endpointDescription.Results.FirstOrDefault();
+            HttpContext.Items.Add(MiddlewareConstants.MockWebApiHttpResponse, response);
+
             await FillResponse(response);
 
             ManageRouteLifeCycle(endpointDescription);
@@ -62,6 +76,7 @@ namespace MockWebApi.Controller
             if (endpointDescription.LifecyclePolicy == LifecyclePolicy.ApplyOnce)
             {
                 _configStore.Remove(endpointDescription.Route);
+                _routeMatcher.Remove(endpointDescription.Route);
             }
         }
 

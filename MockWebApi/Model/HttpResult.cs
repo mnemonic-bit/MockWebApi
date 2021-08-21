@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using MockWebApi.Extension;
+using System.Collections.Generic;
 using System.Net;
 
 namespace MockWebApi.Model
@@ -13,6 +14,16 @@ namespace MockWebApi.Model
         public string Body { get; set; }
 
         public string ContentType { get; set; }
+
+        public override string ToString()
+        {
+            string result = "Response:\n"
+                + $"  Status Code: {StatusCode}\n"
+                + $"  Content Type: {ContentType}\n"
+                + $"  Body:\n{Body.IndentLines("    ")}\n";
+
+            return result;
+        }
 
     }
 }

@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using MockWebApi.Data;
 using MockWebApi.Extension;
 using MockWebApi.Model;
+using MockWebApi.Routing;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -22,13 +23,21 @@ namespace MockWebApi.Controller
 
         private readonly IDataStore _dataStore;
 
+        private readonly IRouteMatcher<EndpointDescription> _routeMatcher;
+
         private readonly IRouteConfigurationStore _configStore;
 
-        public ServiceApiController(ILogger<ServiceApiController> logger, IServerConfiguration serverConfig, IDataStore dataStore, IRouteConfigurationStore configStore)
+        public ServiceApiController(
+            ILogger<ServiceApiController> logger,
+            IServerConfiguration serverConfig,
+            IDataStore dataStore,
+            IRouteMatcher<EndpointDescription> routeMatcher,
+            IRouteConfigurationStore configStore)
         {
             _logger = logger;
             _serverConfig = serverConfig;
             _dataStore = dataStore;
+            _routeMatcher = routeMatcher;
             _configStore = configStore;
         }
 
@@ -64,15 +73,7 @@ namespace MockWebApi.Controller
         [HttpGet("configure")]
         public IActionResult GetConfiguration()
         {
-            foreach (KeyValuePair<string, string> parameter in Request.Query.ToDictionary())
-            {
-                if (_serverConfig.Contains(parameter.Key))
-                {
-                    _serverConfig[parameter.Key] = parameter.Value;
-                }
-            }
-
-            return Ok();
+            return Ok(_serverConfig.ToString());
         }
 
         [HttpPost("configure")]
@@ -102,6 +103,8 @@ namespace MockWebApi.Controller
         public async Task<IActionResult> ConfigureRoute()
         {
             string config = await Request.GetBody();
+            config = config.Replace("\r\n", "\n");
+
             EndpointDescription endpointDescription = DeserializeYaml<EndpointDescription>(config);
 
             if (endpointDescription == null)
@@ -110,6 +113,8 @@ namespace MockWebApi.Controller
             }
 
             _configStore.Add(endpointDescription);
+
+            _routeMatcher.AddRoute(endpointDescription.Route, endpointDescription);
 
             return Ok($"Configured route '{endpointDescription.Route}'.");
         }

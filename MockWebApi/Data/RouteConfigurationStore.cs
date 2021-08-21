@@ -16,7 +16,7 @@ namespace MockWebApi.Data
 
         public void Add(EndpointDescription config)
         {
-            _endpoints.Add(config.Route, config);
+            _endpoints[config.Route] = config;
         }
 
         public bool Remove(string route)

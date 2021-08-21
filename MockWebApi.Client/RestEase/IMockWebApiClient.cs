@@ -12,7 +12,7 @@ namespace MockWebApi.Client.RestEase
     {
 
         [Post("configure")]
-        Task<Response<string>> Configure([Query] int? DefaultHttpStatusCode = null, [Query] string DefaultContentType = null, [Query] bool? TrackServiceApiCalls = null);
+        Task<Response<string>> Configure([Query] int? DefaultHttpStatusCode = null, [Query] string DefaultContentType = null, [Query] bool? TrackServiceApiCalls = null, [Query] bool? LogServiceApiCalls = null);
 
         [Get("configure")]
         Task<Response<string>> GetConfiguration();

@@ -16,13 +16,13 @@ namespace MockWebApi.Middleware
         {
             if (!values.ContainsKey("some-key"))
             {
-                return ValueTask.FromResult(values);
+                return new ValueTask<RouteValueDictionary>(Task.FromResult(values));
             }
 
             values["controller"] = "WeatherForecast";
             values["action"] = "Get";
 
-            return ValueTask.FromResult(values);
+            return new ValueTask<RouteValueDictionary>(Task.FromResult(values));
         }
 
     }

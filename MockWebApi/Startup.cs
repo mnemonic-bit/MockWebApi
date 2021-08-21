@@ -17,11 +17,8 @@ namespace MockWebApi
     public class Startup
     {
 
-        private readonly ILogger<Startup> _logger;
-
-        public Startup(ILogger<Startup> logger, IConfiguration configuration)
+        public Startup(IConfiguration configuration)
         {
-            _logger = logger;
             Configuration = configuration;
         }
 
@@ -30,11 +27,11 @@ namespace MockWebApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSingleton<IRouteMatcher<EndpointDescription>>(new RouteMatcher<EndpointDescription>());
             services.AddSingleton<IRouteConfigurationStore>(new RouteConfigurationStore());
             services.AddSingleton<IServerConfiguration>(new ServerConfiguration());
 
             services.AddSingleton<IDataStore>(new DataStore());
-            //services.AddTransient<GenericRouteTransformer>();
 
             services.AddControllers();
 
@@ -45,7 +42,7 @@ namespace MockWebApi
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger)
         {
             if (env.IsDevelopment())
             {
@@ -56,7 +53,7 @@ namespace MockWebApi
 
             app.Use(next => context =>
             {
-                _logger.LogDebug($"Endpoint before UserRouting(): {context.GetEndpoint()?.DisplayName ?? "(null)"}");
+                logger.LogDebug($"Endpoint before UserRouting(): {context.GetEndpoint()?.DisplayName ?? "(null)"}");
                 return next(context);
             });
 
@@ -67,13 +64,12 @@ namespace MockWebApi
 
             app.Use(next => context =>
             {
-                _logger.LogDebug($"Endpoint after UseRouting(): {context.GetEndpoint()?.DisplayName ?? "(null)"}");
+                logger.LogDebug($"Endpoint after UseRouting(): {context.GetEndpoint()?.DisplayName ?? "(null)"}");
                 return next(context);
             });
 
-            //app.Map("/calculator", random => random.UseMiddleware<DemoMiddleware>());
-            //app.Map("/store", random => random.UseMiddleware<StoreRequestDataMiddleware>());
             app.UseMiddleware<StoreRequestDataMiddleware>();
+            app.UseMiddleware<LoggingMiddleware>();
 
             app.UseAuthorization();
 
@@ -82,6 +78,7 @@ namespace MockWebApi
             //{
             //    var endPoint = context.GetEndpoint();
             //    var routes = context.Request.RouteValues;
+            //    await next();
             //});
 
             app.UseEndpoints(endpoints =>
@@ -92,10 +89,6 @@ namespace MockWebApi
                     name: "some-route-name",
                     pattern: "{**slug}",
                     defaults: new { controller = "MockWebApi", action = "MockResults" });
-
-                //endpoints.Map().WithMetadata();
-
-                //endpoints.MapDynamicControllerRoute<GenericRouteTransformer>("{**slug}"); // this pattern works as a catch-all for all URLs that are not matched by the routing
             });
         }
 
