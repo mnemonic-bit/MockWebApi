@@ -21,10 +21,11 @@ namespace MockWebApi.Routing
         /// </summary>
         /// <param name="infos"></param>
         /// <param name="variables"></param>
-        public RouteMatch(TInfo infos, IDictionary<string, string> variables)
+        public RouteMatch(TInfo infos, IDictionary<string, string> variables, IDictionary<string, string> parameters)
         {
             RouteInformation = infos;
             Variables = variables;
+            Parameters = parameters;
         }
 
         /// <summary>
@@ -38,6 +39,11 @@ namespace MockWebApi.Routing
         /// to this route.
         /// </summary>
         public IDictionary<string, string> Variables { get; }
+
+        /// <summary>
+        /// Gets the dictionary of parameters of this route match.
+        /// </summary>
+        public IDictionary<string, string> Parameters { get; }
 
     }
 }

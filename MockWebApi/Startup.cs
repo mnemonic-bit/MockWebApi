@@ -27,8 +27,7 @@ namespace MockWebApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSingleton<IRouteMatcher<EndpointDescription>>(new RouteMatcher<EndpointDescription>());
-            services.AddSingleton<IRouteConfigurationStore>(new RouteConfigurationStore());
+            services.AddSingleton<IRouteMatcher<EndpointDescription>>(new RouteGraphMatcher<EndpointDescription>());
             services.AddSingleton<IServerConfiguration>(new ServerConfiguration());
 
             services.AddSingleton<IDataStore>(new DataStore());

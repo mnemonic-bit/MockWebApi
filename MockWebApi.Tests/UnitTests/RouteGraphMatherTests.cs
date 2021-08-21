@@ -32,9 +32,12 @@ namespace MockWebApi.Tests.UnitTests
         [Theory]
         [InlineData(new string[] { "/some/path" }, "/some/path")]
         [InlineData(new string[] { "/some/path/" }, "/some/path")]
+        [InlineData(new string[] { "/some/path?var1=value1&var2=value2" }, "/some/path?var1=value1&var2=value2")]
+        [InlineData(new string[] { "/some/path?var1={param1}&var2=value2" }, "/some/path?var1=some-value&var2=value2")]
         [InlineData(new string[] { "/some/other/path", "/some/path/" }, "/some/path")]
         [InlineData(new string[] { "/some/{variable}/path", "/some/different/path" }, "/some/other/path")]
-        public void TryMatch_ShouldExtensTheGraph(string[] pathTemplates, string path)
+        //[InlineData(new string[] { "/some/{variable}/path", "/some/different/path" }, "/some/different/path")] //TODO: matches the most specific (literal) one
+        public void TryMatch_ShouldFindMatch(string[] pathTemplates, string path)
         {
             // Arrange
             RouteGraphMatcher<EndpointDescription> graphMatcher = new RouteGraphMatcher<EndpointDescription>();
@@ -58,6 +61,9 @@ namespace MockWebApi.Tests.UnitTests
         [Theory]
         [InlineData(new string[] { "/some/other/path" }, "/some/path")]
         [InlineData(new string[] { "/some/{variable}/path" }, "/some/path")]
+        [InlineData(new string[] { "/some/other/path", "/some/path/but/longer" }, "/some/path")]
+        [InlineData(new string[] { "/some/{variable}/path", "/some/{variable}/continued" }, "/some/path")]
+        [InlineData(new string[] { "/some/path?var1=value1&var2=value2" }, "/some/path")]
         public void TryMatch_ShouldNotFindMatch(string[] pathTemplates, string path)
         {
             // Arrange

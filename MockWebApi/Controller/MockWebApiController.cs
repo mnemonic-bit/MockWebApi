@@ -19,25 +19,21 @@ namespace MockWebApi.Controller
 
         private readonly IServerConfiguration _serverConfig;
 
-        private readonly IRouteConfigurationStore _configStore;
-
         private readonly IRouteMatcher<EndpointDescription> _routeMatcher;
 
         public MockWebApiController(
             ILogger<ServiceApiController> logger,
             IServerConfiguration serverConfig,
-            IRouteConfigurationStore configStore,
             IRouteMatcher<EndpointDescription> routeMatcher)
         {
             _logger = logger;
             _serverConfig = serverConfig;
-            _configStore = configStore;
             _routeMatcher = routeMatcher;
         }
 
         public async Task MockResults()
         {
-            if (!_configStore.TryGet(Request.Path, out EndpointDescription endpointDescription))
+            if (!_routeMatcher.TryMatch(Request.Path, out RouteMatch<EndpointDescription> routeMatch))
             {
                 int defaultStatusCode = _serverConfig.Get<int>(ServerConfiguration.Parameters.DefaultHttpStatusCode);
                 HttpContext.Items.Add(MiddlewareConstants.MockWebApiHttpResponse, new HttpResult() { StatusCode = (HttpStatusCode)defaultStatusCode });
@@ -45,12 +41,12 @@ namespace MockWebApi.Controller
                 return;
             }
 
-            HttpResult response = endpointDescription.Results.FirstOrDefault();
+            HttpResult response = routeMatch.RouteInformation.Results.FirstOrDefault();
             HttpContext.Items.Add(MiddlewareConstants.MockWebApiHttpResponse, response);
 
             await FillResponse(response);
 
-            ManageRouteLifeCycle(endpointDescription);
+            ManageRouteLifeCycle(routeMatch);
         }
 
         private async Task FillResponse(HttpResult response)
@@ -71,12 +67,11 @@ namespace MockWebApi.Controller
             }
         }
 
-        private void ManageRouteLifeCycle(EndpointDescription endpointDescription)
+        private void ManageRouteLifeCycle(RouteMatch<EndpointDescription> routeMatch)
         {
-            if (endpointDescription.LifecyclePolicy == LifecyclePolicy.ApplyOnce)
+            if (routeMatch.RouteInformation.LifecyclePolicy == LifecyclePolicy.ApplyOnce)
             {
-                _configStore.Remove(endpointDescription.Route);
-                _routeMatcher.Remove(endpointDescription.Route);
+                _routeMatcher.Remove(routeMatch.RouteInformation.Route);
             }
         }
 

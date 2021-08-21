@@ -28,12 +28,5 @@ namespace MockWebApi.Extension
             return new Dictionary<string, string>(enumerable.Select(q => new KeyValuePair<string, string>(q.Key, q.Value.ToString())));
         }
 
-        private static bool GetFirstElement<TElem>(IEnumerator<TElem> enumerator, out TElem element)
-        {
-            bool result = enumerator.MoveNext();
-            element = enumerator.Current;
-            return result;
-        }
-
     }
 }

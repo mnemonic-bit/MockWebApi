@@ -25,20 +25,16 @@ namespace MockWebApi.Controller
 
         private readonly IRouteMatcher<EndpointDescription> _routeMatcher;
 
-        private readonly IRouteConfigurationStore _configStore;
-
         public ServiceApiController(
             ILogger<ServiceApiController> logger,
             IServerConfiguration serverConfig,
             IDataStore dataStore,
-            IRouteMatcher<EndpointDescription> routeMatcher,
-            IRouteConfigurationStore configStore)
+            IRouteMatcher<EndpointDescription> routeMatcher)
         {
             _logger = logger;
             _serverConfig = serverConfig;
             _dataStore = dataStore;
             _routeMatcher = routeMatcher;
-            _configStore = configStore;
         }
 
         [HttpGet("request/{id?}")]
@@ -93,7 +89,7 @@ namespace MockWebApi.Controller
         [HttpGet("configure/route")]
         public IActionResult GetRoutes()
         {
-            EndpointDescription[] endpointConfigs = _configStore.GetAllRoutes();
+            EndpointDescription[] endpointConfigs = _routeMatcher.GetAllRoutes().ToArray();
             string endpointConfigsAsYaml = SerializeToYaml(endpointConfigs);
 
             return Ok(endpointConfigsAsYaml);
@@ -112,8 +108,6 @@ namespace MockWebApi.Controller
                 return BadRequest($"Unable to deserialize the request-body YAML into an endpoint configuration.");
             }
 
-            _configStore.Add(endpointDescription);
-
             _routeMatcher.AddRoute(endpointDescription.Route, endpointDescription);
 
             return Ok($"Configured route '{endpointDescription.Route}'.");
@@ -127,7 +121,7 @@ namespace MockWebApi.Controller
                 return BadRequest($"To delete a route, a value for 'routeKey' must be passed as parameter.");
             }
 
-            if (!_configStore.Remove(routeKey))
+            if (!_routeMatcher.Remove(routeKey))
             {
                 return BadRequest($"The route '{routeKey}' was not configured, so nothing was deleted.");
             }

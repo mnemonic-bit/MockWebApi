@@ -9,35 +9,80 @@ namespace MockWebApi.Routing
     {
 
         private RouteGraphNode _matchGraph;
+        private IDictionary<string, TInfo> _routes;
 
         public RouteGraphMatcher()
         {
             _matchGraph = new RouteGraphNode();
+            _routes = new Dictionary<string, TInfo>();
         }
 
         public void AddRoute(string routeTemplate, TInfo routeInfo)
         {
+            if (ContainsRoute(routeTemplate))
+            {
+                return;
+            }
+
             RouteParser routeParser = new RouteParser();
             Route route = routeParser.Parse(routeTemplate);
             AddRouteToMatchGraph(route, routeInfo);
+            _routes.Add(routeTemplate, routeInfo);
+        }
+
+        public bool ContainsRoute(string routeTemplate)
+        {
+            return _routes.ContainsKey(routeTemplate);
+        }
+
+        public IEnumerable<TInfo> GetAllRoutes()
+        {
+            return _routes.Values;
         }
 
         public bool Remove(string routeTemplate)
         {
-            throw new NotImplementedException();
+            if (!ContainsRoute(routeTemplate))
+            {
+                return false;
+            }
+
+            RouteParser routeParser = new RouteParser();
+            Route route = routeParser.Parse(routeTemplate);
+            RemoveRouteFromMatchGraph(route);
+
+            return _routes.Remove(routeTemplate);
         }
 
-        public bool TryMatch(string route, out RouteMatch<TInfo> routeMatch)
+        public bool TryMatch(string path, out RouteMatch<TInfo> routeMatch)
         {
             RouteParser routeParser = new RouteParser();
-            Route parsedRoute = routeParser.Parse(route);
+            Route parsedRoute = routeParser.Parse(path);
 
-            return TryMatch(parsedRoute.Parts, out routeMatch);
+            if (!parsedRoute.Parts.All(part => part is Route.LiteralPart))
+            {
+                throw new ArgumentException($"Given path contains variable definitions, wich is not allowed when matching (offending path='{path}')");
+            }
+
+            if (!TryMatch(parsedRoute.Parts, out routeMatch))
+            {
+                return false;
+            }
+
+            if (!TryMatchParameters(parsedRoute, routeMatch.Parameters, out IDictionary<string, string> parameters))
+            {
+                return false;
+            }
+
+            routeMatch.Variables.AddAll(parameters);
+
+            return true;
         }
 
         private void AddRouteToMatchGraph(Route route, TInfo routeInfo)
         {
             RouteGraphNode leafNode = route.Parts.Aggregate(_matchGraph, (graph, part, isLast) => AddPartToGraphNode(graph, part, routeInfo, isLast));
+            leafNode.Parameters = route.Parameters;
         }
 
         private RouteGraphNode AddPartToGraphNode(RouteGraphNode graph, Route.Part part, TInfo routeInfo, bool isLast)
@@ -71,6 +116,7 @@ namespace MockWebApi.Routing
 
             LiteralPartCandidate candidate = new LiteralPartCandidate()
             {
+                LiteralPart = literalPart,
                 NextNode = newGraphNode,
                 Info = routeInfo,
                 IsLast = isLast
@@ -100,6 +146,55 @@ namespace MockWebApi.Routing
             return graph.VariableNode;
         }
 
+        private bool RemoveRouteFromMatchGraph(Route route)
+        {
+            RouteGraphNode leafNode = route.Parts.Aggregate(_matchGraph, RemoveRouteFromMatchGraph);
+            return true;
+        }
+
+        private RouteGraphNode RemoveRouteFromMatchGraph(RouteGraphNode graph, Route.Part part)
+        {
+            if (part is Route.LiteralPart literalPart)
+            {
+                return RemoveLiteralPartFromMatchGraph(graph, literalPart);
+            }
+            else if (part is Route.VariablePart variablePart)
+            {
+                return RemoveVariablePartFromMatchGraph(graph, variablePart);
+            }
+            else
+            {
+                throw new InvalidOperationException($"Internal error: Type of route part is not supported.");
+            }
+        }
+
+        private RouteGraphNode RemoveLiteralPartFromMatchGraph(RouteGraphNode graph, Route.LiteralPart part)
+        {
+            if (!graph.Parts.TryGetValue(part, out ICollection<LiteralPartCandidate> candidates))
+            {
+                throw new InvalidOperationException($"Internal Error: Trying to remove part of route which does not exist.");
+            }
+
+            LiteralPartCandidate candidateToRemove = candidates.Single(candidate => candidate.LiteralPart.Equals(part)); // TODO, add the part to this class to check and filter for it.
+            candidates.Remove(candidateToRemove);
+
+            return candidateToRemove.NextNode;
+        }
+
+        private RouteGraphNode RemoveVariablePartFromMatchGraph(RouteGraphNode graph, Route.VariablePart part)
+        {
+            VariablePartCandidate candidateToRemove = graph.Variables.FirstOrDefault(candidate => candidate.IsLast); // TODO, add the part to this class to check and filter for it.
+
+            if (candidateToRemove == null)
+            {
+                throw new InvalidOperationException($"Internal Error: Trying to remove part of route which does not exist.");
+            }
+
+            graph.Variables.Remove(candidateToRemove);
+
+            return graph.VariableNode;
+        }
+
         private bool TryMatch(IEnumerable<Route.Part> parts, out RouteMatch<TInfo> routeMatch)
         {
             routeMatch = default;
@@ -123,7 +218,7 @@ namespace MockWebApi.Routing
             }
 
             MatchCandidate candidate = nodeCandidates.Single();
-            routeMatch = new RouteMatch<TInfo>(candidate.Info, candidate.Variables);
+            routeMatch = new RouteMatch<TInfo>(candidate.Info, candidate.Variables, candidate.NextNode.Parameters);
 
             return true;
         }
@@ -221,19 +316,12 @@ namespace MockWebApi.Routing
 
         private bool TryMatchPart(RouteGraphNode graph, Route.Part part, out ICollection<MatchCandidate> nodes)
         {
-            if (part is Route.LiteralPart literalPart)
-            {
-                return TryMatchLiteralPart(graph, literalPart, out nodes);
-            }
-            else if (part is Route.VariablePart variablePart)
-            {
-                //TODO: refactor, this should not happen
-                return TryMatchVariablePart(graph, variablePart, out nodes);
-            }
-            else
+            if (!(part is Route.LiteralPart literalPart))
             {
                 throw new InvalidOperationException($"This sub-class of Route.Part is not handled by this function.");
             }
+
+            return TryMatchLiteralPart(graph, literalPart, out nodes);
         }
 
         private bool TryMatchLiteralPart(RouteGraphNode graph, Route.LiteralPart literalPart, out ICollection<MatchCandidate> matchCandidates)
@@ -251,14 +339,13 @@ namespace MockWebApi.Routing
                 return false;
             }
 
-
             var nextVariableNodes = graph
                 .Variables
                 .Select(variable =>
                 {
                     MatchCandidate matchCandidate = new MatchCandidate(variable);
                     matchCandidate.NextNode = graph.VariableNode;
-                    matchCandidate.Variables.Add(variable.Variable.ToString(), literalPart.ToString());
+                    matchCandidate.Variables.Add(GetVariableName(variable.Variable), literalPart.ToString());
                     return matchCandidate;
                 });
 
@@ -268,15 +355,64 @@ namespace MockWebApi.Routing
             return true;
         }
 
-        private bool TryMatchVariablePart(RouteGraphNode graph, Route.VariablePart variablePart, out ICollection<MatchCandidate> nodes)
+        private bool TryMatchParameters(Route route, IDictionary<string, string> parameters, out IDictionary<string, string> matchedParameters)
         {
-            nodes = null;
+            matchedParameters = new Dictionary<string, string>();
 
-            //TODO: refactor, this should not happen
-            // This case may not happen, because a match must only
-            // have literals.
+            foreach (var param in parameters)
+            {
+                if (!TryMatchParameter(param.Key, param.Value, route.Parameters, out KeyValuePair<string,string>? matchedParameter))
+                {
+                    return false;
+                }
 
+                if (matchedParameter.HasValue)
+                {
+                    matchedParameters.Add(matchedParameter.Value);
+                }
+            }
+
+            return true;
+        }
+
+        private bool TryMatchParameter(string variableName, string variableValue, IDictionary<string, string> parameters, out KeyValuePair<string, string>? matchedParameter)
+        {
+            matchedParameter = null;
+
+            if (!parameters.TryGetValue(variableName, out string parameterValue))
+            {
+                return false;
+            }
+
+            if (!VariableValueIsParameterName(variableValue, out string parameterName))
+            {
+                return variableValue == parameterValue;
+            }
+
+            matchedParameter = new KeyValuePair<string, string>(parameterName, parameterValue);
+            return true;
+        }
+
+        private bool VariableValueIsParameterName(string variableValue, out string parameterName)
+        {
+            if (variableValue.StartsWith("{") && variableValue.EndsWith("}"))
+            {
+                parameterName = GetVariableName(variableValue);
+                return true;
+            }
+
+            parameterName = null;
             return false;
+        }
+
+        private string GetVariableName(Route.VariablePart variablePart)
+        {
+            return GetVariableName(variablePart.ToString());
+        }
+
+        private string GetVariableName(string variable)
+        {
+            return variable.Substring(1, variable.Length - 2);
         }
 
         /// <summary>
@@ -291,6 +427,12 @@ namespace MockWebApi.Routing
             /// This is the reference to the parent node in this route graph.
             /// </summary>
             internal RouteGraphNode Parent { get; set; }
+
+            /// <summary>
+            /// Stores the dictionary of all parameters of the route this
+            /// graph node represents.
+            /// </summary>
+            internal IDictionary<string, string> Parameters { get; set; }
 
             /// <summary>
             /// Each part of a path which is a literal will create a vertice
@@ -316,6 +458,8 @@ namespace MockWebApi.Routing
 
         private class LiteralPartCandidate
         {
+
+            public Route.LiteralPart LiteralPart { get; set; }
 
             public RouteGraphNode NextNode { get; set; }
 
