@@ -346,6 +346,7 @@ namespace MockWebApi.Routing
                     MatchCandidate matchCandidate = new MatchCandidate(variable);
                     matchCandidate.NextNode = graph.VariableNode;
                     matchCandidate.Variables.Add(GetVariableName(variable.Variable), literalPart.ToString());
+                    matchCandidate.IdSpecific = false;
                     return matchCandidate;
                 });
 
@@ -508,6 +509,12 @@ namespace MockWebApi.Routing
             public IDictionary<string, string> Variables { get; } = new Dictionary<string, string>();
 
             public bool IsLast { get; set; }
+
+            /// <summary>
+            /// Marks this match candidate as being for a specific
+            /// route, i.e. one that has no variables in it along the path.
+            /// </summary>
+            public bool IdSpecific { get; set; }
 
         }
 
