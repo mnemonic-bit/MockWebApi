@@ -16,7 +16,7 @@ namespace MockWebApi.Tests.UnitTests
         [InlineData("/some/path?key1=123&key2=hello")]
         [InlineData("/page1?id=3&format=yaml&content-type=text/plain")]
         [InlineData("/page1?id=3123&format=json&action=edit&text=It's%20a%20brave%20new%20world!")]
-        public void AddRoute_ShouldExtensTheGraph(string pathTemplate)
+        public void AddRoute_ShouldExtendTheGraph(string pathTemplate)
         {
             // Arrange
             RouteGraphMatcher<EndpointDescription> graphMatcher = new RouteGraphMatcher<EndpointDescription>();
@@ -35,8 +35,10 @@ namespace MockWebApi.Tests.UnitTests
         [InlineData(new string[] { "/some/path?var1=value1&var2=value2" }, "/some/path?var1=value1&var2=value2")]
         [InlineData(new string[] { "/some/path?var1={param1}&var2=value2" }, "/some/path?var1=some-value&var2=value2")]
         [InlineData(new string[] { "/some/other/path", "/some/path/" }, "/some/path")]
-        [InlineData(new string[] { "/some/{variable}/path", "/some/different/path" }, "/some/other/path")]
-        //[InlineData(new string[] { "/some/{variable}/path", "/some/different/path" }, "/some/different/path")] //TODO: matches the most specific (literal) one
+        [InlineData(new string[] { "/some/{variable}/path", "/some/different/path" }, "/some/different/path")]
+        [InlineData(new string[] { "/some/{variable}/path", "/some/different/path" }, "/some/static/path")]
+        [InlineData(new string[] { "/some/specific/path", "/some/speficic/path/detail" }, "/some/specific/path")]
+        [InlineData(new string[] { "/some/specific/path", "/some/speficic/path/detail" }, "/some/speficic/path/detail")]
         public void TryMatch_ShouldFindMatch(string[] pathTemplates, string path)
         {
             // Arrange
@@ -56,10 +58,12 @@ namespace MockWebApi.Tests.UnitTests
 
             // Assert
             Assert.True(result);
+            Assert.NotNull(routeMatch);
         }
 
         [Theory]
         [InlineData(new string[] { "/some/other/path" }, "/some/path")]
+        [InlineData(new string[] { "/some/specific/path", "/some/speficic/path/detail" }, "/some/specific")]
         [InlineData(new string[] { "/some/{variable}/path" }, "/some/path")]
         [InlineData(new string[] { "/some/other/path", "/some/path/but/longer" }, "/some/path")]
         [InlineData(new string[] { "/some/{variable}/path", "/some/{variable}/continued" }, "/some/path")]
@@ -83,6 +87,7 @@ namespace MockWebApi.Tests.UnitTests
 
             // Assert
             Assert.False(result);
+            Assert.Null(routeMatch);
         }
 
     }

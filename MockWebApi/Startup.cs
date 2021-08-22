@@ -69,6 +69,7 @@ namespace MockWebApi
 
             app.UseMiddleware<StoreRequestDataMiddleware>();
             app.UseMiddleware<LoggingMiddleware>();
+            app.UseMiddleware<DynamicRoutingMiddleware>();
 
             app.UseAuthorization();
 
