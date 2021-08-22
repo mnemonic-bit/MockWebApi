@@ -7,6 +7,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using MockWebApi.Data;
+using MockWebApi.Extension;
 using MockWebApi.Middleware;
 using MockWebApi.Model;
 using MockWebApi.Routing;
@@ -27,12 +28,12 @@ namespace MockWebApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSingleton<IRouteMatcher<EndpointDescription>>(new RouteGraphMatcher<EndpointDescription>());
             services.AddSingleton<IServerConfiguration>(new ServerConfiguration());
-
             services.AddSingleton<IDataStore>(new DataStore());
 
             services.AddControllers();
+
+            services.AddDynamicRouting();
 
             services.AddSwaggerGen(c =>
             {
@@ -69,7 +70,8 @@ namespace MockWebApi
 
             app.UseMiddleware<StoreRequestDataMiddleware>();
             app.UseMiddleware<LoggingMiddleware>();
-            app.UseMiddleware<DynamicRoutingMiddleware>();
+
+            app.UseDynamicRouting();
 
             app.UseAuthorization();
 

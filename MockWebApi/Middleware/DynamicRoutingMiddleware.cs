@@ -7,6 +7,11 @@ using System.Threading.Tasks;
 
 namespace MockWebApi.Middleware
 {
+    /// <summary>
+    /// This middleware enables dynamic changes to the routing of controllers
+    /// and their methods. To change routing behaviour, change the routes that
+    /// are configured in the IRouteMatcher.
+    /// </summary>
     public class DynamicRoutingMiddleware
     {
 
@@ -38,10 +43,16 @@ namespace MockWebApi.Middleware
 
             if (_routeMatcher.TryMatch(fullRequestPath, out RouteMatch<EndpointDescription> routeMatch))
             {
-
+                InvokeHandler(routeMatch);
             }
 
             await _nextDelegate(context);
+        }
+
+        private void InvokeHandler(RouteMatch<EndpointDescription> routeMatch)
+        {
+            // TODO: implement invocation of a controller method. Possibly the
+            // EndpointDescription has to be changed for that, too.
         }
 
     }
