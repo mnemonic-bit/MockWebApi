@@ -372,6 +372,8 @@ namespace MockWebApi.Routing
             if (graph.Literals.TryGetValue(literalPart, out ICollection<LiteralPartCandidate> nodes))
             {
                 matchCandidates = new HashSet<MatchCandidate>(nodes.Select(candidate => new MatchCandidate(candidate)));
+                // TODO: possibly a mistake to return here. Are there graph nodes
+                // that contain both, Literals and Variables?
                 return true;
             }
 

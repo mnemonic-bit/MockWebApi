@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace MockWebApi.Data
 {
-    public interface IServerConfiguration
+    public interface IConfigurationCollection
     {
 
         string this[string index] { get; set; }
