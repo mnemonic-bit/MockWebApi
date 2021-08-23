@@ -4,15 +4,14 @@ using System.Linq;
 
 namespace MockWebApi.Data
 {
-    public class ServerConfiguration : IServerConfiguration
+    public class ConfigurationCollection : IConfigurationCollection
     {
 
         private readonly Dictionary<string, string> _config;
 
-        public ServerConfiguration()
+        public ConfigurationCollection()
         {
             _config = new Dictionary<string, string>();
-            InitServerConfiguration();
         }
 
         public string this[string index]
@@ -61,14 +60,7 @@ namespace MockWebApi.Data
             return result;
         }
 
-        private void InitServerConfiguration()
-        {
-            Set(Parameters.TrackServiceApiCalls, false);
-            Set(Parameters.LogServiceApiCalls, false);
-            Set(Parameters.DefaultHttpStatusCode, 200);
-            Set(Parameters.DefaultContentType, "text/plain");
-        }
-
+        //TODO: move the definitions out of this class
         public static class Parameters
         {
             public static readonly string DefaultHttpStatusCode = "DefaultHttpStatusCode";

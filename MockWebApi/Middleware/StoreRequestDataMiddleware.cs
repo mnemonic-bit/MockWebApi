@@ -17,7 +17,7 @@ namespace MockWebApi.Middleware
 
         private readonly RequestDelegate _nextDelegate;
 
-        private readonly IServerConfiguration _serverConfig;
+        private readonly IConfigurationCollection _serverConfig;
 
         private readonly IDataStore _dataStore;
 
@@ -27,7 +27,7 @@ namespace MockWebApi.Middleware
 
         public StoreRequestDataMiddleware(
             RequestDelegate next,
-            IServerConfiguration serverConfig,
+            IConfigurationCollection serverConfig,
             IDataStore dataStore,
             IRouteMatcher<EndpointDescription> routeMatcher,
             ILogger<StoreRequestDataMiddleware> logger)
@@ -59,7 +59,7 @@ namespace MockWebApi.Middleware
 
         private bool RequestShouldNotBeStored(HttpRequest request)
         {
-            bool trackServiceApiCalls = _serverConfig.Get<bool>(ServerConfiguration.Parameters.TrackServiceApiCalls);
+            bool trackServiceApiCalls = _serverConfig.Get<bool>(ConfigurationCollection.Parameters.TrackServiceApiCalls);
             bool startsWithServiceApi = request.Path.StartsWithSegments("/service-api");
             bool routeOptOut = _routeMatcher.TryMatch(request.Path, out RouteMatch<EndpointDescription> routeMatch) && !routeMatch.RouteInformation.PersistRequestInformation;
 

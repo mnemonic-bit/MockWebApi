@@ -17,13 +17,13 @@ namespace MockWebApi.Controller
 
         private readonly ILogger<ServiceApiController> _logger;
 
-        private readonly IServerConfiguration _serverConfig;
+        private readonly IConfigurationCollection _serverConfig;
 
         private readonly IRouteMatcher<EndpointDescription> _routeMatcher;
 
         public MockWebApiController(
             ILogger<ServiceApiController> logger,
-            IServerConfiguration serverConfig,
+            IConfigurationCollection serverConfig,
             IRouteMatcher<EndpointDescription> routeMatcher)
         {
             _logger = logger;
@@ -35,7 +35,7 @@ namespace MockWebApi.Controller
         {
             if (!_routeMatcher.TryMatch(Request.Path, out RouteMatch<EndpointDescription> routeMatch))
             {
-                int defaultStatusCode = _serverConfig.Get<int>(ServerConfiguration.Parameters.DefaultHttpStatusCode);
+                int defaultStatusCode = _serverConfig.Get<int>(ConfigurationCollection.Parameters.DefaultHttpStatusCode);
                 HttpContext.Items.Add(MiddlewareConstants.MockWebApiHttpResponse, new HttpResult() { StatusCode = (HttpStatusCode)defaultStatusCode });
                 Response.StatusCode = defaultStatusCode;
                 return;
@@ -56,8 +56,8 @@ namespace MockWebApi.Controller
                 return;
             }
 
-            HttpContext.Response.StatusCode = (int?)response?.StatusCode ?? _serverConfig.Get<int>(ServerConfiguration.Parameters.DefaultHttpStatusCode);
-            HttpContext.Response.ContentType = response.ContentType ?? _serverConfig.Get<string>(ServerConfiguration.Parameters.DefaultContentType);
+            HttpContext.Response.StatusCode = (int?)response?.StatusCode ?? _serverConfig.Get<int>(ConfigurationCollection.Parameters.DefaultHttpStatusCode);
+            HttpContext.Response.ContentType = response.ContentType ?? _serverConfig.Get<string>(ConfigurationCollection.Parameters.DefaultContentType);
 
             string body = response.Body;
             if (body != null)

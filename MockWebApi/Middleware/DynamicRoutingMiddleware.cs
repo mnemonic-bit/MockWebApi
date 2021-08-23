@@ -17,7 +17,7 @@ namespace MockWebApi.Middleware
 
         private readonly RequestDelegate _nextDelegate;
 
-        private readonly IServerConfiguration _serverConfig;
+        private readonly IConfigurationCollection _serverConfig;
 
         private readonly IRouteMatcher<EndpointDescription> _routeMatcher;
 
@@ -25,7 +25,7 @@ namespace MockWebApi.Middleware
 
         public DynamicRoutingMiddleware(
             RequestDelegate next,
-            IServerConfiguration serverConfig,
+            IConfigurationCollection serverConfig,
             IRouteMatcher<EndpointDescription> routeMatcher,
             ILogger<StoreRequestDataMiddleware> logger)
         {

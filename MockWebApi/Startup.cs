@@ -1,17 +1,14 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using MockWebApi.Configuration;
 using MockWebApi.Data;
 using MockWebApi.Extension;
 using MockWebApi.Middleware;
-using MockWebApi.Model;
-using MockWebApi.Routing;
-using System;
 
 namespace MockWebApi
 {
@@ -28,11 +25,13 @@ namespace MockWebApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSingleton<IServerConfiguration>(new ServerConfiguration());
+            services.AddSingleton<IConfigurationCollection>(new ConfigurationCollection());
             services.AddSingleton<IDataStore>(new DataStore());
 
-            services.AddControllers();
+            services.AddTransient<IConfigurationReader, ConfigurationReader>();
+            services.AddTransient<IConfigurationWriter, ConfigurationWriter>();
 
+            services.AddControllers();
             services.AddDynamicRouting();
 
             services.AddSwaggerGen(c =>
@@ -51,22 +50,7 @@ namespace MockWebApi
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "MockWebApi v1"));
             }
 
-            app.Use(next => context =>
-            {
-                logger.LogDebug($"Endpoint before UserRouting(): {context.GetEndpoint()?.DisplayName ?? "(null)"}");
-                return next(context);
-            });
-
-            // we don't use this
-            //app.UseHttpsRedirection();
-
             app.UseRouting();
-
-            app.Use(next => context =>
-            {
-                logger.LogDebug($"Endpoint after UseRouting(): {context.GetEndpoint()?.DisplayName ?? "(null)"}");
-                return next(context);
-            });
 
             app.UseMiddleware<StoreRequestDataMiddleware>();
             app.UseMiddleware<LoggingMiddleware>();
@@ -75,13 +59,8 @@ namespace MockWebApi
 
             app.UseAuthorization();
 
-            // to debug an api-call, just add a break-point here:
-            //app.Use(async (context, next) =>
-            //{
-            //    var endPoint = context.GetEndpoint();
-            //    var routes = context.Request.RouteValues;
-            //    await next();
-            //});
+            string configurationFileName = Configuration.GetValue<string>("ServiceConfigurationFileName", "MockWebApiConfiguration.yml");
+            app.LoadServiceConfiguration(configurationFileName, false);
 
             app.UseEndpoints(endpoints =>
             {

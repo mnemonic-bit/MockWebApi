@@ -12,7 +12,7 @@ namespace MockWebApi.Middleware
 
         private readonly RequestDelegate _nextDelegate;
 
-        private readonly IServerConfiguration _serverConfig;
+        private readonly IConfigurationCollection _serverConfig;
 
         private readonly IRouteMatcher<EndpointDescription> _routeMatcher;
 
@@ -20,7 +20,7 @@ namespace MockWebApi.Middleware
 
         public LoggingMiddleware(
             RequestDelegate next,
-            IServerConfiguration serverConfig,
+            IConfigurationCollection serverConfig,
             IRouteMatcher<EndpointDescription> routeMatcher,
             ILogger<StoreRequestDataMiddleware> logger)
         {
@@ -49,7 +49,7 @@ namespace MockWebApi.Middleware
 
         private bool RequestShouldBeLogged(HttpRequest request)
         {
-            bool logServiceApiCalls = _serverConfig.Get<bool>(ServerConfiguration.Parameters.LogServiceApiCalls);
+            bool logServiceApiCalls = _serverConfig.Get<bool>(ConfigurationCollection.Parameters.LogServiceApiCalls);
             bool startsWithServiceApi = request.Path.StartsWithSegments("/service-api");
             bool customRouteExists = _routeMatcher.TryMatch(request.Path, out RouteMatch<EndpointDescription> routeMatch);
             bool routeLogRule = customRouteExists && routeMatch.RouteInformation.LogRequestInformation || !customRouteExists;
