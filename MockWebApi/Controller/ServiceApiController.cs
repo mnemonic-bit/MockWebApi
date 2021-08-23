@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using MockWebApi.Configuration;
 using MockWebApi.Data;
 using MockWebApi.Extension;
 using MockWebApi.Model;
 using MockWebApi.Routing;
+using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -19,22 +21,26 @@ namespace MockWebApi.Controller
 
         private readonly ILogger<ServiceApiController> _logger;
 
-        private readonly IServerConfiguration _serverConfig;
+        private readonly IConfigurationCollection _serverConfig;
 
         private readonly IDataStore _dataStore;
 
         private readonly IRouteMatcher<EndpointDescription> _routeMatcher;
 
+        private readonly IConfigurationWriter _configurationWriter;
+
         public ServiceApiController(
             ILogger<ServiceApiController> logger,
-            IServerConfiguration serverConfig,
+            IConfigurationCollection serverConfig,
             IDataStore dataStore,
-            IRouteMatcher<EndpointDescription> routeMatcher)
+            IRouteMatcher<EndpointDescription> routeMatcher,
+            IConfigurationWriter configurationWriter)
         {
             _logger = logger;
             _serverConfig = serverConfig;
             _dataStore = dataStore;
             _routeMatcher = routeMatcher;
+            _configurationWriter = configurationWriter;
         }
 
         [HttpGet("request/{id?}")]
@@ -87,12 +93,12 @@ namespace MockWebApi.Controller
         }
 
         [HttpGet("configure/route")]
-        public IActionResult GetRoutes()
+        public IActionResult GetRoutes([FromQuery] string outputFormat = "YAML")
         {
-            EndpointDescription[] endpointConfigs = _routeMatcher.GetAllRoutes().ToArray();
-            string endpointConfigsAsYaml = SerializeToYaml(endpointConfigs);
+            ServiceConfiguration serviceConfiguration = _configurationWriter.GetServiceConfiguration();
+            string endpointConfigsAsString = _configurationWriter.WriteConfiguration(serviceConfiguration, outputFormat);
 
-            return Ok(endpointConfigsAsYaml);
+            return Ok(endpointConfigsAsString);
         }
 
         [HttpPost("configure/route")]
