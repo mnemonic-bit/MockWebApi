@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using MockWebApi.Data;
 using MockWebApi.Middleware;
@@ -33,15 +34,21 @@ namespace MockWebApi.Controller
 
         public async Task MockResults()
         {
+            RequestInformation requestInformation = GetRequestInformation(HttpContext);
+
             if (!_routeMatcher.TryMatch($"{Request.Path}{Request.QueryString}", out RouteMatch<EndpointDescription> routeMatch))
             {
                 int defaultStatusCode = _serverConfig.Get<int>(ConfigurationCollection.Parameters.DefaultHttpStatusCode);
+                requestInformation.PathMatchedRoute = false;
                 HttpContext.Items.Add(MiddlewareConstants.MockWebApiHttpResponse, new HttpResult() { StatusCode = (HttpStatusCode)defaultStatusCode });
                 Response.StatusCode = defaultStatusCode;
                 return;
             }
 
+            requestInformation.PathMatchedRoute = true;
+
             HttpResult response = routeMatch.RouteInformation.Results.FirstOrDefault();
+            response.IsMockedResult = true;
             HttpContext.Items.Add(MiddlewareConstants.MockWebApiHttpResponse, response);
 
             await FillResponse(response);
@@ -73,6 +80,13 @@ namespace MockWebApi.Controller
             {
                 _routeMatcher.Remove(routeMatch.RouteInformation.Route);
             }
+        }
+
+        private RequestInformation GetRequestInformation(HttpContext context)
+        {
+            HttpContext.Items.TryGetValue(MiddlewareConstants.MockWebApiHttpRequestInfomation, out object contextItem);
+            RequestInformation requestInformation = contextItem as RequestInformation;
+            return requestInformation;
         }
 
     }

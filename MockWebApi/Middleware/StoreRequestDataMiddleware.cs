@@ -73,6 +73,7 @@ namespace MockWebApi.Middleware
             {
                 Path = request.Path,
                 Uri = request.GetDisplayUrl(),
+                Scheme = request.Scheme,
                 HttpVerb = request.Method,
                 ContentType = request.ContentType,
                 Cookies = new Dictionary<string, string>(request.Cookies),

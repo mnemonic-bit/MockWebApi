@@ -13,6 +13,10 @@ namespace MockWebApi.Model
 
         public string Uri { get; set; }
 
+        public bool PathMatchedRoute { get; set; }
+
+        public string Scheme { get; set; }
+
         public string HttpVerb { get; set; }
 
         public DateTime Date { get; set; }

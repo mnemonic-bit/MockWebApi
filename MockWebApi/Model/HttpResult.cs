@@ -11,6 +11,8 @@ namespace MockWebApi.Model
 
         public HttpStatusCode StatusCode { get; set; }
 
+        public bool IsMockedResult { get; set; }
+
         public string Body { get; set; }
 
         public string ContentType { get; set; }
