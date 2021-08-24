@@ -19,7 +19,7 @@ namespace MockWebApi.Middleware
 
         private readonly IConfigurationCollection _serverConfig;
 
-        private readonly IDataStore _dataStore;
+        private readonly IRequestHistory _dataStore;
 
         private readonly IRouteMatcher<EndpointDescription> _routeMatcher;
 
@@ -28,7 +28,7 @@ namespace MockWebApi.Middleware
         public StoreRequestDataMiddleware(
             RequestDelegate next,
             IConfigurationCollection serverConfig,
-            IDataStore dataStore,
+            IRequestHistory dataStore,
             IRouteMatcher<EndpointDescription> routeMatcher,
             ILogger<StoreRequestDataMiddleware> logger)
         {
@@ -52,9 +52,10 @@ namespace MockWebApi.Middleware
                 return;
             }
 
-            _dataStore.Store(requestInfos);
-
             await _nextDelegate(context);
+
+            HttpResult httpResult = GetHttpResultFromContext(context);
+            StoreRequestAndResponse(requestInfos, httpResult);
         }
 
         private bool RequestShouldNotBeStored(HttpRequest request)
@@ -85,6 +86,29 @@ namespace MockWebApi.Middleware
             requestInfos.Body = requestBody;
 
             return requestInfos;
+        }
+
+        private HttpResult GetHttpResultFromContext(HttpContext context)
+        {
+            if (!context.Items.TryGetValue(MiddlewareConstants.MockWebApiHttpResponse, out object response))
+            {
+                return null;
+            }
+
+            HttpResult httpResult = response as HttpResult;
+
+            return httpResult;
+        }
+
+        private void StoreRequestAndResponse(RequestInformation request, HttpResult response)
+        {
+            RequestHistoryItem reuqestHistoryItem = new RequestHistoryItem()
+            {
+                Request = request,
+                Response = response
+            };
+
+            _dataStore.Store(reuqestHistoryItem);
         }
 
     }
