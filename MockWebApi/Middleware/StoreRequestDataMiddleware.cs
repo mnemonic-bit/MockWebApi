@@ -84,8 +84,6 @@ namespace MockWebApi.Middleware
             requestBody = requestBody.Replace("\r\n", "\n");
             requestInfos.Body = requestBody;
 
-            _dataStore.Store(requestInfos);
-
             return requestInfos;
         }
 
