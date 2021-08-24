@@ -36,6 +36,8 @@ namespace MockWebApi.Controller
         {
             RequestInformation requestInformation = GetRequestInformation(HttpContext);
 
+            _logger.LogInformation($"match-key: {Request.Path}{Request.QueryString}");
+
             if (!_routeMatcher.TryMatch($"{Request.Path}{Request.QueryString}", out RouteMatch<EndpointDescription> routeMatch))
             {
                 int defaultStatusCode = _serverConfig.Get<int>(ConfigurationCollection.Parameters.DefaultHttpStatusCode);
