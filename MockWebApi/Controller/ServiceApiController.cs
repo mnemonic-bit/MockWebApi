@@ -23,7 +23,7 @@ namespace MockWebApi.Controller
 
         private readonly IConfigurationCollection _serverConfig;
 
-        private readonly IDataStore _dataStore;
+        private readonly IRequestHistory _dataStore;
 
         private readonly IRouteMatcher<EndpointDescription> _routeMatcher;
 
@@ -32,7 +32,7 @@ namespace MockWebApi.Controller
         public ServiceApiController(
             ILogger<ServiceApiController> logger,
             IConfigurationCollection serverConfig,
-            IDataStore dataStore,
+            IRequestHistory dataStore,
             IRouteMatcher<EndpointDescription> routeMatcher,
             IConfigurationWriter configurationWriter)
         {
@@ -142,14 +142,14 @@ namespace MockWebApi.Controller
 
         private string GetAllInformation(int? count)
         {
-            RequestInformation[] allInfos = _dataStore.GetAllInformation(count);
+            RequestHistoryItem[] allInfos = _dataStore.GetAllInformation(count);
             string result = SerializeToYaml(allInfos);
             return result;
         }
 
         private string GetInformation(string id)
         {
-            RequestInformation infos = _dataStore.GetInformation(id);
+            RequestHistoryItem infos = _dataStore.GetInformation(id);
             string result = SerializeToYaml(infos);
             return result;
         }

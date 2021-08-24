@@ -26,7 +26,7 @@ namespace MockWebApi
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton<IConfigurationCollection>(new ConfigurationCollection());
-            services.AddSingleton<IDataStore>(new DataStore());
+            services.AddSingleton<IRequestHistory>(new RequestHistory());
 
             services.AddTransient<IConfigurationReader, ConfigurationReader>();
             services.AddTransient<IConfigurationWriter, ConfigurationWriter>();
