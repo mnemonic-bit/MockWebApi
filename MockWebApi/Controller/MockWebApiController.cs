@@ -33,7 +33,7 @@ namespace MockWebApi.Controller
 
         public async Task MockResults()
         {
-            if (!_routeMatcher.TryMatch(Request.Path, out RouteMatch<EndpointDescription> routeMatch))
+            if (!_routeMatcher.TryMatch($"{Request.Path}{Request.QueryString}", out RouteMatch<EndpointDescription> routeMatch))
             {
                 int defaultStatusCode = _serverConfig.Get<int>(ConfigurationCollection.Parameters.DefaultHttpStatusCode);
                 HttpContext.Items.Add(MiddlewareConstants.MockWebApiHttpResponse, new HttpResult() { StatusCode = (HttpStatusCode)defaultStatusCode });
