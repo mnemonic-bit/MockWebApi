@@ -1,6 +1,6 @@
 
 
-$DockerRepoUrl = "www.dockerhub.com"
+$DockerRepoUrl = "mnemonicbit"
 $ProjectName = "MockWebApi"
 $ProjectFileName = ".\$ProjectName\$ProjectName.csproj"
 

@@ -14,8 +14,8 @@ namespace MockWebApi.Extension
                 return null;
             }
 
-            //services.AddSingleton<IRouteMatcher<EndpointDescription>>(new RouteGraphMatcher<EndpointDescription>());
-            services.AddSingleton<IRouteMatcher<EndpointDescription>>(new SimpleRouteMatcher<EndpointDescription>());
+            services.AddSingleton(typeof(IRouteMatcher<EndpointDescription>), typeof(RouteGraphMatcher<EndpointDescription>));
+            //services.AddSingleton(typeof(IRouteMatcher<EndpointDescription>), typeof(SimpleRouteMatcher<EndpointDescription>));
 
             return services;
         }

@@ -39,6 +39,8 @@ namespace MockWebApi.Tests.UnitTests
         [InlineData(new string[] { "/some/{variable}/path", "/some/different/path" }, "/some/static/path")]
         [InlineData(new string[] { "/some/specific/path", "/some/speficic/path/detail" }, "/some/specific/path")]
         [InlineData(new string[] { "/some/specific/path", "/some/speficic/path/detail" }, "/some/speficic/path/detail")]
+        [InlineData(new string[] { "/some/specific/path?emptyParam=&paramWithValue=ABC", "/some/specific/path?emptyParam=&paramWithValue=XYZ" }, "/some/specific/path?emptyParam=&paramWithValue=ABC")]
+        [InlineData(new string[] { "/some/specific/path?emptyParam=&paramWithValue=ABC", "/some/specific/path?emptyParam=&paramWithValue={var}" }, "/some/specific/path?emptyParam=&paramWithValue=A")]
         public void TryMatch_ShouldFindMatch(string[] pathTemplates, string path)
         {
             // Arrange

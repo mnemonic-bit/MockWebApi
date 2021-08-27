@@ -75,17 +75,10 @@ namespace MockWebApi.Routing
                     throw new ArgumentException($"Given path contains variable definitions, wich is not allowed when matching (offending path='{path}')");
                 }
 
-                if (!TryMatch(parsedRoute.Parts, out routeMatch))
+                if (!TryMatchRoute(parsedRoute, out routeMatch))
                 {
                     return false;
                 }
-
-                if (!TryMatchParameters(parsedRoute, routeMatch.Parameters, out IDictionary<string, string> variablesFromParameters))
-                {
-                    return false;
-                }
-
-                routeMatch.Variables.AddAll(variablesFromParameters);
 
                 return true;
             }
@@ -207,7 +200,7 @@ namespace MockWebApi.Routing
             return graph.VariableNode;
         }
 
-        private bool TryMatch(IEnumerable<Route.Part> parts, out RouteMatch<TInfo> match)
+        private bool TryMatchRoute(Route route, out RouteMatch<TInfo> match)
         {
             match = default;
 
@@ -218,9 +211,15 @@ namespace MockWebApi.Routing
                 IsSpecific = true
             });
 
+            IEnumerable<Route.Part> parts = route.Parts;
             ICollection<MatchCandidate> candidates = parts.Aggregate(initialCandidates, TryMatchAggregate);
 
             if (candidates == null || candidates.Count() == 0)
+            {
+                return false;
+            }
+
+            if (!TryMatchParameters(route, candidates, out candidates))
             {
                 return false;
             }
@@ -241,7 +240,6 @@ namespace MockWebApi.Routing
         private bool TryGetFixedCandidate(ICollection<MatchCandidate> candidates, out RouteMatch<TInfo> match)
         {
             return TryFilterCandidate(candidates, c => c.IsSpecific, out match);
-
         }
 
         private bool TryGetVariableCandidate(ICollection<MatchCandidate> candidates, out RouteMatch<TInfo> match)
@@ -261,9 +259,14 @@ namespace MockWebApi.Routing
             }
 
             MatchCandidate candidate = filteredCandidates.Single();
-            match = new RouteMatch<TInfo>(candidate.Info, candidate.Variables, candidate.NextNode.Parameters);
+            match = ConvertToRouteMatch(candidate);
 
             return true;
+        }
+
+        private RouteMatch<TInfo> ConvertToRouteMatch(MatchCandidate candidate)
+        {
+            return new RouteMatch<TInfo>(candidate.Info, candidate.Variables, candidate.NextNode.Parameters);
         }
 
         /// <summary>
@@ -399,13 +402,33 @@ namespace MockWebApi.Routing
             return true;
         }
 
+        private bool TryMatchParameters(Route route, ICollection<MatchCandidate> currentCandidates, out ICollection<MatchCandidate> candidates)
+        {
+            candidates = currentCandidates
+                .Select(candidate =>
+                {
+                    if (!TryMatchParameters(route, candidate.NextNode.Parameters, out IDictionary<string, string> variablesFromParameters))
+                    {
+                        return null;
+                    }
+
+                    candidate.Variables.AddAll(variablesFromParameters);
+
+                    return candidate;
+                })
+                .Where(candidates => candidates != null)
+                .ToList();
+
+            return true;
+        }
+
         private bool TryMatchParameters(Route route, IDictionary<string, string> parameters, out IDictionary<string, string> matchedParameters)
         {
             matchedParameters = new Dictionary<string, string>();
 
             foreach (var param in parameters)
             {
-                if (!TryMatchParameter(param.Key, param.Value, route.Parameters, out KeyValuePair<string,string>? matchedParameter))
+                if (!TryMatchSingleParameter(param.Key, param.Value, route.Parameters, out KeyValuePair<string,string>? matchedParameter))
                 {
                     return false;
                 }
@@ -419,7 +442,7 @@ namespace MockWebApi.Routing
             return true;
         }
 
-        private bool TryMatchParameter(string variableName, string variableValue, IDictionary<string, string> parameters, out KeyValuePair<string, string>? matchedParameter)
+        private bool TryMatchSingleParameter(string variableName, string variableValue, IDictionary<string, string> parameters, out KeyValuePair<string, string>? matchedParameter)
         {
             matchedParameter = null;
 

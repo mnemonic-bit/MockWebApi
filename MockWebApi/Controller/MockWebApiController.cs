@@ -36,11 +36,9 @@ namespace MockWebApi.Controller
         {
             RequestInformation requestInformation = GetRequestInformation(HttpContext);
 
-            _logger.LogInformation($"match-key: {Request.Path}{Request.QueryString}");
-
             if (!_routeMatcher.TryMatch($"{Request.Path}{Request.QueryString}", out RouteMatch<EndpointDescription> routeMatch))
             {
-                requestInformation.PathMatchedRoute = false;
+                requestInformation.PathMatchedTemplate = false;
 
                 int defaultStatusCode = _serverConfig.Get<int>(ConfigurationCollection.Parameters.DefaultHttpStatusCode);
                 HttpContext.Items.Add(MiddlewareConstants.MockWebApiHttpResponse, new HttpResult() { StatusCode = (HttpStatusCode)defaultStatusCode });
@@ -49,7 +47,7 @@ namespace MockWebApi.Controller
                 return;
             }
 
-            requestInformation.PathMatchedRoute = true;
+            requestInformation.PathMatchedTemplate = true;
 
             HttpResult response = routeMatch.RouteInformation.Results.FirstOrDefault();
             response.IsMockedResult = true;
