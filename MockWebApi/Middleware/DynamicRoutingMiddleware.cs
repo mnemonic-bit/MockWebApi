@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using MockWebApi.Configuration.Model;
 using MockWebApi.Data;
-using MockWebApi.Model;
 using MockWebApi.Routing;
 using System.Threading.Tasks;
 

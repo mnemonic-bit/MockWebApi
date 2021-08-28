@@ -91,7 +91,7 @@ namespace MockWebApi.Middleware
 
         private static int? CalculateValue(Operation op, int op1, int op2)
         {
-            if(!OperationMethods.TryGetValue(op, out Func<int, int, int> operationFn))
+            if (!OperationMethods.TryGetValue(op, out Func<int, int, int> operationFn))
             {
                 throw new InvalidOperationException($"The operator '{op}' is not implemented. Please fix this class.");
             }

@@ -1,5 +1,7 @@
 ﻿using MockWebApi.Client.Model;
 using MockWebApi.Client.RestEase;
+using MockWebApi.Configuration;
+using MockWebApi.Configuration.Model;
 using RestEase;
 using System;
 using System.IO;
@@ -16,6 +18,35 @@ namespace MockWebApi.Client
         public MockWebApi(Uri uri)
         {
             _webApi = RestClient.For<IMockWebApiClient>(uri);
+        }
+
+        /// <summary>
+        /// Configures all aspects which are given in the configuration file
+        /// on the server.
+        /// </summary>
+        /// <returns></returns>
+        public Task<bool> ConfigureServer(string fileName)
+        {
+            IConfigurationReader configrationReader = new ConfigurationReader();
+            ServiceConfiguration serviceConfiguration = configrationReader.ReadConfiguration(fileName);
+
+            return ConfigureServer(serviceConfiguration);
+        }
+
+        public async Task<bool> ConfigureServer(ServiceConfiguration serviceConfiguration)
+        {
+            bool overallSuccess = await Configure(
+                defaultHttpStatusCode: serviceConfiguration.DefaultHttpStatusCode,
+                defaultContentType: serviceConfiguration.DefaultContentType,
+                trackServiceApiCalls: serviceConfiguration.TrackServiceApiCalls,
+                logServiceApiCalls: serviceConfiguration.LogServiceApiCalls);
+
+            foreach (EndpointDescription endpointDescription in serviceConfiguration.EndpointDescriptions)
+            {
+                overallSuccess &= await ConfigureRoute(endpointDescription);
+            }
+
+            return overallSuccess;
         }
 
         public async Task<bool> Configure(int? defaultHttpStatusCode = null, string defaultContentType = null, bool? trackServiceApiCalls = null, bool? logServiceApiCalls = null)
@@ -51,7 +82,7 @@ namespace MockWebApi.Client
             return responseBody;
         }
 
-        public async Task<EndpointConfiguration[]> GetRoutes()
+        public async Task<EndpointDescription[]> GetRoutes()
         {
             Response<string> response = await _webApi.GetRoutes();
 
@@ -61,12 +92,12 @@ namespace MockWebApi.Client
             }
 
             string responseBody = response.StringContent;
-            EndpointConfiguration[] endpointConfigurations = DeserializeYaml<EndpointConfiguration[]>(responseBody);
+            EndpointDescription[] endpointConfigurations = DeserializeYaml<EndpointDescription[]>(responseBody);
 
             return endpointConfigurations;
         }
 
-        public async Task<bool> ConfigureRoute(EndpointConfiguration endpointConfiguration)
+        public async Task<bool> ConfigureRoute(EndpointDescription endpointConfiguration)
         {
             string configAsYaml = SerializeToYaml(endpointConfiguration);
             Response<string> response = await _webApi.ConfigureRoute(configAsYaml);

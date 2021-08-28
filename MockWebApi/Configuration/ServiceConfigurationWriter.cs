@@ -1,23 +1,23 @@
-﻿using MockWebApi.Data;
-using MockWebApi.Model;
+﻿using MockWebApi.Configuration.Model;
+using MockWebApi.Data;
 using MockWebApi.Routing;
-using Newtonsoft.Json;
-using System.IO;
 using System.Linq;
-using YamlDotNet.Serialization;
 
 namespace MockWebApi.Configuration
 {
-    public class ConfigurationWriter : IConfigurationWriter
+    public class ServiceConfigurationWriter : IServiceConfigurationWriter
     {
 
+        private readonly IConfigurationWriter _configurationWriter;
         private readonly IConfigurationCollection _serviceConfiguration;
         private readonly IRouteMatcher<EndpointDescription> _routeMatcher;
 
-        public ConfigurationWriter(
+        public ServiceConfigurationWriter(
+            IConfigurationWriter configurationWriter,
             IConfigurationCollection serviceConfiguration,
             IRouteMatcher<EndpointDescription> routeMatcher)
         {
+            _configurationWriter = configurationWriter;
             _serviceConfiguration = serviceConfiguration;
             _routeMatcher = routeMatcher;
         }
@@ -28,7 +28,7 @@ namespace MockWebApi.Configuration
             {
                 case "JSON":
                     {
-                        return WriteToJson(serviceConfiguration);
+                        return _configurationWriter.WriteToJson(serviceConfiguration);
                     }
                 case "CS":
                     {
@@ -37,19 +37,9 @@ namespace MockWebApi.Configuration
                 case "YAML":
                 default:
                     {
-                        return WriteToYaml(serviceConfiguration);
+                        return _configurationWriter.WriteToYaml(serviceConfiguration);
                     }
             }
-        }
-
-        public string WriteToJson(ServiceConfiguration serviceConfiguration)
-        {
-            return SerializeToJson(serviceConfiguration);
-        }
-
-        public string WriteToYaml(ServiceConfiguration serviceConfiguration)
-        {
-            return SerializeToYaml(serviceConfiguration);
         }
 
         public ServiceConfiguration GetServiceConfiguration()
@@ -66,20 +56,6 @@ namespace MockWebApi.Configuration
             };
 
             return serviceConfiguration;
-        }
-
-        private string SerializeToJson<TObject>(TObject value)
-        {
-            string result = JsonConvert.SerializeObject(value, Formatting.Indented);
-            return result;
-        }
-
-        private string SerializeToYaml<TObject>(TObject value)
-        {
-            StringWriter stringWriter = new StringWriter();
-            Serializer serializer = new Serializer();
-            serializer.Serialize(stringWriter, value);
-            return stringWriter.ToString();
         }
 
     }

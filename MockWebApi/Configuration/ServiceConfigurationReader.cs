@@ -1,35 +1,21 @@
-﻿using MockWebApi.Data;
-using MockWebApi.Model;
+﻿using MockWebApi.Configuration.Model;
+using MockWebApi.Data;
 using MockWebApi.Routing;
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
 
 namespace MockWebApi.Configuration
 {
-    public class ConfigurationReader : IConfigurationReader
+    public class ServiceConfigurationReader : IServiceConfigurationReader
     {
 
         private readonly IConfigurationCollection _serviceConfiguration;
         private readonly IRouteMatcher<EndpointDescription> _routeMatcher;
 
-        public ConfigurationReader(
+        public ServiceConfigurationReader(
             IConfigurationCollection serviceConfiguration,
             IRouteMatcher<EndpointDescription> routeMatcher)
         {
             _serviceConfiguration = serviceConfiguration;
             _routeMatcher = routeMatcher;
-        }
-
-        public ServiceConfiguration ReadFromJson(string text)
-        {
-            ServiceConfiguration configuration = DeserializeJson<ServiceConfiguration>(text);
-            return configuration;
-        }
-
-        public ServiceConfiguration ReadFromYaml(string text)
-        {
-            ServiceConfiguration config = DeserializeYaml<ServiceConfiguration>(text);
-            return config;
         }
 
         public void ConfigureService(ServiceConfiguration configuration)
@@ -48,21 +34,6 @@ namespace MockWebApi.Configuration
             {
                 _routeMatcher.AddRoute(endpoint.Route, endpoint);
             }
-        }
-
-        private T DeserializeYaml<T>(string yamlText)
-        {
-            IDeserializer deserializer = new DeserializerBuilder()
-                //.WithNamingConvention(CamelCaseNamingConvention.Instance)
-                .Build();
-
-            return deserializer.Deserialize<T>(yamlText);
-        }
-
-        private T DeserializeJson<T>(string jsonText)
-        {
-            T result = JsonConvert.DeserializeObject<T>(jsonText);
-            return result;
         }
 
     }

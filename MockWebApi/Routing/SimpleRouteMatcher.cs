@@ -37,6 +37,11 @@ namespace MockWebApi.Routing
             return _routes.Remove(routeTemplate);
         }
 
+        public void RemoveAll()
+        {
+            _routes.Clear();
+        }
+
         public bool TryMatch(string path, out RouteMatch<TInfo> routeMatch)
         {
             routeMatch = default;

@@ -55,7 +55,7 @@ namespace MockWebApi.Data
         {
             IEnumerable<string> configItems = _config.Select(item => $"{item.Key}: {item.Value}");
 
-            string result = string.Join("\n",configItems);
+            string result = string.Join("\n", configItems);
 
             return result;
         }

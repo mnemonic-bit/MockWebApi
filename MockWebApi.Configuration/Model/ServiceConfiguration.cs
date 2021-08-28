@@ -1,16 +1,10 @@
-﻿using MockWebApi.Model;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace MockWebApi.Configuration
+﻿namespace MockWebApi.Configuration.Model
 {
     /// <summary>
     /// This class is used for reading and writing out the configuration
     /// of the MockWebApi.
     /// </summary>
-    public class ServiceConfiguration : IServiceConfiguration
+    public class ServiceConfiguration
     {
 
         public int? DefaultHttpStatusCode { get; set; }

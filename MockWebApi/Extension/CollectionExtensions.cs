@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace MockWebApi.Extension
 {
@@ -10,7 +7,7 @@ namespace MockWebApi.Extension
 
         public static ICollection<TElem> AddAll<TElem>(this ICollection<TElem> collection, IEnumerable<TElem> enumerable)
         {
-            foreach(TElem elem in enumerable)
+            foreach (TElem elem in enumerable)
             {
                 collection.Add(elem);
             }

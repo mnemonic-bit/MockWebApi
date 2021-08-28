@@ -1,10 +1,4 @@
-﻿using MockWebApi.Model;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace MockWebApi.Data
+﻿namespace MockWebApi.Data
 {
     public interface IRequestHistory
     {

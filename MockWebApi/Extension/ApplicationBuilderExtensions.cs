@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using MockWebApi.Configuration;
+using MockWebApi.Configuration.Model;
 using MockWebApi.Middleware;
 using System.IO;
 
@@ -23,19 +24,22 @@ namespace MockWebApi.Extension
 
         public static IApplicationBuilder LoadServiceConfiguration(this IApplicationBuilder app, string configFileName, bool required = true)
         {
-            IConfigurationReader configurationReader = app.ApplicationServices.GetService<IConfigurationReader>();
+            IServiceConfigurationReader serviceConfigurationReader = app.ApplicationServices.GetService<IServiceConfigurationReader>();
 
             if (!TryReadingFile(configFileName, out string configFileContents))
             {
                 if (!required)
                 {
-                    configurationReader.ConfigureService(new ServiceConfiguration());
+                    serviceConfigurationReader.ConfigureService(new ServiceConfiguration());
                 }
                 return required ? throw new FileNotFoundException($"Configuration file not found ('{configFileName}').") : app;
             }
 
+            IConfigurationReader configurationReader = app.ApplicationServices.GetService<IConfigurationReader>();
+
             ServiceConfiguration serviceConfiguration = configurationReader.ReadFromYaml(configFileContents);
-            configurationReader.ConfigureService(serviceConfiguration);
+
+            serviceConfigurationReader.ConfigureService(serviceConfiguration);
 
             return app;
         }

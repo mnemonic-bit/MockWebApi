@@ -1,4 +1,5 @@
-﻿using MockWebApi.Model;
+﻿using MockWebApi.Configuration.Model;
+using MockWebApi.Model;
 
 namespace MockWebApi.Data
 {

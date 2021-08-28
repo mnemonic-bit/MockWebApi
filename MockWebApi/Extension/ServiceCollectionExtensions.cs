@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using MockWebApi.Model;
+using MockWebApi.Configuration.Model;
 using MockWebApi.Routing;
 
 namespace MockWebApi.Extension
@@ -15,7 +15,6 @@ namespace MockWebApi.Extension
             }
 
             services.AddSingleton(typeof(IRouteMatcher<EndpointDescription>), typeof(RouteGraphMatcher<EndpointDescription>));
-            //services.AddSingleton(typeof(IRouteMatcher<EndpointDescription>), typeof(SimpleRouteMatcher<EndpointDescription>));
 
             return services;
         }

@@ -13,6 +13,8 @@ namespace MockWebApi.Routing
 
         bool Remove(string routeTemplate);
 
+        void RemoveAll();
+
         bool TryMatch(string path, out RouteMatch<TInfo> routeMatch);
 
     }

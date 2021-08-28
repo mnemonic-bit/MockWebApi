@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Net;
 
-namespace MockWebApi.Model
+namespace MockWebApi.Configuration.Model
 {
     public class HttpResult
     {

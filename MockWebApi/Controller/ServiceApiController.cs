@@ -1,11 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using MockWebApi.Configuration;
+using MockWebApi.Configuration.Model;
 using MockWebApi.Data;
 using MockWebApi.Extension;
-using MockWebApi.Model;
 using MockWebApi.Routing;
-using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -27,14 +26,14 @@ namespace MockWebApi.Controller
 
         private readonly IRouteMatcher<EndpointDescription> _routeMatcher;
 
-        private readonly IConfigurationWriter _configurationWriter;
+        private readonly IServiceConfigurationWriter _configurationWriter;
 
         public ServiceApiController(
             ILogger<ServiceApiController> logger,
             IConfigurationCollection serverConfig,
             IRequestHistory dataStore,
             IRouteMatcher<EndpointDescription> routeMatcher,
-            IConfigurationWriter configurationWriter)
+            IServiceConfigurationWriter configurationWriter)
         {
             _logger = logger;
             _serverConfig = serverConfig;
@@ -92,6 +91,15 @@ namespace MockWebApi.Controller
             return Ok();
         }
 
+        [HttpDelete("configure")]
+        public IActionResult ResetToDefault()
+        {
+            DeleteRoute(null);
+            _routeMatcher.RemoveAll();
+
+            return Ok();
+        }
+
         [HttpGet("configure/route")]
         public IActionResult GetRoutes([FromQuery] string outputFormat = "YAML")
         {
@@ -120,11 +128,12 @@ namespace MockWebApi.Controller
         }
 
         [HttpDelete("configure/route")]
-        public IActionResult DeleteConfig([FromQuery] string routeKey)
+        public IActionResult DeleteRoute([FromQuery] string routeKey)
         {
             if (string.IsNullOrEmpty(routeKey))
             {
-                return BadRequest($"To delete a route, a value for 'routeKey' must be passed as parameter.");
+                _routeMatcher.RemoveAll();
+                return Ok("All routes have been deleted.");
             }
 
             if (!_routeMatcher.Remove(routeKey))

@@ -1,11 +1,11 @@
-using MockWebApiClient = MockWebApi.Client.MockWebApi;
-using System;
-using Xunit;
-using MockWebApi.Client.Model;
-using System.Net;
-using System.Threading.Tasks;
-using System.Net.Http;
+using MockWebApi.Configuration.Model;
 using MockWebApi.Tests.TestUtils;
+using System;
+using System.Net;
+using System.Net.Http;
+using System.Threading.Tasks;
+using Xunit;
+using MockWebApiClient = MockWebApi.Client.MockWebApi;
 
 namespace MockWebApi.IntegrationTests.Tests
 {
@@ -19,7 +19,7 @@ namespace MockWebApi.IntegrationTests.Tests
             string testUriPath = "/brand/new/path";
             string responseBody = "some body";
 
-            EndpointConfiguration endpointConfiguration = new EndpointConfiguration()
+            EndpointDescription endpointConfiguration = new EndpointDescription()
             {
                 Route = testUriPath,
                 LifecyclePolicy = LifecyclePolicy.ApplyOnce,
@@ -40,7 +40,7 @@ namespace MockWebApi.IntegrationTests.Tests
             bool configureRouteResult = await webApiClient.ConfigureRoute(endpointConfiguration);
 
             // Act
-            EndpointConfiguration[] endpointConfigurations = await webApiClient.GetRoutes();
+            EndpointDescription[] endpointConfigurations = await webApiClient.GetRoutes();
 
             // Assert
             Assert.True(configureWebApiResult);
@@ -57,7 +57,7 @@ namespace MockWebApi.IntegrationTests.Tests
             string expectedResponseBody = "some: body";
             HttpStatusCode statusCode = HttpStatusCode.Created;
 
-            EndpointConfiguration endpointConfiguration = new EndpointConfiguration()
+            EndpointDescription endpointConfiguration = new EndpointDescription()
             {
                 Route = testUriPath,
                 LifecyclePolicy = LifecyclePolicy.ApplyOnce,

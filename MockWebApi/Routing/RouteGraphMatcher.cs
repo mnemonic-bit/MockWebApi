@@ -8,8 +8,8 @@ namespace MockWebApi.Routing
     public class RouteGraphMatcher<TInfo> : IRouteMatcher<TInfo>
     {
 
-        private RouteGraphNode _matchGraph;
-        private IDictionary<string, TInfo> _routes;
+        private readonly RouteGraphNode _matchGraph;
+        private readonly IDictionary<string, TInfo> _routes;
 
         public RouteGraphMatcher()
         {
@@ -35,7 +35,7 @@ namespace MockWebApi.Routing
 
         public bool ContainsRoute(string routeTemplate)
         {
-            lock(_routes)
+            lock (_routes)
             {
                 return _routes.ContainsKey(routeTemplate);
             }
@@ -48,7 +48,7 @@ namespace MockWebApi.Routing
 
         public bool Remove(string routeTemplate)
         {
-            lock(_routes)
+            lock (_routes)
             {
                 if (!ContainsRoute(routeTemplate))
                 {
@@ -63,9 +63,23 @@ namespace MockWebApi.Routing
             }
         }
 
-        public bool TryMatch(string path, out RouteMatch<TInfo> routeMatch)
+        public void RemoveAll()
         {
             lock(_routes)
+            {
+                _matchGraph.Parameters.Clear();
+                _matchGraph.Literals.Clear();
+                _matchGraph.Parent = null;
+                _matchGraph.Variables.Clear();
+                _matchGraph.VariableNode = null;
+
+                _routes.Clear();
+            }
+        }
+
+        public bool TryMatch(string path, out RouteMatch<TInfo> routeMatch)
+        {
+            lock (_routes)
             {
                 RouteParser routeParser = new RouteParser();
                 Route parsedRoute = routeParser.Parse(path);
@@ -204,12 +218,14 @@ namespace MockWebApi.Routing
         {
             match = default;
 
-            ICollection<MatchCandidate> initialCandidates = new HashSet<MatchCandidate>();
-            initialCandidates.Add(new MatchCandidate()
+            ICollection<MatchCandidate> initialCandidates = new HashSet<MatchCandidate>
             {
-                NextNode = _matchGraph,
-                IsSpecific = true
-            });
+                new MatchCandidate()
+                {
+                    NextNode = _matchGraph,
+                    IsSpecific = true
+                }
+            };
 
             IEnumerable<Route.Part> parts = route.Parts;
             ICollection<MatchCandidate> candidates = parts.Aggregate(initialCandidates, TryMatchAggregate);
@@ -308,7 +324,7 @@ namespace MockWebApi.Routing
             matchCandidates = new HashSet<MatchCandidate>();
 
             bool notFoundInAnyNode = true;
-            foreach (var match in currentMatches)
+            foreach (MatchCandidate match in currentMatches)
             {
                 if (!TryMatch(match.NextNode, part, isLastNode, out ICollection<MatchCandidate> nextCandidates))
                 {
@@ -385,12 +401,14 @@ namespace MockWebApi.Routing
                 return false;
             }
 
-            var nextVariableNodes = graph
+            IEnumerable<MatchCandidate> nextVariableNodes = graph
                 .Variables
                 .Select(variable =>
                 {
-                    MatchCandidate matchCandidate = new MatchCandidate(variable);
-                    matchCandidate.NextNode = graph.VariableNode;
+                    MatchCandidate matchCandidate = new MatchCandidate(variable)
+                    {
+                        NextNode = graph.VariableNode
+                    };
                     matchCandidate.Variables.Add(GetVariableName(variable.Variable), literalPart.ToString());
                     matchCandidate.IsSpecific = false;
                     return matchCandidate;
@@ -426,9 +444,9 @@ namespace MockWebApi.Routing
         {
             matchedParameters = new Dictionary<string, string>();
 
-            foreach (var param in parameters)
+            foreach (KeyValuePair<string, string> param in parameters)
             {
-                if (!TryMatchSingleParameter(param.Key, param.Value, route.Parameters, out KeyValuePair<string,string>? matchedParameter))
+                if (!TryMatchSingleParameter(param.Key, param.Value, route.Parameters, out KeyValuePair<string, string>? matchedParameter))
                 {
                     return false;
                 }

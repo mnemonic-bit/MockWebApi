@@ -31,6 +31,9 @@ namespace MockWebApi
             services.AddTransient<IConfigurationReader, ConfigurationReader>();
             services.AddTransient<IConfigurationWriter, ConfigurationWriter>();
 
+            services.AddTransient<IServiceConfigurationReader, ServiceConfigurationReader>();
+            services.AddTransient<IServiceConfigurationWriter, ServiceConfigurationWriter>();
+
             services.AddControllers();
             services.AddDynamicRouting();
 

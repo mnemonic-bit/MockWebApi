@@ -1,4 +1,4 @@
-﻿using MockWebApi.Model;
+﻿using MockWebApi.Configuration.Model;
 using MockWebApi.Routing;
 using Xunit;
 
