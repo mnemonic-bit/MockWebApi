@@ -3,9 +3,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using MockWebApi.Configuration.Model;
 using MockWebApi.Data;
+using MockWebApi.Extension;
 using MockWebApi.Middleware;
 using MockWebApi.Model;
 using MockWebApi.Routing;
+using MockWebApi.Templating;
 using System;
 using System.Linq;
 using System.Net;
@@ -23,14 +25,18 @@ namespace MockWebApi.Controller
 
         private readonly IRouteMatcher<EndpointDescription> _routeMatcher;
 
+        private readonly ITemplateExecutor _templateExecutor;
+
         public MockWebApiController(
             ILogger<ServiceApiController> logger,
             IConfigurationCollection serverConfig,
-            IRouteMatcher<EndpointDescription> routeMatcher)
+            IRouteMatcher<EndpointDescription> routeMatcher,
+            ITemplateExecutor templateExecutor)
         {
             _logger = logger;
             _serverConfig = serverConfig;
             _routeMatcher = routeMatcher;
+            _templateExecutor = templateExecutor;
         }
 
         public async Task MockResults()
@@ -50,7 +56,8 @@ namespace MockWebApi.Controller
 
             requestInformation.PathMatchedTemplate = true;
 
-            HttpResult response = routeMatch.RouteInformation.Results.FirstOrDefault();
+            HttpResult response = await ExecuteTemplate(routeMatch);
+
             response.IsMockedResult = true;
             HttpContext.Items.Add(MiddlewareConstants.MockWebApiHttpResponse, response);
 
@@ -90,6 +97,25 @@ namespace MockWebApi.Controller
             HttpContext.Items.TryGetValue(MiddlewareConstants.MockWebApiHttpRequestInfomation, out object contextItem);
             RequestInformation requestInformation = contextItem as RequestInformation;
             return requestInformation;
+        }
+
+        private async Task<HttpResult> ExecuteTemplate(RouteMatch<EndpointDescription> routeMatch)
+        {
+            HttpResult responseTemplate = routeMatch.RouteInformation.Results.FirstOrDefault();
+
+            HttpResult result = responseTemplate.Clone();
+
+            string templateBody = responseTemplate.Body;
+
+            if (string.IsNullOrEmpty(templateBody))
+            {
+                return responseTemplate;
+            }
+
+            string responseBody = await _templateExecutor.Execute(templateBody, routeMatch.Variables);
+            result.Body = responseBody;
+
+            return result;
         }
 
     }

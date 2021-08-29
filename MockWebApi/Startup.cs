@@ -9,6 +9,7 @@ using MockWebApi.Configuration;
 using MockWebApi.Data;
 using MockWebApi.Extension;
 using MockWebApi.Middleware;
+using MockWebApi.Templating;
 
 namespace MockWebApi
 {
@@ -33,6 +34,9 @@ namespace MockWebApi
 
             services.AddTransient<IServiceConfigurationReader, ServiceConfigurationReader>();
             services.AddTransient<IServiceConfigurationWriter, ServiceConfigurationWriter>();
+
+            services.AddTransient<ITemplateExecutor, TemplateExecutor>();
+            services.AddTransient<ITemplateParser, TemplateParser>();
 
             services.AddControllers();
             services.AddDynamicRouting();

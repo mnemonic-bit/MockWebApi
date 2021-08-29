@@ -7,7 +7,7 @@ namespace MockWebApi.Configuration.Model
     public class HttpResult
     {
 
-        public Dictionary<string, string> Headers { get; set; }
+        public IDictionary<string, string> Headers { get; set; }
 
         public HttpStatusCode StatusCode { get; set; }
 
