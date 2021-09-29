@@ -12,6 +12,10 @@
         public bool? LogServiceApiCalls { get; set; }
         public string DefaultContentType { get; set; }
 
+        public HttpResult DefaultHttpResult { get; set; }
+
+        public JwtServiceOptions JwtServiceOptions { get; set; }
+
         public EndpointDescription[] EndpointDescriptions { get; set; }
 
     }

@@ -15,6 +15,10 @@ namespace MockWebApi.Extension
             return collection;
         }
 
+        public static bool IsNullOrEmpty<TElem>(this ICollection<TElem> collection)
+        {
+            return collection == null || collection.Count == 0;
+        }
 
     }
 }

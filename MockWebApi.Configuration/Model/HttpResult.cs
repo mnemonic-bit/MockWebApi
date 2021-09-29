@@ -17,6 +17,8 @@ namespace MockWebApi.Configuration.Model
 
         public string ContentType { get; set; }
 
+        public IDictionary<string, string> Cookies { get; set; }
+
         public override string ToString()
         {
             string result = "Response:\n"

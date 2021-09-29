@@ -5,11 +5,15 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using MockWebApi.Auth;
 using MockWebApi.Configuration;
+using MockWebApi.Configuration.Model;
 using MockWebApi.Data;
 using MockWebApi.Extension;
 using MockWebApi.Middleware;
 using MockWebApi.Templating;
+using System;
+using System.Reflection;
 
 namespace MockWebApi
 {
@@ -34,6 +38,18 @@ namespace MockWebApi
 
             services.AddTransient<IServiceConfigurationReader, ServiceConfigurationReader>();
             services.AddTransient<IServiceConfigurationWriter, ServiceConfigurationWriter>();
+
+            //TODO: change this, change the configuration in general to include this structure,
+            // make it changable at runtime.
+            services.AddSingleton(new JwtServiceOptions()
+            {
+                Audience = "AUDIENCE",
+                Issuer = "ISSUER",
+                Expiration = TimeSpan.FromHours(1),
+                SigningKey = "slkdjflskdjflksdjfklsdjflskf"
+            });
+            services.AddTransient<IJwtService, JwtService>();
+            services.AddTransient<IAuthorizationService, AuthorizationService>();
 
             services.AddTransient<ITemplateExecutor, TemplateExecutor>();
             services.AddTransient<ITemplateParser, TemplateParser>();
@@ -78,6 +94,22 @@ namespace MockWebApi
                     pattern: "{**slug}",
                     defaults: new { controller = "MockWebApi", action = "MockResults" });
             });
+
+            WriteBanner(logger);
+        }
+
+        private void WriteBanner(ILogger<Startup> logger)
+        {
+            logger.LogInformation($"MockWebApi service version {GetVersion()} has been configured.\n");
+        }
+
+        private Version GetVersion()
+        {
+            Assembly thisAssembly = Assembly.GetAssembly(typeof(Startup));
+
+            Version assemblyVersion = thisAssembly.GetName().Version;
+
+            return assemblyVersion;
         }
 
     }

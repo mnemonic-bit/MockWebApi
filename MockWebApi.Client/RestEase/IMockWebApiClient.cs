@@ -1,4 +1,5 @@
-﻿using RestEase;
+﻿using MockWebApi.Configuration.Model;
+using RestEase;
 using System.Threading.Tasks;
 
 namespace MockWebApi.Client.RestEase
@@ -19,11 +20,17 @@ namespace MockWebApi.Client.RestEase
         [Post("configure/route")]
         Task<Response<string>> ConfigureRoute([Body] string endpointConfiguration);
 
+        [Delete("configure/route")]
+        Task<Response<string>> DeleteRoute([Body] string routeKey);
+
         [Get("request")]
         Task<Response<string>> GetAllRequests();
 
         [Get("request/tail/{count?}")]
         Task<Response<string>> GetLastRequests([Path("count?")] int? count);
+
+        [Post("configure/jwt")]
+        public Task<Response<string>> GetJwtToken([Body] JwtCredentialUser user);
 
     }
 }

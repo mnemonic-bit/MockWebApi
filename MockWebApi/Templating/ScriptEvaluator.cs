@@ -1,7 +1,6 @@
 ﻿using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace MockWebApi.Templating
@@ -19,7 +18,13 @@ namespace MockWebApi.Templating
         public ScriptEvaluator(string scriptInitCode = null)
         {
             _options = ScriptOptions.Default
-                .AddImports("System");
+                .AddImports("System")
+                .AddImports("System.Text")
+                .AddImports("System.Text.Json")
+                .AddImports("System.Linq")
+                .AddImports("System.Xml")
+                .AddImports("System.Collections")
+                .AddImports("System.Collections.Generic");
 
             _script = CSharpScript.Create(scriptInitCode ?? "", _options);
         }

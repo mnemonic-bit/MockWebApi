@@ -21,6 +21,12 @@ namespace MockWebApi.Routing
 
         public IDictionary<string, string> Parameters { get; }
 
+        public string FixedPartsBitmap()
+        {
+            var resultElements = Parts.Select(part => part is LiteralPart ? "1" : "0");
+            return string.Join("", resultElements);
+        }
+
         /// <summary>
         /// This class models a part of a route, which is either
         /// a constant string representing a literal part of the URL

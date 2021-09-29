@@ -37,7 +37,7 @@ namespace MockWebApi.Routing
         {
             lock (_routes)
             {
-                return _routes.ContainsKey(routeTemplate);
+                return TryFindRoute(routeTemplate, out TInfo _);
             }
         }
 
@@ -67,15 +67,182 @@ namespace MockWebApi.Routing
         {
             lock(_routes)
             {
-                _matchGraph.Parameters.Clear();
                 _matchGraph.Literals.Clear();
                 _matchGraph.Parent = null;
                 _matchGraph.Variables.Clear();
-                _matchGraph.VariableNode = null;
 
                 _routes.Clear();
             }
         }
+
+        public bool TryFindRoute(string path, out TInfo info)
+        {
+            lock (_routes)
+            {
+                RouteParser routeParser = new RouteParser();
+                Route parsedRoute = routeParser.Parse(path);
+
+                return TryFindRoute(parsedRoute, out info);
+            }
+        }
+
+
+        #region TryFindRoute
+
+        private bool TryFindRoute(Route route, out TInfo info)
+        {
+            info = default(TInfo);
+
+            ICollection<MatchCandidate> initialCandidates = new HashSet<MatchCandidate>
+            {
+                new MatchCandidate()
+                {
+                    NextNode = _matchGraph
+                }
+            };
+
+            IEnumerable<Route.Part> parts = route.Parts;
+            ICollection<MatchCandidate> candidates = parts.Aggregate(initialCandidates, TryFindRouteAggregate);
+
+            if (candidates.IsNullOrEmpty())
+            {
+                return false;
+            }
+
+            if (candidates.Count > 1)
+            {
+                return false;
+            }
+
+            info = candidates.Single().Info;
+
+            return true;
+        }
+
+        private ICollection<MatchCandidate> TryFindRouteAggregate(ICollection<MatchCandidate> currentMatches, Route.Part part, bool isLastNode)
+        {
+            if (currentMatches == null)
+            {
+                return null;
+            }
+
+            if (!TryFindRouteAggregate(currentMatches, part, isLastNode, out ICollection<MatchCandidate> matchCandidates))
+            {
+                return null;
+            }
+
+            return matchCandidates;
+        }
+
+        private bool TryFindRouteAggregate(ICollection<MatchCandidate> currentMatches, Route.Part part, bool isLastNode, out ICollection<MatchCandidate> matchCandidates)
+        {
+            matchCandidates = new HashSet<MatchCandidate>();
+
+            bool notFoundInAnyNode = true;
+            foreach (MatchCandidate matchCandidate in currentMatches)
+            {
+                if (!TryFindRoute(matchCandidate.NextNode, part, isLastNode, out ICollection<MatchCandidate> nextCandidates))
+                {
+                    continue;
+                }
+
+                notFoundInAnyNode = false;
+
+                matchCandidates.AddAll(nextCandidates);
+            }
+
+            return !notFoundInAnyNode;
+        }
+
+        private bool TryFindRoute(RouteGraphNode nextNode, Route.Part part, bool isLastNode, out ICollection<MatchCandidate> nextCandidates)
+        {
+            if (part is Route.LiteralPart literalPart)
+            {
+                return TryFindLiteralPartRoute(nextNode, literalPart, isLastNode, out nextCandidates);
+            }
+            else if (part is Route.VariablePart variablePart)
+            {
+                return TryFindVariablePartRoute(nextNode, variablePart, isLastNode, out nextCandidates);
+            }
+            else
+            {
+                throw new NotImplementedException($"The type of route-part {part.GetType().Name} is not implemented.");
+            }
+        }
+
+        private bool TryFindLiteralPartRoute(RouteGraphNode nextNode, Route.LiteralPart literalPart, bool isLastNode, out ICollection<MatchCandidate> nextCandidates)
+        {
+            nextCandidates = default(ICollection<MatchCandidate>);
+
+            if (!nextNode.Literals.TryGetValue(literalPart, out LiteralPartCandidates literalPartCandidates))
+            {
+                return false;
+            }
+
+            nextCandidates = literalPartCandidates
+                .Infos
+                .Select(info =>
+                {
+                    MatchCandidate candidate = new MatchCandidate();
+                    candidate.Info = info.Info;
+                    candidate.Parameters.AddAll(info.Parameters);
+                    candidate.NextNode = literalPartCandidates.NextNode;
+
+                    return candidate;
+                })
+                .ToHashSet();
+
+            if (!isLastNode)
+            {
+                MatchCandidate singleMatchCandidate = new MatchCandidate();
+                singleMatchCandidate.Info = default(TInfo);
+                singleMatchCandidate.NextNode = literalPartCandidates.NextNode;
+
+                nextCandidates.Add(singleMatchCandidate);
+            }
+
+            return true;
+        }
+
+        private bool TryFindVariablePartRoute(RouteGraphNode nextNode, Route.VariablePart variablePart, bool isLastNode, out ICollection<MatchCandidate> nextCandidates)
+        {
+            nextCandidates = default(ICollection<MatchCandidate>);
+
+            nextCandidates = nextNode
+                .Variables
+                .SelectMany(variablePart =>
+                {
+                    ICollection<MatchCandidate> newCandidates = variablePart
+                        .Infos
+                        .Select(info =>
+                        {
+                            MatchCandidate candidate = new MatchCandidate();
+                            candidate.Info = info.Info;
+                            candidate.Parameters.AddAll(info.Parameters);
+                            candidate.NextNode = variablePart.NextNode;
+
+                            return candidate;
+                        })
+                        .ToHashSet();
+
+                    if (!isLastNode)
+                    {
+                        MatchCandidate singleMatchCandidate = new MatchCandidate();
+                        singleMatchCandidate.Info = default(TInfo);
+                        singleMatchCandidate.NextNode = variablePart.NextNode;
+
+                        newCandidates.Add(singleMatchCandidate);
+                    }
+
+                    return newCandidates;
+                })
+                .ToHashSet();
+
+            return true;
+        }
+
+        #endregion
+
 
         public bool TryMatch(string path, out RouteMatch<TInfo> routeMatch)
         {
@@ -89,30 +256,37 @@ namespace MockWebApi.Routing
                     throw new ArgumentException($"Given path contains variable definitions, wich is not allowed when matching (offending path='{path}')");
                 }
 
-                if (!TryMatchRoute(parsedRoute, out routeMatch))
-                {
-                    return false;
-                }
-
-                return true;
+                return TryMatchRoute(parsedRoute, out routeMatch);
             }
         }
 
         private void AddRouteToMatchGraph(Route route, TInfo routeInfo)
         {
-            RouteGraphNode leafNode = route.Parts.Aggregate(_matchGraph, (graph, part, isLast) => AddPartToGraphNode(graph, part, routeInfo, isLast));
-            leafNode.Parameters = route.Parameters;
+            PartCandidate firstCandidate = null;
+            RouteGraphNode graph = _matchGraph;
+
+            (RouteGraphNode leafNode, PartCandidate partCandidate) = route.Parts.Aggregate((graph, firstCandidate), (seed, part, isLast) => { PartCandidate partCandidate = GetPartCandidateFromGraphNode(seed.graph, part); return (partCandidate.NextNode, partCandidate); });
+
+            AddRouteInfoToPartCandidate(partCandidate, routeInfo, route.Parameters);
         }
 
-        private RouteGraphNode AddPartToGraphNode(RouteGraphNode graph, Route.Part part, TInfo routeInfo, bool isLast)
+        private void AddRouteInfoToPartCandidate(PartCandidate partCandidate, TInfo routeInfo, IDictionary<string, string> parameters)
+        {
+            RouteInfo routeInfoItem = new RouteInfo(routeInfo);
+            routeInfoItem.Parameters.AddAll(parameters);
+
+            partCandidate.Infos.Add(routeInfoItem);
+        }
+
+        private PartCandidate GetPartCandidateFromGraphNode(RouteGraphNode graph, Route.Part part)
         {
             if (part is Route.LiteralPart literalPart)
             {
-                return AddLiteralPartToGraphNode(graph, literalPart, routeInfo, isLast);
+                return GetLiteralPartGraphNode(graph, literalPart);
             }
             else if (part is Route.VariablePart variablePart)
             {
-                return AddVariablePartToGraphNode(graph, variablePart, routeInfo, isLast);
+                return GetVariablePartGraphNode(graph, variablePart);
             }
             else
             {
@@ -120,49 +294,43 @@ namespace MockWebApi.Routing
             }
         }
 
-        private RouteGraphNode AddLiteralPartToGraphNode(RouteGraphNode graph, Route.LiteralPart literalPart, TInfo routeInfo, bool isLast)
+        private LiteralPartCandidates GetLiteralPartGraphNode(RouteGraphNode graph, Route.LiteralPart literalPart)
         {
-            if (!graph.Literals.TryGetValue(literalPart, out ICollection<LiteralPartCandidate> nodes))
+            if (!graph.Literals.TryGetValue(literalPart, out LiteralPartCandidates candidates))
             {
-                nodes = new HashSet<LiteralPartCandidate>();
-                graph.Literals.Add(literalPart, nodes);
+                RouteGraphNode nextGraphNode = new RouteGraphNode()
+                {
+                    Parent = graph
+                };
+
+                candidates = new LiteralPartCandidates()
+                {
+                    LiteralPart = literalPart,
+                    NextNode = nextGraphNode
+                };
+
+                graph.Literals.Add(literalPart, candidates);
             }
 
-            RouteGraphNode newGraphNode = new RouteGraphNode()
-            {
-                Parent = graph
-            };
-
-            LiteralPartCandidate candidate = new LiteralPartCandidate()
-            {
-                LiteralPart = literalPart,
-                NextNode = newGraphNode,
-                Info = routeInfo,
-                IsLast = isLast
-            };
-
-            nodes.Add(candidate);
-
-            return newGraphNode;
+            return candidates;
         }
 
-        private RouteGraphNode AddVariablePartToGraphNode(RouteGraphNode graph, Route.VariablePart variablePart, TInfo routeInfo, bool isLast)
+        private VariablePartCandidates GetVariablePartGraphNode(RouteGraphNode graph, Route.VariablePart variablePart)
         {
-            graph.VariableNode ??= new RouteGraphNode()
+            RouteGraphNode nextNode = new RouteGraphNode()
             {
                 Parent = graph
             };
 
-            VariablePartCandidate candidate = new VariablePartCandidate()
+            VariablePartCandidates candidate = new VariablePartCandidates()
             {
                 Variable = variablePart,
-                Info = routeInfo,
-                IsLast = isLast
+                NextNode = nextNode
             };
 
             graph.Variables.Add(candidate);
 
-            return graph.VariableNode;
+            return candidate;
         }
 
         private bool RemoveRouteFromMatchGraph(Route route)
@@ -189,20 +357,22 @@ namespace MockWebApi.Routing
 
         private RouteGraphNode RemoveLiteralPartFromMatchGraph(RouteGraphNode graph, Route.LiteralPart part)
         {
-            if (!graph.Literals.TryGetValue(part, out ICollection<LiteralPartCandidate> candidates))
+            if (!graph.Literals.TryGetValue(part, out LiteralPartCandidates candidates))
             {
                 throw new InvalidOperationException($"Internal Error: Trying to remove part of route which does not exist.");
             }
 
-            LiteralPartCandidate candidateToRemove = candidates.Single(candidate => candidate.LiteralPart.Equals(part)); // TODO, add the part to this class to check and filter for it.
-            candidates.Remove(candidateToRemove);
+            //TODO: re-implement this
+            //LiteralPartCandidates candidateToRemove = candidates.Single(candidate => candidate.LiteralPart.Equals(part)); // TODO: remove this
+            //candidates.
+            //candidates.Infos.Remove(candidateToRemove.Infos.FirstOrDefault());
 
-            return candidateToRemove.NextNode;
+            return candidates.NextNode;
         }
 
         private RouteGraphNode RemoveVariablePartFromMatchGraph(RouteGraphNode graph, Route.VariablePart part)
         {
-            VariablePartCandidate candidateToRemove = graph.Variables.FirstOrDefault(candidate => candidate.IsLast); // TODO, add the part to this class to check and filter for it.
+            VariablePartCandidates candidateToRemove = graph.Variables.FirstOrDefault();// (candidate => candidate.IsLast); // TODO, add the part to this class to check and filter for it.
 
             if (candidateToRemove == null)
             {
@@ -211,7 +381,8 @@ namespace MockWebApi.Routing
 
             graph.Variables.Remove(candidateToRemove);
 
-            return graph.VariableNode;
+            // TODO: this is not correct and was changed due to a rewrite of the algorithm
+            return graph;
         }
 
         private bool TryMatchRoute(Route route, out RouteMatch<TInfo> match)
@@ -222,15 +393,14 @@ namespace MockWebApi.Routing
             {
                 new MatchCandidate()
                 {
-                    NextNode = _matchGraph,
-                    IsSpecific = true
+                    NextNode = _matchGraph
                 }
             };
 
             IEnumerable<Route.Part> parts = route.Parts;
             ICollection<MatchCandidate> candidates = parts.Aggregate(initialCandidates, TryMatchAggregate);
 
-            if (candidates == null || candidates.Count() == 0)
+            if (candidates.IsNullOrEmpty())
             {
                 return false;
             }
@@ -267,7 +437,16 @@ namespace MockWebApi.Routing
         {
             match = default;
 
-            ICollection<MatchCandidate> filteredCandidates = candidates.Where(predicate).ToHashSet();
+            ICollection<MatchCandidate> filteredCandidates = candidates
+                .Select(candidate =>
+                {
+                    MatchCandidate newMatchCandidates = new MatchCandidate();
+                    newMatchCandidates.Info = candidate.Info;
+                    return newMatchCandidates;
+                })
+                .Where(predicate)
+                .Where(candidate => candidate.Info != null)
+                .ToHashSet();
 
             if (filteredCandidates.Count() != 1)
             {
@@ -282,7 +461,12 @@ namespace MockWebApi.Routing
 
         private RouteMatch<TInfo> ConvertToRouteMatch(MatchCandidate candidate)
         {
-            return new RouteMatch<TInfo>(candidate.Info, candidate.Variables, candidate.NextNode.Parameters);
+            if (candidate.Info == null)
+            {
+                throw new ArgumentException($"The number of info-items in a {nameof(MatchCandidate)} must be set, but currently it is null", nameof(candidate));
+            }
+
+            return new RouteMatch<TInfo>(candidate.Info, candidate.Variables, candidate.Parameters);
         }
 
         /// <summary>
@@ -333,9 +517,15 @@ namespace MockWebApi.Routing
 
                 notFoundInAnyNode = false;
 
+                // accumulate the variable bindings found so far
                 _ = matchCandidates.AddAll(nextCandidates
-                    .Where(candidate => candidate.IsLast == isLastNode)
-                    .Select(candidate => { candidate.Variables.AddAll(match.Variables); candidate.IsSpecific &= match.IsSpecific; return candidate; }));
+                    .Where(candidate => isLastNode ? candidate.Info != null : candidate.Info == null)
+                    .Select(candidate =>
+                    {
+                        //candidate.Infos.Select(info => info.Variables.AddAll(match.Variables)); //TODO refactor
+                        candidate.Variables.AddAll(match.Variables);
+                        return candidate;
+                    }));
             }
 
             return !notFoundInAnyNode;
@@ -354,12 +544,12 @@ namespace MockWebApi.Routing
         /// <returns></returns>
         private bool TryMatch(RouteGraphNode graph, Route.Part part, bool isLastNode, out ICollection<MatchCandidate> matchCandidates)
         {
-            if (!TryMatchPart(graph, part, out matchCandidates))
+            if (!TryMatchPart(graph, part, isLastNode, out matchCandidates))
             {
                 return false;
             }
 
-            matchCandidates = matchCandidates.Where(candidate => candidate.IsLast == isLastNode).ToHashSet();
+            matchCandidates = matchCandidates.Where(candidate => isLastNode ? candidate.Info != null : candidate.Info == null).ToHashSet();
 
             if (matchCandidates.Count() == 0)
             {
@@ -374,44 +564,66 @@ namespace MockWebApi.Routing
             return true;
         }
 
-        private bool TryMatchPart(RouteGraphNode graph, Route.Part part, out ICollection<MatchCandidate> nodes)
+        private bool TryMatchPart(RouteGraphNode graph, Route.Part part, bool isLastNode, out ICollection<MatchCandidate> nodes)
         {
             if (!(part is Route.LiteralPart literalPart))
             {
                 throw new InvalidOperationException($"This sub-class of Route.Part is not handled by this function.");
             }
 
-            return TryMatchLiteralPart(graph, literalPart, out nodes);
+            return TryMatchLiteralPart(graph, literalPart, isLastNode, out nodes);
         }
 
-        private bool TryMatchLiteralPart(RouteGraphNode graph, Route.LiteralPart literalPart, out ICollection<MatchCandidate> matchCandidates)
+        private bool TryMatchLiteralPart(RouteGraphNode graph, Route.LiteralPart literalPart, bool isLastNode, out ICollection<MatchCandidate> matchCandidates)
         {
             matchCandidates = default;
 
-            if (graph.Literals.TryGetValue(literalPart, out ICollection<LiteralPartCandidate> nodes))
+            if (graph.Literals.TryGetValue(literalPart, out LiteralPartCandidates literalPartCandidates))
             {
-                matchCandidates = new HashSet<MatchCandidate>(nodes.Select(candidate => new MatchCandidate(candidate)));
-                // TODO: possibly a mistake to return here. Are there graph nodes
-                // that contain both, Literals and Variables?
-                return true;
-            }
+                if (isLastNode ? literalPartCandidates.Infos.Count > 0 : literalPartCandidates.Infos.Count == 0)
+                {
+                    matchCandidates = literalPartCandidates.Infos
+                        .Select(info =>
+                        {
+                            MatchCandidate matchCandidate = new MatchCandidate();
+                            matchCandidate.Info = info.Info; // TODO: fix this, this is most likely not correct.
+                            return matchCandidate;
+                        })
+                        .ToHashSet();
 
-            if (graph.VariableNode == null)
-            {
-                return false;
+                    MatchCandidate matchCandidate = new MatchCandidate();
+                    matchCandidate.NextNode = literalPartCandidates.NextNode;
+                    matchCandidates.Add(matchCandidate);
+
+                    return true;
+                }
             }
 
             IEnumerable<MatchCandidate> nextVariableNodes = graph
                 .Variables
-                .Select(variable =>
+                .SelectMany(variable =>
                 {
-                    MatchCandidate matchCandidate = new MatchCandidate(variable)
-                    {
-                        NextNode = graph.VariableNode
-                    };
-                    matchCandidate.Variables.Add(GetVariableName(variable.Variable), literalPart.ToString());
-                    matchCandidate.IsSpecific = false;
-                    return matchCandidate;
+                    // This are all matches that end in this node
+                    var matchCandidates = variable
+                        .Infos
+                        .Select(info =>
+                        {
+                            MatchCandidate matchCandidate = new MatchCandidate();
+                            matchCandidate.Info = info.Info; // TODO: refactor this?
+                            matchCandidate.Variables.Add(GetVariableName(variable.Variable), literalPart.ToString());
+
+                            return matchCandidate;
+                        })
+                        .ToList(); // TODO: why does this not work without ToList() and matchCandidates.Append(singleMatchCandidate) at the end
+
+                    // This is for all matches that go beyond this node
+                    MatchCandidate singleMatchCandidate = new MatchCandidate();
+                    singleMatchCandidate.NextNode = variable.NextNode;
+                    singleMatchCandidate.Variables.Add(GetVariableName(variable.Variable), literalPart.ToString());
+
+                    matchCandidates.Add(singleMatchCandidate);
+
+                    return matchCandidates;
                 });
 
             matchCandidates = new HashSet<MatchCandidate>();
@@ -425,14 +637,19 @@ namespace MockWebApi.Routing
             candidates = currentCandidates
                 .Select(candidate =>
                 {
-                    if (!TryMatchParameters(route, candidate.NextNode.Parameters, out IDictionary<string, string> variablesFromParameters))
+                    if (!TryMatchParameters(route, candidate.Parameters, out IDictionary<string, string> variablesFromParameters))
                     {
                         return null;
                     }
 
                     candidate.Variables.AddAll(variablesFromParameters);
 
-                    return candidate;
+                    MatchCandidate newCandidate = new MatchCandidate();
+                    newCandidate.Info = candidate.Info;
+                    newCandidate.Variables.AddAll(candidate.Variables);
+                    newCandidate.Parameters.AddAll(candidate.Parameters);
+
+                    return newCandidate;
                 })
                 .Where(candidates => candidates != null)
                 .ToList();
@@ -509,59 +726,72 @@ namespace MockWebApi.Routing
         {
 
             /// <summary>
+            /// Determines whether the graph node is empty or contains any
+            /// links to child-nodes.
+            /// </summary>
+            /// <returns></returns>
+            internal bool IsEmpty
+            {
+                get
+                {
+                    return Literals.Count == 0 && Variables.Count == 0;
+                }
+            }
+
+            /// <summary>
             /// This is the reference to the parent node in this route graph.
             /// </summary>
             internal RouteGraphNode Parent { get; set; }
 
             /// <summary>
-            /// Stores the dictionary of all parameters of the route this
-            /// graph node represents.
-            /// </summary>
-            internal IDictionary<string, string> Parameters { get; set; }
-
-            /// <summary>
             /// Each part of a path which is a literal will create a vertice
             /// to another RouteGraphNode.
             /// </summary>
-            internal IDictionary<Route.LiteralPart, ICollection<LiteralPartCandidate>> Literals { get; } = new Dictionary<Route.LiteralPart, ICollection<LiteralPartCandidate>>();
+            internal IDictionary<Route.LiteralPart, LiteralPartCandidates> Literals { get; } = new Dictionary<Route.LiteralPart, LiteralPartCandidates>();
 
             /// <summary>
             /// All variable parts and the info items that belong to their
             /// paths are stored in a collection. Threy will add up to the
             /// current set of possible endpoints while matching an URL path.
             /// </summary>
-            internal ICollection<VariablePartCandidate> Variables { get; } = new HashSet<VariablePartCandidate>();
-
-            /// <summary>
-            /// For all variable in the colection Variables, we have only one
-            /// instance of RouteGraphNode which represents the rest of the path
-            /// whenever a vaiable is matched inside this 
-            /// </summary>
-            internal RouteGraphNode VariableNode { get; set; }
+            internal ICollection<VariablePartCandidates> Variables { get; } = new HashSet<VariablePartCandidates>();
 
         }
 
-        private class LiteralPartCandidate
+        private class RouteInfo
+        {
+
+            public RouteInfo(TInfo info)
+            {
+                Info = info;
+            }
+
+            public TInfo Info { get; }
+
+            public IDictionary<string, string> Parameters { get; } = new Dictionary<string, string>(); // TODO: fix this, this might not belong to a route information item.
+
+        }
+
+        private class PartCandidate
+        {
+
+            public RouteGraphNode NextNode { get; set; }
+
+            public ICollection<RouteInfo> Infos { get; } = new HashSet<RouteInfo>();
+
+        }
+
+        private class LiteralPartCandidates : PartCandidate
         {
 
             public Route.LiteralPart LiteralPart { get; set; }
 
-            public RouteGraphNode NextNode { get; set; }
-
-            public TInfo Info { get; set; }
-
-            public bool IsLast { get; set; }
-
         }
 
-        private class VariablePartCandidate
+        private class VariablePartCandidates : PartCandidate
         {
 
             public Route.VariablePart Variable { get; set; }
-
-            public TInfo Info { get; set; }
-
-            public bool IsLast { get; set; }
 
         }
 
@@ -573,33 +803,25 @@ namespace MockWebApi.Routing
 
             }
 
-            public MatchCandidate(LiteralPartCandidate literalCandidate)
+            /// <summary>
+            /// Marks this match candidate as being for a specific
+            /// route, i.e. one that has no variables in it along the path.
+            /// </summary>
+            public bool IsSpecific
             {
-                NextNode = literalCandidate.NextNode;
-                Info = literalCandidate.Info;
-                IsLast = literalCandidate.IsLast;
-                IsSpecific = true;
-            }
-
-            public MatchCandidate(VariablePartCandidate variableCandidate)
-            {
-                Info = variableCandidate.Info;
-                IsLast = variableCandidate.IsLast;
+                get
+                {
+                    return Variables.Count == 0;
+                }
             }
 
             public RouteGraphNode NextNode { get; set; }
 
             public TInfo Info { get; set; }
 
+            public IDictionary<string, string> Parameters { get; } = new Dictionary<string, string>();
+
             public IDictionary<string, string> Variables { get; } = new Dictionary<string, string>();
-
-            public bool IsLast { get; set; }
-
-            /// <summary>
-            /// Marks this match candidate as being for a specific
-            /// route, i.e. one that has no variables in it along the path.
-            /// </summary>
-            public bool IsSpecific { get; set; }
 
         }
 

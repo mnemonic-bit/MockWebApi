@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using MockWebApi.Auth;
 using MockWebApi.Configuration;
 using MockWebApi.Configuration.Model;
 using MockWebApi.Data;
@@ -19,13 +20,10 @@ namespace MockWebApi.Controller
     {
 
         private readonly ILogger<ServiceApiController> _logger;
-
         private readonly IConfigurationCollection _serverConfig;
-
         private readonly IRequestHistory _dataStore;
-
         private readonly IRouteMatcher<EndpointDescription> _routeMatcher;
-
+        private readonly IJwtService _jwtService;
         private readonly IServiceConfigurationWriter _configurationWriter;
 
         public ServiceApiController(
@@ -33,12 +31,14 @@ namespace MockWebApi.Controller
             IConfigurationCollection serverConfig,
             IRequestHistory dataStore,
             IRouteMatcher<EndpointDescription> routeMatcher,
+            IJwtService jwtService,
             IServiceConfigurationWriter configurationWriter)
         {
             _logger = logger;
             _serverConfig = serverConfig;
             _dataStore = dataStore;
             _routeMatcher = routeMatcher;
+            _jwtService = jwtService;
             _configurationWriter = configurationWriter;
         }
 
@@ -92,9 +92,9 @@ namespace MockWebApi.Controller
         }
 
         [HttpDelete("configure")]
-        public IActionResult ResetToDefault()
+        public async Task<IActionResult> ResetToDefault()
         {
-            DeleteRoute(null);
+            await DeleteRoute();
             _routeMatcher.RemoveAll();
 
             return Ok();
@@ -112,10 +112,8 @@ namespace MockWebApi.Controller
         [HttpPost("configure/route")]
         public async Task<IActionResult> ConfigureRoute()
         {
-            string config = await Request.GetBody();
-            config = config.Replace("\r\n", "\n");
-
-            EndpointDescription endpointDescription = DeserializeYaml<EndpointDescription>(config);
+            string configAsString = await GetBody();
+            EndpointDescription endpointDescription = DeserializeYaml<EndpointDescription>(configAsString);
 
             if (endpointDescription == null)
             {
@@ -128,8 +126,10 @@ namespace MockWebApi.Controller
         }
 
         [HttpDelete("configure/route")]
-        public IActionResult DeleteRoute([FromQuery] string routeKey)
+        public async Task<IActionResult> DeleteRoute()
         {
+            string routeKey = await GetBody();
+
             if (string.IsNullOrEmpty(routeKey))
             {
                 _routeMatcher.RemoveAll();
@@ -142,6 +142,17 @@ namespace MockWebApi.Controller
             }
 
             return Ok($"The route '{routeKey}' has been deleted.");
+        }
+
+        [HttpPost("configure/jwt")]
+        public async Task<IActionResult> GetJwtToken()
+        {
+            string configAsString = await GetBody();
+            JwtCredentialUser user = DeserializeYaml<JwtCredentialUser>(configAsString);
+
+            string token = _jwtService.CreateToken(user);
+
+            return Ok(token);
         }
 
         private string GetAllInformation()
@@ -178,6 +189,13 @@ namespace MockWebApi.Controller
                 .Build();
 
             return deserializer.Deserialize<T>(yamlText);
+        }
+
+        private async Task<string> GetBody()
+        {
+            string config = await Request.GetBody();
+            config = config.Replace("\r\n", "\n");
+            return config;
         }
 
     }

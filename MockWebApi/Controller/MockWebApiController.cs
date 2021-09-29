@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using MockWebApi.Auth;
 using MockWebApi.Configuration.Model;
 using MockWebApi.Data;
 using MockWebApi.Extension;
@@ -9,6 +10,7 @@ using MockWebApi.Model;
 using MockWebApi.Routing;
 using MockWebApi.Templating;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -20,53 +22,134 @@ namespace MockWebApi.Controller
     {
 
         private readonly ILogger<ServiceApiController> _logger;
-
         private readonly IConfigurationCollection _serverConfig;
-
         private readonly IRouteMatcher<EndpointDescription> _routeMatcher;
-
+        private readonly IAuthorizationService _authorizationService;
         private readonly ITemplateExecutor _templateExecutor;
 
         public MockWebApiController(
             ILogger<ServiceApiController> logger,
             IConfigurationCollection serverConfig,
             IRouteMatcher<EndpointDescription> routeMatcher,
+            IAuthorizationService authorizationService,
             ITemplateExecutor templateExecutor)
         {
             _logger = logger;
             _serverConfig = serverConfig;
             _routeMatcher = routeMatcher;
+            _authorizationService = authorizationService;
             _templateExecutor = templateExecutor;
         }
 
+        /// <summary>
+        /// This method implements the REST API for all mocked
+        /// URL paths. It uses the configuration to create a response
+        /// for each URL, and in case for some URL there is no response
+        /// configured, it creates a default response.
+        /// </summary>
+        /// <returns></returns>
         public async Task MockResults()
         {
             RequestInformation requestInformation = GetRequestInformation(HttpContext);
 
-            if (!_routeMatcher.TryMatch($"{Request.Path}{Request.QueryString}", out RouteMatch<EndpointDescription> routeMatch))
+            string requestUri = $"{Request.Path}{Request.QueryString}";
+            bool requestUriDidMatch = TryGetHttpResult(requestUri, out EndpointDescription endpointDescription, out IDictionary<string, string> variables);
+
+            if (!CkeckAuthorization(HttpContext, endpointDescription))
             {
-                requestInformation.PathMatchedTemplate = false;
-
-                int defaultStatusCode = _serverConfig.Get<int>(ConfigurationCollection.Parameters.DefaultHttpStatusCode);
-                HttpContext.Items.Add(MiddlewareConstants.MockWebApiHttpResponse, new HttpResult() { StatusCode = (HttpStatusCode)defaultStatusCode });
-                Response.StatusCode = defaultStatusCode;
-
+                //TODO: default authorization-failed response?
                 return;
             }
 
-            requestInformation.PathMatchedTemplate = true;
+            requestInformation.PathMatchedTemplate = requestUriDidMatch;
 
-            HttpResult response = await ExecuteTemplate(routeMatch);
-
-            response.IsMockedResult = true;
-            HttpContext.Items.Add(MiddlewareConstants.MockWebApiHttpResponse, response);
-
-            await FillResponse(response);
-
-            ManageRouteLifeCycle(routeMatch);
+            await MockResponse(endpointDescription, variables);
         }
 
-        private async Task FillResponse(HttpResult response)
+
+
+        ////////////////////////////////////////////////////////////////
+
+
+
+        private bool CkeckAuthorization(HttpContext httpContext, EndpointDescription endpointDescription)
+        {
+            if (!endpointDescription.CheckAuthorization)
+            {
+                return true;
+            }
+
+            string authorizationHeader = httpContext.Request.Headers.FirstOrDefault(header => header.Key == "Authorization").Value;
+
+            if (string.IsNullOrEmpty(authorizationHeader))
+            {
+                return false;
+            }
+
+            if (!_authorizationService.CkeckAuthorization(authorizationHeader, endpointDescription))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool TryGetHttpResult(string uri, out EndpointDescription endpointDescription, out IDictionary<string, string> variables)
+        {
+            if (_routeMatcher.TryMatch(uri, out RouteMatch<EndpointDescription> routeMatch))
+            {
+                //TODO: clone the found routing information to make it tamper-proof
+                // and guard the config done by the user against changes made
+                // by this software.
+                ManageRouteLifeCycle(routeMatch);
+                endpointDescription = routeMatch.RouteInformation;
+                variables = routeMatch.Variables;
+
+                return true;
+            }
+
+            (endpointDescription, variables) = GetDefaultEndpointDescription();
+
+            return false;
+        }
+
+        private (EndpointDescription, IDictionary<string, string>) GetDefaultEndpointDescription()
+        {
+            // TODO: get this instance from the server-configuration
+
+            HttpResult httpResult = new HttpResult()
+            {
+                StatusCode = (HttpStatusCode)_serverConfig.Get<int>(ConfigurationCollection.Parameters.DefaultHttpStatusCode),
+                ContentType = _serverConfig.Get<string>(ConfigurationCollection.Parameters.DefaultContentType)
+            };
+
+            IDictionary<string, string> variables = new Dictionary<string, string>();
+
+            EndpointDescription endpointDescription = new EndpointDescription()
+            {
+                ReturnCookies = true,
+                Results = new HttpResult[]
+                {
+                    httpResult
+                }
+            };
+
+            return (endpointDescription, variables);
+        }
+
+        private async Task MockResponse(EndpointDescription endpointDescription, IDictionary<string, string> variables)
+        {
+            HttpResult httpResult = endpointDescription.Results.FirstOrDefault();
+
+            HttpResult response = await ExecuteTemplate(httpResult, variables);
+
+            response.IsMockedResult = true; // Move this line to TryGetHttpResult()
+            HttpContext.Items.Add(MiddlewareConstants.MockWebApiHttpResponse, response);
+
+            await FillResponse(endpointDescription, response);
+        }
+
+        private async Task FillResponse(EndpointDescription endpointDescription, HttpResult response)
         {
             if (response == null)
             {
@@ -75,6 +158,19 @@ namespace MockWebApi.Controller
 
             HttpContext.Response.StatusCode = (int?)response?.StatusCode ?? _serverConfig.Get<int>(ConfigurationCollection.Parameters.DefaultHttpStatusCode);
             HttpContext.Response.ContentType = response.ContentType ?? _serverConfig.Get<string>(ConfigurationCollection.Parameters.DefaultContentType);
+
+            if (endpointDescription.ReturnCookies)
+            {
+                foreach (var cookie in HttpContext.Request.Cookies)
+                {
+                    HttpContext.Response.Cookies.Append(cookie.Key, cookie.Value);
+                }
+            }
+
+            foreach (var cookie in response.Cookies)
+            {
+                HttpContext.Response.Cookies.Append(cookie.Key, cookie.Value);
+            }
 
             string body = response.Body;
             if (body != null)
@@ -99,23 +195,50 @@ namespace MockWebApi.Controller
             return requestInformation;
         }
 
-        private async Task<HttpResult> ExecuteTemplate(RouteMatch<EndpointDescription> routeMatch)
+        private async Task<HttpResult> ExecuteTemplate(HttpResult httpResult, IDictionary<string, string> variables)
         {
-            HttpResult responseTemplate = routeMatch.RouteInformation.Results.FirstOrDefault();
+            HttpResult result = httpResult.Clone(); // TODO: this is not needed any longer when the TryGetHttpResult() clones all structures before it returns them
 
-            HttpResult result = responseTemplate.Clone();
+            result.Body = await ExecuteTemplate(result.Body, variables);
+            result.ContentType = await ExecuteTemplate(result.ContentType, variables);
 
-            string templateBody = responseTemplate.Body;
-
-            if (string.IsNullOrEmpty(templateBody))
+            var httpStatusCodeString = await ExecuteTemplate($"{ (int)(result.StatusCode) }", variables);
+            HttpStatusCode? newHttpStatusCode = ConvertToHttpStatusCode(httpStatusCodeString);
+            if (newHttpStatusCode.HasValue)
             {
-                return responseTemplate;
+                result.StatusCode = newHttpStatusCode.Value;
             }
 
-            string responseBody = await _templateExecutor.Execute(templateBody, routeMatch.Variables);
-            result.Body = responseBody;
-
             return result;
+        }
+
+        private async Task<string> ExecuteTemplate(string templateText, IDictionary<string, string> variables)
+        {
+            if (string.IsNullOrEmpty(templateText))
+            {
+                return null;
+            }
+
+            return await _templateExecutor.Execute(templateText, variables);
+        }
+
+        private HttpStatusCode? ConvertToHttpStatusCode(string value)
+        {
+            if (!Int32.TryParse(value, out int numericalValue))
+            {
+                return null;
+            }
+
+            try
+            {
+                return (HttpStatusCode)numericalValue;
+            }
+            catch (Exception)
+            {
+
+            }
+
+            return null;
         }
 
     }

@@ -8,11 +8,28 @@ namespace MockWebApi.Tests.TestUtils
     internal class HttpTestClient
     {
 
-        private static readonly HttpClient _httpClient = new HttpClient();
+        private readonly HttpClient _httpClient;
 
-        public static async Task<HttpResponseMessage> SendMessage(Uri uri, string path, string body, HttpMethod method = null, string mediaType = "text/plain")
+        internal HttpTestClient(HttpClient httpClient = null)
+        {
+            _httpClient = httpClient ?? new HttpClient();
+        }
+
+        internal async Task<HttpResponseMessage> SendMessage(Uri uri, string path, string body, HttpMethod method = null, string mediaType = "text/plain")
         {
             HttpRequestMessage request = new HttpRequestMessage(method ?? HttpMethod.Get, new Uri(uri, path))
+            {
+                Content = new StringContent(body, Encoding.UTF8, mediaType)
+            };
+
+            HttpResponseMessage responseMessage = await _httpClient.SendAsync(request);
+
+            return responseMessage;
+        }
+
+        internal async Task<HttpResponseMessage> SendMessage(string path, string body, HttpMethod method = null, string mediaType = "text/plain")
+        {
+            HttpRequestMessage request = new HttpRequestMessage(method ?? HttpMethod.Get, path)
             {
                 Content = new StringContent(body, Encoding.UTF8, mediaType)
             };

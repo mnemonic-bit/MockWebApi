@@ -5,6 +5,7 @@ using MockWebApi.Configuration.Model;
 using RestEase;
 using System;
 using System.IO;
+using System.Net.Http;
 using System.Threading.Tasks;
 using YamlDotNet.Serialization;
 
@@ -20,20 +21,12 @@ namespace MockWebApi.Client
             _webApi = RestClient.For<IMockWebApiClient>(uri);
         }
 
-        /// <summary>
-        /// Configures all aspects which are given in the configuration file
-        /// on the server.
-        /// </summary>
-        /// <returns></returns>
-        public Task<bool> ConfigureServer(string fileName)
+        public MockWebApi(HttpClient httpClient)
         {
-            IConfigurationReader configrationReader = new ConfigurationReader();
-            ServiceConfiguration serviceConfiguration = configrationReader.ReadConfiguration(fileName);
-
-            return ConfigureServer(serviceConfiguration);
+            _webApi = RestClient.For<IMockWebApiClient>(httpClient);
         }
 
-        public async Task<bool> ConfigureServer(ServiceConfiguration serviceConfiguration)
+        public async Task<bool> ConfigureMockWebApi(ServiceConfiguration serviceConfiguration)
         {
             bool overallSuccess = await Configure(
                 defaultHttpStatusCode: serviceConfiguration.DefaultHttpStatusCode,
@@ -47,6 +40,43 @@ namespace MockWebApi.Client
             }
 
             return overallSuccess;
+        }
+
+        /// <summary>
+        /// Configures all aspects which are given in the configuration file
+        /// on the server.
+        /// </summary>
+        /// <returns></returns>
+        public Task<bool> ConfigureMockWebApi(string fileName)
+        {
+            IConfigurationReader configrationReader = new ConfigurationReader();
+            ServiceConfiguration serviceConfiguration = configrationReader.ReadConfiguration(fileName);
+
+            return ConfigureMockWebApi(serviceConfiguration);
+        }
+
+        public Task<bool> ConfigureMockWebApi(string configuration, string format = "YAML")
+        {
+            ConfigurationReader configurationReader = new ConfigurationReader();
+            ServiceConfiguration serviceConfiguration = configurationReader.ReadConfiguration(configuration, format);
+
+            return ConfigureMockWebApi(serviceConfiguration);
+        }
+
+        public async Task<string> DownloadMockWebApiConfiguration(string format = "YAML")
+        {
+            EndpointDescription[] endpointDescriptions = await GetRoutes();
+
+            ServiceConfiguration serviceConfiguration = new ServiceConfiguration()
+            {
+                EndpointDescriptions = endpointDescriptions
+            };
+
+            ConfigurationWriter configurationWriter = new ConfigurationWriter();
+
+            string configuration = configurationWriter.WriteConfiguration(serviceConfiguration, format);
+
+            return configuration;
         }
 
         public async Task<bool> Configure(int? defaultHttpStatusCode = null, string defaultContentType = null, bool? trackServiceApiCalls = null, bool? logServiceApiCalls = null)
@@ -63,23 +93,6 @@ namespace MockWebApi.Client
             }
 
             return true;
-        }
-
-        public async Task<string> GetConfiguration()
-        {
-            Response<string> response = await _webApi.GetConfiguration();
-
-            if (!response.ResponseMessage.IsSuccessStatusCode)
-            {
-                return "";
-            }
-
-            // TODO: change the return type to a structure which contains
-            // all the configuration keys with their values.
-            string responseBody = response.StringContent;
-            //EndpointConfiguration[] endpointConfigurations = DeserializeYaml<EndpointConfiguration[]>(responseBody);
-
-            return responseBody;
         }
 
         public async Task<EndpointDescription[]> GetRoutes()
@@ -107,7 +120,17 @@ namespace MockWebApi.Client
                 return false;
             }
 
-            // TODO: logging, something else?
+            return true;
+        }
+
+        public async Task<bool> DeleteRoute(string routeKey)
+        {
+            Response<string> response = await _webApi.DeleteRoute(routeKey);
+
+            if (!response.ResponseMessage.IsSuccessStatusCode)
+            {
+                return false;
+            }
 
             return true;
         }
@@ -134,6 +157,20 @@ namespace MockWebApi.Client
             string responseBody = response.StringContent;
             RequestInformation[] requestInformation = DeserializeYaml<RequestInformation[]>(responseBody);
             return requestInformation;
+        }
+
+        public async Task<string> GetJwtToken(JwtCredentialUser user)
+        {
+            Response<string> response = await _webApi.GetJwtToken(user);
+
+            if (!response.ResponseMessage.IsSuccessStatusCode)
+            {
+                return null;
+            }
+
+            string token = response.StringContent;
+
+            return token;
         }
 
         private string SerializeToYaml<TObject>(TObject value)

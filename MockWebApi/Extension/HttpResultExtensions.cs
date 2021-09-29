@@ -21,6 +21,9 @@ namespace MockWebApi.Extension
                 StatusCode = httpStatusCode ?? httpResult.StatusCode
             };
 
+            result.Cookies ??= new Dictionary<string, string>();
+            result.Cookies.AddAll(httpResult.Cookies);
+
             return result;
         }
 

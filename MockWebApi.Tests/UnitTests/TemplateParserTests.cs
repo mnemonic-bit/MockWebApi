@@ -13,8 +13,6 @@ namespace MockWebApi.Tests.UnitTests
         public void Parse_ShouldReturnTheSameText_WhenNoTemplatingMarksAreMissing(string text)
         {
             // Arrange
-            //using Microsoft.AspNetCore.Routing.Template;
-            //TemplateParser parser = new TemplateParser();
             TemplateParser parser = new TemplateParser();
 
             // Act

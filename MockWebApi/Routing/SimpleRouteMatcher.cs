@@ -27,6 +27,11 @@ namespace MockWebApi.Routing
             return _routes.ContainsKey(routeTemplate);
         }
 
+        public bool TryFindRoute(string path, out TInfo info)
+        {
+            return _routes.TryGetValue(path, out info);
+        }
+
         public IEnumerable<TInfo> GetAllRoutes()
         {
             return _routes.Values.AsEnumerable();
@@ -46,7 +51,7 @@ namespace MockWebApi.Routing
         {
             routeMatch = default;
 
-            if (!_routes.TryGetValue(path, out TInfo info))
+            if (!TryFindRoute(path, out TInfo info))
             {
                 return false;
             }

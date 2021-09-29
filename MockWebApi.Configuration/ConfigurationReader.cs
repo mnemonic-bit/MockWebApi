@@ -23,16 +23,21 @@ namespace MockWebApi.Configuration
 
             string fileContents = File.ReadAllText(fileName);
 
-            switch (fileExtension.ToUpper())
+            return ReadConfiguration(fileContents, fileExtension.ToUpper());
+        }
+
+        public ServiceConfiguration ReadConfiguration(string configuration, string configurationFormat)
+        {
+            switch (configurationFormat)
             {
                 case "JSON":
                     {
-                        return ReadFromJson(fileContents);
+                        return ReadFromJson(configuration);
                     }
                 case "YAML":
                 default:
                     {
-                        return ReadFromYaml(fileContents);
+                        return ReadFromYaml(configuration);
                     }
             }
         }

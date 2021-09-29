@@ -17,5 +17,7 @@ namespace MockWebApi.Routing
 
         bool TryMatch(string path, out RouteMatch<TInfo> routeMatch);
 
+        bool TryFindRoute(string path, out TInfo info);
+
     }
 }

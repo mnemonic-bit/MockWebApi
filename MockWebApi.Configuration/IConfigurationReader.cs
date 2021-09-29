@@ -7,6 +7,8 @@ namespace MockWebApi.Configuration
 
         ServiceConfiguration ReadConfiguration(string fileName);
 
+        ServiceConfiguration ReadConfiguration(string configuration, string configurationFormat);
+
         ServiceConfiguration ReadFromJson(string text);
 
         ServiceConfiguration ReadFromYaml(string text);

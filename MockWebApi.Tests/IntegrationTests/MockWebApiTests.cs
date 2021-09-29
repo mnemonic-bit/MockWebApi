@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Xunit;
+
 using MockWebApiClient = MockWebApi.Client.MockWebApi;
 
 namespace MockWebApi.IntegrationTests.Tests
@@ -52,7 +53,10 @@ namespace MockWebApi.IntegrationTests.Tests
         public async Task ConfigureRoute_ShouldReturnBody_WhenRouteIsConfigured()
         {
             // Arrange
-            Uri serverUri = new Uri("http://localhost:5000");
+            IntegrationTestServer integrationTestServer = new IntegrationTestServer();
+            HttpClient httpClient = integrationTestServer.CreateHttpClient();
+            HttpTestClient httpTestClient = new HttpTestClient(httpClient);
+
             string testUriPath = "/brand/new/path";
             string expectedResponseBody = "some: body";
             HttpStatusCode statusCode = HttpStatusCode.Created;
@@ -73,20 +77,62 @@ namespace MockWebApi.IntegrationTests.Tests
                 }
             };
 
-            MockWebApiClient webApiClient = new MockWebApiClient(serverUri);
-            bool configureWebApiResult = await webApiClient.Configure(trackServiceApiCalls: true);
+            MockWebApiClient webApiClient = new MockWebApiClient(httpClient);
             bool configureRouteResult = await webApiClient.ConfigureRoute(endpointConfiguration);
 
             // Act
-            HttpResponseMessage responseMessage = await HttpTestClient.SendMessage(serverUri, testUriPath, "Test message");
+            HttpResponseMessage responseMessage = await httpTestClient.SendMessage(testUriPath, "Test message");
 
             // Assert
-            Assert.True(configureWebApiResult);
             Assert.True(configureRouteResult);
             Assert.Equal(statusCode, responseMessage.StatusCode);
 
             string responseBody = await responseMessage.Content.ReadAsStringAsync();
             Assert.Equal(expectedResponseBody, responseBody);
+        }
+
+        [Fact]
+        public async Task ConfigureRoute_ShouldReturnDefaultResponse_WhenRouteIsDeleted()
+        {
+            // Arrange
+            IntegrationTestServer integrationTestServer = new IntegrationTestServer();
+            HttpClient httpClient = integrationTestServer.CreateHttpClient();
+            HttpTestClient httpTestClient = new HttpTestClient(httpClient);
+
+            string testUriPath = "/brand/new/path";
+            string expectedResponseBody = "some: body";
+            HttpStatusCode statusCode = HttpStatusCode.Created;
+
+            EndpointDescription endpointConfiguration = new EndpointDescription()
+            {
+                Route = testUriPath,
+                LifecyclePolicy = LifecyclePolicy.ApplyOnce,
+                RequestBodyType = "text/plain",
+                Results = new HttpResult[]
+                {
+                    new HttpResult()
+                    {
+                        ContentType = "application/yaml",
+                        StatusCode = statusCode,
+                        Body = expectedResponseBody
+                    }
+                }
+            };
+
+            MockWebApiClient webApiClient = new MockWebApiClient(httpClient);
+            bool configureRouteResult = await webApiClient.ConfigureRoute(endpointConfiguration);
+            bool deleteRouteResult = await webApiClient.DeleteRoute(endpointConfiguration.Route);
+
+            // Act
+            HttpResponseMessage responseMessage = await httpTestClient.SendMessage(testUriPath, "Test message");
+
+            // Assert
+            Assert.True(configureRouteResult);
+            Assert.True(deleteRouteResult);
+            Assert.Equal(HttpStatusCode.OK, responseMessage.StatusCode);
+
+            string responseBody = await responseMessage.Content.ReadAsStringAsync();
+            Assert.Empty(responseBody);
         }
 
     }

@@ -16,11 +16,11 @@ namespace MockWebApi.Routing
         /// Inits a new instance of the RouteMatch class with the required
         /// information about the endpoint and the variable-bindings.
         /// </summary>
-        /// <param name="infos"></param>
+        /// <param name="info"></param>
         /// <param name="variables"></param>
-        public RouteMatch(TInfo infos, IDictionary<string, string> variables, IDictionary<string, string> parameters)
+        public RouteMatch(TInfo info, IDictionary<string, string> variables, IDictionary<string, string> parameters)
         {
-            RouteInformation = infos;
+            RouteInformation = info;
             Variables = variables;
             Parameters = parameters;
         }
