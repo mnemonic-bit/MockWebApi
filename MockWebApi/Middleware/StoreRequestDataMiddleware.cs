@@ -47,13 +47,14 @@ namespace MockWebApi.Middleware
             RequestInformation requestInfos = await CreateRequestInformation(request);
             context.Items.Add(MiddlewareConstants.MockWebApiHttpRequestInfomation, requestInfos);
 
-            if (RequestShouldNotBeStored(request))
-            {
-                await _nextDelegate(context);
-                return;
-            }
+            bool skipStoringTheRequest = RequestShouldNotBeStored(request);
 
             await _nextDelegate(context);
+
+            if (skipStoringTheRequest)
+            {
+                return;
+            }
 
             HttpResult httpResult = GetHttpResultFromContext(context);
             StoreRequestAndResponse(requestInfos, httpResult);
@@ -63,7 +64,7 @@ namespace MockWebApi.Middleware
         {
             bool trackServiceApiCalls = _serverConfig.Get<bool>(ConfigurationCollection.Parameters.TrackServiceApiCalls);
             bool startsWithServiceApi = request.Path.StartsWithSegments("/service-api");
-            bool routeOptOut = _routeMatcher.TryMatch(request.Path, out RouteMatch<EndpointDescription> routeMatch) && !routeMatch.RouteInformation.PersistRequestInformation;
+            bool routeOptOut = _routeMatcher.TryMatch(request.PathWithParameters(), out RouteMatch<EndpointDescription> routeMatch) && !routeMatch.RouteInformation.PersistRequestInformation;
 
             return startsWithServiceApi && !trackServiceApiCalls || routeOptOut;
         }

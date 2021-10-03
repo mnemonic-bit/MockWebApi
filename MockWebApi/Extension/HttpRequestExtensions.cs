@@ -23,5 +23,10 @@ namespace MockWebApi.Extension
             return body;
         }
 
+        public static string PathWithParameters(this HttpRequest request)
+        {
+            return $"{request.Path}{request.QueryString}";
+        }
+
     }
 }

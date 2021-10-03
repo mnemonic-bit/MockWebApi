@@ -52,7 +52,7 @@ namespace MockWebApi.Controller
         {
             RequestInformation requestInformation = GetRequestInformation(HttpContext);
 
-            string requestUri = $"{Request.Path}{Request.QueryString}";
+            string requestUri = Request.PathWithParameters();
             bool requestUriDidMatch = TryGetHttpResult(requestUri, out EndpointDescription endpointDescription, out IDictionary<string, string> variables);
 
             if (!CkeckAuthorization(HttpContext, endpointDescription))
@@ -159,14 +159,18 @@ namespace MockWebApi.Controller
             HttpContext.Response.StatusCode = (int?)response?.StatusCode ?? _serverConfig.Get<int>(ConfigurationCollection.Parameters.DefaultHttpStatusCode);
             HttpContext.Response.ContentType = response.ContentType ?? _serverConfig.Get<string>(ConfigurationCollection.Parameters.DefaultContentType);
 
+            response.Headers = HttpContext.Response.Headers.ToDictionary();
+
             if (endpointDescription.ReturnCookies)
             {
+                // This one mirrors the cookies from the request.
                 foreach (var cookie in HttpContext.Request.Cookies)
                 {
                     HttpContext.Response.Cookies.Append(cookie.Key, cookie.Value);
                 }
             }
 
+            // This one inserts/overwrites the cookies from the endpoint-configuration.
             foreach (var cookie in response.Cookies)
             {
                 HttpContext.Response.Cookies.Append(cookie.Key, cookie.Value);

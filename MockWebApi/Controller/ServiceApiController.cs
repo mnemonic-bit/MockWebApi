@@ -1,10 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using GraphQL;
+using GraphQL.NewtonsoftJson;
+using GraphQL.Types;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using MockWebApi.Auth;
 using MockWebApi.Configuration;
 using MockWebApi.Configuration.Model;
 using MockWebApi.Data;
 using MockWebApi.Extension;
+using MockWebApi.GraphQL;
 using MockWebApi.Routing;
 using System.Collections.Generic;
 using System.IO;
@@ -144,15 +148,35 @@ namespace MockWebApi.Controller
             return Ok($"The route '{routeKey}' has been deleted.");
         }
 
-        [HttpPost("configure/jwt")]
-        public async Task<IActionResult> GetJwtToken()
+        [HttpGet("jwt")]
+        public IActionResult GetJwtTokenViaHttpGet( [FromQuery] string userName)
         {
-            string configAsString = await GetBody();
-            JwtCredentialUser user = DeserializeYaml<JwtCredentialUser>(configAsString);
+            if (string.IsNullOrEmpty(userName))
+            {
+                return BadRequest("No user name was given in this request.");
+            }
+
+            JwtCredentialUser user = new JwtCredentialUser()
+            {
+                Name = userName
+            };
 
             string token = _jwtService.CreateToken(user);
 
             return Ok(token);
+        }
+
+        [HttpGet("graphql")]
+        public async Task<IActionResult> ExecuteGraphQlQuery( [FromQuery] string queryString)
+        {
+            var schema = new Schema { Query = new RequestHistoryItemQuery(_dataStore) };
+
+            var json = await schema.ExecuteAsync(_ =>
+            {
+                _.Query = queryString;
+            });
+
+            return Ok(json);
         }
 
         private string GetAllInformation()
