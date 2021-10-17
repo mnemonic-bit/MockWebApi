@@ -1,9 +1,5 @@
 ﻿using GraphQL.Types;
 using MockWebApi.Model;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace MockWebApi.GraphQL
 {
@@ -12,10 +8,13 @@ namespace MockWebApi.GraphQL
 
         public RequestInformationType()
         {
-            Field<StringGraphType>("HttpVerb");
-            Field<StringGraphType>("Scheme");
             Field<StringGraphType>("Path");
             Field<StringGraphType>("Uri");
+            Field<StringGraphType>("Scheme");
+            Field<StringGraphType>("HttpVerb");
+            Field<DateTimeGraphType>("Date");
+            //Field<DictionaryGraphType>("HttpHeaders"); // Dictionary? C.f. https://github.com/graphql-dotnet/graphql-dotnet/issues/318
+            Field<StringGraphType>("ContentType");
             Field<StringGraphType>("Body");
         }
 

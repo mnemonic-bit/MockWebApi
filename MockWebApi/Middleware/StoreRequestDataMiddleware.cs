@@ -9,6 +9,8 @@ using MockWebApi.Routing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace MockWebApi.Middleware
@@ -84,7 +86,7 @@ namespace MockWebApi.Middleware
                 HttpHeaders = request.Headers.ToDictionary()
             };
 
-            string requestBody = await request.GetBody();
+            string requestBody = await request.GetBody(Encoding.UTF8);
             requestBody = requestBody.Replace("\r\n", "\n");
             requestInfos.Body = requestBody;
 

@@ -1,3 +1,4 @@
+using GraphQL.Server;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -10,6 +11,7 @@ using MockWebApi.Configuration;
 using MockWebApi.Configuration.Model;
 using MockWebApi.Data;
 using MockWebApi.Extension;
+using MockWebApi.GraphQL;
 using MockWebApi.Middleware;
 using MockWebApi.Templating;
 using System;
@@ -54,6 +56,9 @@ namespace MockWebApi
             services.AddTransient<ITemplateExecutor, TemplateExecutor>();
             services.AddTransient<ITemplateParser, TemplateParser>();
 
+            // GraphQL schema types...
+            services.AddSingleton<RequestHistorySchema>();
+
             services.AddControllers();
             services.AddDynamicRouting();
 
@@ -61,6 +66,10 @@ namespace MockWebApi
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "MockWebApi", Version = "v1" });
             });
+
+            services.AddGraphQL()
+                .AddGraphTypes(ServiceLifetime.Scoped)
+                .AddSystemTextJson();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -88,6 +97,9 @@ namespace MockWebApi
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+
+                endpoints.MapGraphQL<RequestHistorySchema>("graphql");
+                endpoints.MapGraphQLPlayground("playground");
 
                 endpoints.MapControllerRoute(
                     name: "some-route-name",

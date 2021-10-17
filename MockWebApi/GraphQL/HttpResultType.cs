@@ -3,6 +3,7 @@ using MockWebApi.Configuration.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace MockWebApi.GraphQL
@@ -12,10 +13,13 @@ namespace MockWebApi.GraphQL
 
         public HttpResultType()
         {
-            //Field<StringGraphType>("StatusCode"); //TODO: HttpStatusCode is an enum
-            Field<StringGraphType>("ContentType");
-            Field<StringGraphType>("Body");
+            //Field<DictionaryGraphType>(nameof(HttpResult.Headers)); // Dictionary?
+            Field<HttpStatusCodeEnumType>(nameof(HttpResult.StatusCode)); // Enum
+            Field<BooleanGraphType>(nameof(HttpResult.IsMockedResult));
+            Field<StringGraphType>(nameof(HttpResult.Body));
+            Field<StringGraphType>(nameof(HttpResult.ContentType));
+            //Field<DictionaryGraphType>(nameof(HttpResult.Cookies)); // Dictionary?
         }
-
+        
     }
 }

@@ -8,16 +8,12 @@ namespace MockWebApi.Extension
     public static class HttpRequestExtensions
     {
 
-        public static async Task<string> GetBody(this HttpRequest request)
+        public static async Task<string> GetBody(this HttpRequest request, Encoding encoding)
         {
             request.EnableBuffering();
 
-            using StreamReader reader = new StreamReader(
-                request.Body, encoding: Encoding.UTF8,
-                detectEncodingFromByteOrderMarks: false,
-                leaveOpen: true);
+            string body = await request.Body.ReadString(encoding);
 
-            string body = await reader.ReadToEndAsync();
             request.Body.Position = 0;
 
             return body;

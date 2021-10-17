@@ -50,6 +50,10 @@ namespace MockWebApi.Controller
         /// <returns></returns>
         public async Task MockResults()
         {
+            // TODO: add a cancellation token to wherever we
+            // can use it to stop a long-running request.
+            //CancellationToken cancellationToken = HttpContext.RequestAborted;
+
             RequestInformation requestInformation = GetRequestInformation(HttpContext);
 
             string requestUri = Request.PathWithParameters();
@@ -164,14 +168,14 @@ namespace MockWebApi.Controller
             if (endpointDescription.ReturnCookies)
             {
                 // This one mirrors the cookies from the request.
-                foreach (var cookie in HttpContext.Request.Cookies)
+                foreach (KeyValuePair<string, string> cookie in HttpContext.Request.Cookies)
                 {
                     HttpContext.Response.Cookies.Append(cookie.Key, cookie.Value);
                 }
             }
 
             // This one inserts/overwrites the cookies from the endpoint-configuration.
-            foreach (var cookie in response.Cookies)
+            foreach (KeyValuePair<string, string> cookie in response.Cookies)
             {
                 HttpContext.Response.Cookies.Append(cookie.Key, cookie.Value);
             }
@@ -206,7 +210,7 @@ namespace MockWebApi.Controller
             result.Body = await ExecuteTemplate(result.Body, variables);
             result.ContentType = await ExecuteTemplate(result.ContentType, variables);
 
-            var httpStatusCodeString = await ExecuteTemplate($"{ (int)(result.StatusCode) }", variables);
+            string httpStatusCodeString = await ExecuteTemplate($"{ (int)(result.StatusCode) }", variables);
             HttpStatusCode? newHttpStatusCode = ConvertToHttpStatusCode(httpStatusCodeString);
             if (newHttpStatusCode.HasValue)
             {
@@ -228,7 +232,7 @@ namespace MockWebApi.Controller
 
         private HttpStatusCode? ConvertToHttpStatusCode(string value)
         {
-            if (!Int32.TryParse(value, out int numericalValue))
+            if (!int.TryParse(value, out int numericalValue))
             {
                 return null;
             }

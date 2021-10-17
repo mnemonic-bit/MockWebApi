@@ -10,9 +10,11 @@ using MockWebApi.Data;
 using MockWebApi.Extension;
 using MockWebApi.GraphQL;
 using MockWebApi.Routing;
+using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using YamlDotNet.Serialization;
 
@@ -217,7 +219,7 @@ namespace MockWebApi.Controller
 
         private async Task<string> GetBody()
         {
-            string config = await Request.GetBody();
+            string config = await Request.GetBody(Encoding.UTF8);
             config = config.Replace("\r\n", "\n");
             return config;
         }
