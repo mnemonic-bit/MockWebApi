@@ -9,17 +9,14 @@ namespace MockWebApi.Configuration
     {
 
         private readonly IConfigurationWriter _configurationWriter;
-        private readonly IConfigurationCollection _serviceConfiguration;
-        private readonly IRouteMatcher<EndpointDescription> _routeMatcher;
+        private readonly IServiceConfiguration _serviceConfiguration;
 
         public ServiceConfigurationWriter(
             IConfigurationWriter configurationWriter,
-            IConfigurationCollection serviceConfiguration,
-            IRouteMatcher<EndpointDescription> routeMatcher)
+            IServiceConfiguration serviceConfiguration)
         {
             _configurationWriter = configurationWriter;
             _serviceConfiguration = serviceConfiguration;
-            _routeMatcher = routeMatcher;
         }
 
         public string WriteConfiguration(MockedWebApiServiceConfiguration serviceConfiguration, string outputFormat = "YAML")
@@ -47,13 +44,13 @@ namespace MockWebApi.Configuration
             MockedWebApiServiceConfiguration serviceConfiguration = new MockedWebApiServiceConfiguration
             {
                 //TODO: make the getters accept nullable types (e.g. 'bool?')
-                TrackServiceApiCalls = _serviceConfiguration.Get<bool>(ConfigurationCollection.Parameters.TrackServiceApiCalls),
-                LogServiceApiCalls = _serviceConfiguration.Get<bool>(ConfigurationCollection.Parameters.LogServiceApiCalls),
+                TrackServiceApiCalls = _serviceConfiguration.ConfigurationCollection.Get<bool>(ConfigurationCollection.Parameters.TrackServiceApiCalls),
+                LogServiceApiCalls = _serviceConfiguration.ConfigurationCollection.Get<bool>(ConfigurationCollection.Parameters.LogServiceApiCalls),
                 //TODO: implement converting default endpoint definition
                 //DefaultHttpStatusCode = _serviceConfiguration.Get<int>(ConfigurationCollection.Parameters.DefaultHttpStatusCode),
                 //DefaultContentType = _serviceConfiguration.Get<string>(ConfigurationCollection.Parameters.DefaultContentType),
 
-                EndpointDescriptions = _routeMatcher.GetAllRoutes().ToArray()
+                EndpointDescriptions = _serviceConfiguration.RouteMatcher.GetAllRoutes().ToArray()
             };
 
             return serviceConfiguration;

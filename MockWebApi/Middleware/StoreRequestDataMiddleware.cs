@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.Logging;
+using MockWebApi.Configuration;
 using MockWebApi.Configuration.Model;
 using MockWebApi.Data;
 using MockWebApi.Extension;
@@ -18,26 +19,19 @@ namespace MockWebApi.Middleware
     {
 
         private readonly RequestDelegate _nextDelegate;
-
-        private readonly IConfigurationCollection _serverConfig;
-
+        private readonly IServiceConfiguration _serverConfig;
         private readonly IRequestHistory _dataStore;
-
-        private readonly IRouteMatcher<EndpointDescription> _routeMatcher;
-
         private readonly ILogger<StoreRequestDataMiddleware> _logger;
 
         public StoreRequestDataMiddleware(
             RequestDelegate next,
-            IConfigurationCollection serverConfig,
+            IServiceConfiguration serverConfig,
             IRequestHistory dataStore,
-            IRouteMatcher<EndpointDescription> routeMatcher,
             ILogger<StoreRequestDataMiddleware> logger)
         {
             _nextDelegate = next;
             _serverConfig = serverConfig;
             _dataStore = dataStore;
-            _routeMatcher = routeMatcher;
             _logger = logger;
         }
 
@@ -63,9 +57,9 @@ namespace MockWebApi.Middleware
 
         private bool RequestShouldNotBeStored(HttpRequest request)
         {
-            bool trackServiceApiCalls = _serverConfig.Get<bool>(ConfigurationCollection.Parameters.TrackServiceApiCalls);
+            bool trackServiceApiCalls = _serverConfig.ConfigurationCollection.Get<bool>(ConfigurationCollection.Parameters.TrackServiceApiCalls);
             bool startsWithServiceApi = request.Path.StartsWithSegments("/service-api");
-            bool routeOptOut = _routeMatcher.TryMatch(request.PathWithParameters(), out RouteMatch<EndpointDescription> routeMatch) && !routeMatch.RouteInformation.PersistRequestInformation;
+            bool routeOptOut = _serverConfig.RouteMatcher.TryMatch(request.PathWithParameters(), out RouteMatch<EndpointDescription> routeMatch) && !routeMatch.RouteInformation.PersistRequestInformation;
 
             return startsWithServiceApi && !trackServiceApiCalls || routeOptOut;
         }

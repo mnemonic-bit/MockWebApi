@@ -25,24 +25,21 @@ namespace MockWebApi.Controller
     {
 
         private readonly ILogger<ServiceApiController> _logger;
-        private readonly IServiceConfiguration _serverConfig;
+        private readonly IServiceConfiguration _serviceConfiguration;
         private readonly IRequestHistory _dataStore;
-        private readonly IRouteMatcher<EndpointDescription> _routeMatcher;
         private readonly IJwtService _jwtService;
         private readonly IServiceConfigurationWriter _configurationWriter;
 
         public ServiceApiController(
             ILogger<ServiceApiController> logger,
-            IServiceConfiguration serverConfig,
+            IServiceConfiguration serviceConfig,
             IRequestHistory dataStore,
-            IRouteMatcher<EndpointDescription> routeMatcher,
             IJwtService jwtService,
             IServiceConfigurationWriter configurationWriter)
         {
             _logger = logger;
-            _serverConfig = serverConfig;
+            _serviceConfiguration = serviceConfig;
             _dataStore = dataStore;
-            _routeMatcher = routeMatcher;
             _jwtService = jwtService;
             _configurationWriter = configurationWriter;
         }
@@ -79,28 +76,16 @@ namespace MockWebApi.Controller
         [HttpGet("configure")]
         public IActionResult GetConfiguration()
         {
-            return Ok(_serverConfig.ToString());
+            string configYaml = SerializeToYaml(_serviceConfiguration);
+            return Ok(configYaml);
         }
 
         [HttpPost("configure")]
-        public IActionResult Configure()
+        public async Task<IActionResult> Configure()
         {
-            foreach (KeyValuePair<string, string> parameter in Request.Query.ToDictionary())
-            {
-                if (_serverConfig.ConfigurationCollection.Contains(parameter.Key))
-                {
-                    _serverConfig.ConfigurationCollection[parameter.Key] = parameter.Value;
-                }
-            }
+            string body = await HttpContext.Request.GetBody(Encoding.UTF8);
 
-            return Ok();
-        }
-
-        [HttpDelete("configure")]
-        public async Task<IActionResult> ResetToDefault()
-        {
-            await DeleteRoute();
-            _routeMatcher.RemoveAll();
+            _serviceConfiguration.ReadFromYaml(body);
 
             return Ok();
         }
@@ -118,14 +103,14 @@ namespace MockWebApi.Controller
         public async Task<IActionResult> ConfigureRoute()
         {
             string configAsString = await GetBody();
-            EndpointDescription endpointDescription = DeserializeYaml<EndpointDescription>(configAsString);
+            EndpointDescription endpointDescription = configAsString.DeserializeYaml<EndpointDescription>();
 
             if (endpointDescription == null)
             {
                 return BadRequest($"Unable to deserialize the request-body YAML into an endpoint configuration.");
             }
 
-            _routeMatcher.AddRoute(endpointDescription.Route, endpointDescription);
+            _serviceConfiguration.RouteMatcher.AddRoute(endpointDescription.Route, endpointDescription);
 
             return Ok($"Configured route '{endpointDescription.Route}'.");
         }
@@ -137,11 +122,11 @@ namespace MockWebApi.Controller
 
             if (string.IsNullOrEmpty(routeKey))
             {
-                _routeMatcher.RemoveAll();
+                _serviceConfiguration.RouteMatcher.RemoveAll();
                 return Ok("All routes have been deleted.");
             }
 
-            if (!_routeMatcher.Remove(routeKey))
+            if (!_serviceConfiguration.RouteMatcher.Remove(routeKey))
             {
                 return BadRequest($"The route '{routeKey}' was not configured, so nothing was deleted.");
             }
@@ -152,33 +137,33 @@ namespace MockWebApi.Controller
         [HttpGet("configure/default")]
         public IActionResult GetDefault([FromQuery] string outputFormat = "YAML")
         {
+            DefaultEndpointDescription defaultEndpointDescription = _serviceConfiguration.DefaultEndpointDescription;
 
-            //TODO: serialize the default configuration before returning it.
-            string defaultConfigAsString = "TODO";
+            string defaultConfigAsYaml = SerializeToYaml(defaultEndpointDescription);
 
-            return Ok(defaultConfigAsString);
+            return Ok(defaultConfigAsYaml);
         }
 
         [HttpPost("configure/default")]
         public async Task<IActionResult> ConfigureDefault()
         {
             string configAsString = await GetBody();
-            DefaultEndpointDescription defaultEndpointDescription = DeserializeYaml<DefaultEndpointDescription>(configAsString);
+            DefaultEndpointDescription defaultEndpointDescription = configAsString.DeserializeYaml<DefaultEndpointDescription>();
 
             if (defaultEndpointDescription == null)
             {
                 return BadRequest($"Unable to deserialize the request-body YAML into a default endpoint configuration.");
             }
 
-
+            _serviceConfiguration.DefaultEndpointDescription = defaultEndpointDescription;
 
             return Ok($"Configured mocked default response.");
         }
 
         [HttpDelete("configure/default")]
-        public IActionResult ResetDefault()
+        public IActionResult ResetToDefault()
         {
-            //TODO: reset config to factory settings.
+            _serviceConfiguration.ResetToDefault();
 
             return Ok($"The default has been reset to factory settings.");
         }
@@ -239,15 +224,6 @@ namespace MockWebApi.Controller
             Serializer serializer = new Serializer();
             serializer.Serialize(stringWriter, value);
             return stringWriter.ToString();
-        }
-
-        private T DeserializeYaml<T>(string yamlText)
-        {
-            IDeserializer deserializer = new DeserializerBuilder()
-                //.WithNamingConvention(CamelCaseNamingConvention.Instance)
-                .Build();
-
-            return deserializer.Deserialize<T>(yamlText);
         }
 
         private async Task<string> GetBody()

@@ -1,4 +1,5 @@
 ﻿using System;
+using YamlDotNet.Serialization;
 
 namespace MockWebApi.Extension
 {
@@ -33,6 +34,15 @@ namespace MockWebApi.Extension
         public static bool IsNullOrEmpty(this string str)
         {
             return string.IsNullOrEmpty(str);
+        }
+
+        public static T DeserializeYaml<T>(this string yamlText)
+        {
+            IDeserializer deserializer = new DeserializerBuilder()
+                //.WithNamingConvention(CamelCaseNamingConvention.Instance)
+                .Build();
+
+            return deserializer.Deserialize<T>(yamlText);
         }
 
     }

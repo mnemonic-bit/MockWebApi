@@ -23,21 +23,18 @@ namespace MockWebApi.Controller
     {
 
         private readonly ILogger<ServiceApiController> _logger;
-        private readonly IServiceConfiguration _serverConfig;
-        private readonly IRouteMatcher<EndpointDescription> _routeMatcher;
+        private readonly IServiceConfiguration _serviceConfiguration;
         private readonly IAuthorizationService _authorizationService;
         private readonly ITemplateExecutor _templateExecutor;
 
         public MockWebApiController(
             ILogger<ServiceApiController> logger,
             IServiceConfiguration serverConfig,
-            IRouteMatcher<EndpointDescription> routeMatcher,
             IAuthorizationService authorizationService,
             ITemplateExecutor templateExecutor)
         {
             _logger = logger;
-            _serverConfig = serverConfig;
-            _routeMatcher = routeMatcher;
+            _serviceConfiguration = serverConfig;
             _authorizationService = authorizationService;
             _templateExecutor = templateExecutor;
         }
@@ -101,7 +98,7 @@ namespace MockWebApi.Controller
 
         private bool TryGetHttpResult(string uri, out EndpointDescription endpointDescription, out IDictionary<string, string> variables)
         {
-            if (_routeMatcher.TryMatch(uri, out RouteMatch<EndpointDescription> routeMatch))
+            if (_serviceConfiguration.RouteMatcher.TryMatch(uri, out RouteMatch<EndpointDescription> routeMatch))
             {
                 //TODO: clone the found routing information to make it tamper-proof
                 // and guard the config done by the user against changes made
@@ -120,15 +117,12 @@ namespace MockWebApi.Controller
 
         private (EndpointDescription, IDictionary<string, string>) GetDefaultEndpointDescription()
         {
-            DefaultEndpointDescription defaultEndpointDescription = _serverConfig.DefaultEndpointDescription;
+            DefaultEndpointDescription defaultEndpointDescription = _serviceConfiguration.DefaultEndpointDescription;
 
             IDictionary<string, string> variables = new Dictionary<string, string>();
 
-            EndpointDescription endpointDescription = new EndpointDescription()
-            {
-                ReturnCookies = defaultEndpointDescription.ReturnCookies,
-                Result = defaultEndpointDescription.Result
-            };
+            EndpointDescription endpointDescription = new EndpointDescription();
+            defaultEndpointDescription.CopyTo(endpointDescription);
 
             return (endpointDescription, variables);
         }
@@ -152,8 +146,8 @@ namespace MockWebApi.Controller
                 return;
             }
 
-            HttpContext.Response.StatusCode = (int?)response?.StatusCode ?? _serverConfig.ConfigurationCollection.Get<int>(ConfigurationCollection.Parameters.DefaultHttpStatusCode);
-            HttpContext.Response.ContentType = response.ContentType ?? _serverConfig.ConfigurationCollection.Get<string>(ConfigurationCollection.Parameters.DefaultContentType);
+            HttpContext.Response.StatusCode = (int?)response?.StatusCode ?? _serviceConfiguration.ConfigurationCollection.Get<int>(ConfigurationCollection.Parameters.DefaultHttpStatusCode);
+            HttpContext.Response.ContentType = response.ContentType ?? _serviceConfiguration.ConfigurationCollection.Get<string>(ConfigurationCollection.Parameters.DefaultContentType);
 
             response.Headers = HttpContext.Response.Headers.ToDictionary();
 
@@ -184,7 +178,7 @@ namespace MockWebApi.Controller
         {
             if (routeMatch.RouteInformation.LifecyclePolicy == LifecyclePolicy.ApplyOnce)
             {
-                _routeMatcher.Remove(routeMatch.RouteInformation.Route);
+                _serviceConfiguration.RouteMatcher.Remove(routeMatch.RouteInformation.Route);
             }
         }
 

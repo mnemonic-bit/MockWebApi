@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using MockWebApi.Configuration;
 using MockWebApi.Configuration.Model;
 using MockWebApi.Data;
 using MockWebApi.Routing;
@@ -16,22 +17,16 @@ namespace MockWebApi.Middleware
     {
 
         private readonly RequestDelegate _nextDelegate;
-
-        private readonly IConfigurationCollection _serverConfig;
-
-        private readonly IRouteMatcher<EndpointDescription> _routeMatcher;
-
+        private readonly IServiceConfiguration _serverConfig;
         private readonly ILogger<StoreRequestDataMiddleware> _logger;
 
         public DynamicRoutingMiddleware(
             RequestDelegate next,
-            IConfigurationCollection serverConfig,
-            IRouteMatcher<EndpointDescription> routeMatcher,
+            IServiceConfiguration serverConfig,
             ILogger<StoreRequestDataMiddleware> logger)
         {
             _nextDelegate = next;
             _serverConfig = serverConfig;
-            _routeMatcher = routeMatcher;
             _logger = logger;
         }
 
@@ -41,7 +36,7 @@ namespace MockWebApi.Middleware
 
             string fullRequestPath = $"{request.Path}{request.QueryString}";
 
-            if (_routeMatcher.TryMatch(fullRequestPath, out RouteMatch<EndpointDescription> routeMatch))
+            if (_serverConfig.RouteMatcher.TryMatch(fullRequestPath, out RouteMatch<EndpointDescription> routeMatch))
             {
                 InvokeHandler(routeMatch);
             }

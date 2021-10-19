@@ -8,23 +8,20 @@ namespace MockWebApi.Configuration
     public class ServiceConfigurationReader : IServiceConfigurationReader
     {
 
-        private readonly IConfigurationCollection _serviceConfiguration;
-        private readonly IRouteMatcher<EndpointDescription> _routeMatcher;
+        private readonly IServiceConfiguration _serviceConfiguration;
 
         public ServiceConfigurationReader(
-            IConfigurationCollection serviceConfiguration,
-            IRouteMatcher<EndpointDescription> routeMatcher)
+            IServiceConfiguration serviceConfiguration)
         {
             _serviceConfiguration = serviceConfiguration;
-            _routeMatcher = routeMatcher;
         }
 
         public void ConfigureService(MockedWebApiServiceConfiguration configuration)
         {
-            _serviceConfiguration.Set(ConfigurationCollection.Parameters.TrackServiceApiCalls, configuration?.TrackServiceApiCalls ?? false);
-            _serviceConfiguration.Set(ConfigurationCollection.Parameters.LogServiceApiCalls, configuration?.LogServiceApiCalls ?? false);
-            _serviceConfiguration.Set(ConfigurationCollection.Parameters.DefaultHttpStatusCode, configuration?.DefaultEndpointDescription?.Result?.StatusCode ?? System.Net.HttpStatusCode.OK);
-            _serviceConfiguration.Set(ConfigurationCollection.Parameters.DefaultContentType, configuration?.DefaultEndpointDescription?.Result?.ContentType ?? "text/plain");
+            _serviceConfiguration.ConfigurationCollection.Set(ConfigurationCollection.Parameters.TrackServiceApiCalls, configuration?.TrackServiceApiCalls ?? false);
+            _serviceConfiguration.ConfigurationCollection.Set(ConfigurationCollection.Parameters.LogServiceApiCalls, configuration?.LogServiceApiCalls ?? false);
+            _serviceConfiguration.ConfigurationCollection.Set(ConfigurationCollection.Parameters.DefaultHttpStatusCode, configuration?.DefaultEndpointDescription?.Result?.StatusCode ?? System.Net.HttpStatusCode.OK);
+            _serviceConfiguration.ConfigurationCollection.Set(ConfigurationCollection.Parameters.DefaultContentType, configuration?.DefaultEndpointDescription?.Result?.ContentType ?? "text/plain");
 
             if (configuration?.EndpointDescriptions == null)
             {
@@ -33,7 +30,7 @@ namespace MockWebApi.Configuration
 
             foreach (EndpointDescription endpoint in configuration.EndpointDescriptions)
             {
-                _routeMatcher.AddRoute(endpoint.Route, endpoint);
+                _serviceConfiguration.RouteMatcher.AddRoute(endpoint.Route, endpoint);
             }
         }
 
