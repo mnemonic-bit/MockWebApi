@@ -5,6 +5,7 @@ using MockWebApi.Configuration.Model;
 using RestEase;
 using System;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using YamlDotNet.Serialization;
@@ -26,11 +27,11 @@ namespace MockWebApi.Client
             _webApi = RestClient.For<IMockWebApiClient>(httpClient);
         }
 
-        public async Task<bool> ConfigureMockWebApi(ServiceConfiguration serviceConfiguration)
+        public async Task<bool> ConfigureMockWebApi(MockedWebApiServiceConfiguration serviceConfiguration)
         {
             bool overallSuccess = await Configure(
-                defaultHttpStatusCode: serviceConfiguration.DefaultHttpStatusCode,
-                defaultContentType: serviceConfiguration.DefaultContentType,
+                defaultHttpStatusCode: (int?)(serviceConfiguration?.DefaultEndpointDescription?.Result?.StatusCode ?? System.Net.HttpStatusCode.OK),
+                defaultContentType: serviceConfiguration?.DefaultEndpointDescription?.Result?.ContentType ?? "text/plain",
                 trackServiceApiCalls: serviceConfiguration.TrackServiceApiCalls,
                 logServiceApiCalls: serviceConfiguration.LogServiceApiCalls);
 
@@ -50,7 +51,7 @@ namespace MockWebApi.Client
         public Task<bool> ConfigureMockWebApi(string fileName)
         {
             IConfigurationReader configrationReader = new ConfigurationReader();
-            ServiceConfiguration serviceConfiguration = configrationReader.ReadConfiguration(fileName);
+            MockedWebApiServiceConfiguration serviceConfiguration = configrationReader.ReadConfiguration(fileName);
 
             return ConfigureMockWebApi(serviceConfiguration);
         }
@@ -58,7 +59,7 @@ namespace MockWebApi.Client
         public Task<bool> ConfigureMockWebApi(string configuration, string format = "YAML")
         {
             ConfigurationReader configurationReader = new ConfigurationReader();
-            ServiceConfiguration serviceConfiguration = configurationReader.ReadConfiguration(configuration, format);
+            MockedWebApiServiceConfiguration serviceConfiguration = configurationReader.ReadConfiguration(configuration, format);
 
             return ConfigureMockWebApi(serviceConfiguration);
         }
@@ -67,7 +68,7 @@ namespace MockWebApi.Client
         {
             EndpointDescription[] endpointDescriptions = await GetRoutes();
 
-            ServiceConfiguration serviceConfiguration = new ServiceConfiguration()
+            MockedWebApiServiceConfiguration serviceConfiguration = new MockedWebApiServiceConfiguration()
             {
                 EndpointDescriptions = endpointDescriptions
             };

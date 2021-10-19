@@ -12,7 +12,7 @@ namespace MockWebApi.Configuration
         {
         }
 
-        public string WriteConfiguration(ServiceConfiguration serviceConfiguration, string outputFormat = "YAML")
+        public string WriteConfiguration(MockedWebApiServiceConfiguration serviceConfiguration, string outputFormat = "YAML")
         {
             switch (outputFormat.ToUpper())
             {
@@ -32,12 +32,12 @@ namespace MockWebApi.Configuration
             }
         }
 
-        public string WriteToJson(ServiceConfiguration serviceConfiguration)
+        public string WriteToJson(MockedWebApiServiceConfiguration serviceConfiguration)
         {
             return SerializeToJson(serviceConfiguration);
         }
 
-        public string WriteToYaml(ServiceConfiguration serviceConfiguration)
+        public string WriteToYaml(MockedWebApiServiceConfiguration serviceConfiguration)
         {
             return SerializeToYaml(serviceConfiguration);
         }

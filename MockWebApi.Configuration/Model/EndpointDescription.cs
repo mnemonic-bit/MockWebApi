@@ -2,7 +2,11 @@
 
 namespace MockWebApi.Configuration.Model
 {
-    public class EndpointDescription
+    /// <summary>
+    /// An EndpointDescription contains all configurable details of a mocked
+    /// endpoint (URL) on the MockWebApi server.
+    /// </summary>
+    public class EndpointDescription : DefaultEndpointDescription
     {
 
         /// <summary>
@@ -13,24 +17,9 @@ namespace MockWebApi.Configuration.Model
 
         public Dictionary<string, string> Parameters { get; set; }
 
-        public string RequestBodyType { get; set; } // PLAIN_TEXT, YAML, JSON, XML
-
-        /// <summary>
-        /// Gets or sets whether this endpoint guards with authorization
-        /// tokens before the endpoint can be accessed.
-        /// </summary>
-        public bool CheckAuthorization { get; set; }
-
-        /// <summary>
-        /// Gets or sets the list of users allowed to access that endpoint.
-        /// </summary>
-        public string[] AllowedUsers { get; set; }
-
-        public HttpResult[] Results { get; set; }
+        public string RequestBodyType { get; set; } // PLAIN_TEXT, YAML, JSON, XML; TODO: make this either a MIME type as string / class, or enum
 
         public LifecyclePolicy LifecyclePolicy { get; set; }
-
-        public bool ReturnCookies { get; set; }
 
         /// <summary>
         /// Gets or sets whether request-information should be
@@ -46,7 +35,4 @@ namespace MockWebApi.Configuration.Model
         public bool LogRequestInformation { get; set; } = true;
 
     }
-
-    public enum LifecyclePolicy { ApplyOnce, Repeat }
-
 }

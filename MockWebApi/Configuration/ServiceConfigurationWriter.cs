@@ -22,7 +22,7 @@ namespace MockWebApi.Configuration
             _routeMatcher = routeMatcher;
         }
 
-        public string WriteConfiguration(ServiceConfiguration serviceConfiguration, string outputFormat = "YAML")
+        public string WriteConfiguration(MockedWebApiServiceConfiguration serviceConfiguration, string outputFormat = "YAML")
         {
             switch (outputFormat.ToUpper())
             {
@@ -42,15 +42,16 @@ namespace MockWebApi.Configuration
             }
         }
 
-        public ServiceConfiguration GetServiceConfiguration()
+        public MockedWebApiServiceConfiguration GetServiceConfiguration()
         {
-            ServiceConfiguration serviceConfiguration = new ServiceConfiguration
+            MockedWebApiServiceConfiguration serviceConfiguration = new MockedWebApiServiceConfiguration
             {
                 //TODO: make the getters accept nullable types (e.g. 'bool?')
                 TrackServiceApiCalls = _serviceConfiguration.Get<bool>(ConfigurationCollection.Parameters.TrackServiceApiCalls),
                 LogServiceApiCalls = _serviceConfiguration.Get<bool>(ConfigurationCollection.Parameters.LogServiceApiCalls),
-                DefaultHttpStatusCode = _serviceConfiguration.Get<int>(ConfigurationCollection.Parameters.DefaultHttpStatusCode),
-                DefaultContentType = _serviceConfiguration.Get<string>(ConfigurationCollection.Parameters.DefaultContentType),
+                //TODO: implement converting default endpoint definition
+                //DefaultHttpStatusCode = _serviceConfiguration.Get<int>(ConfigurationCollection.Parameters.DefaultHttpStatusCode),
+                //DefaultContentType = _serviceConfiguration.Get<string>(ConfigurationCollection.Parameters.DefaultContentType),
 
                 EndpointDescriptions = _routeMatcher.GetAllRoutes().ToArray()
             };

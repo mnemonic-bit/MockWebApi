@@ -25,14 +25,11 @@ namespace MockWebApi.IntegrationTests.Tests
                 Route = testUriPath,
                 LifecyclePolicy = LifecyclePolicy.ApplyOnce,
                 RequestBodyType = "text/plain",
-                Results = new HttpResult[]
+                Result = new HttpResult()
                 {
-                    new HttpResult()
-                    {
-                        ContentType = "application/yaml",
-                        StatusCode = HttpStatusCode.Created,
-                        Body = responseBody
-                    }
+                    ContentType = "application/yaml",
+                    StatusCode = HttpStatusCode.Created,
+                    Body = responseBody
                 }
             };
 
@@ -66,14 +63,11 @@ namespace MockWebApi.IntegrationTests.Tests
                 Route = testUriPath,
                 LifecyclePolicy = LifecyclePolicy.ApplyOnce,
                 RequestBodyType = "text/plain",
-                Results = new HttpResult[]
+                Result = new HttpResult()
                 {
-                    new HttpResult()
-                    {
-                        ContentType = "application/yaml",
-                        StatusCode = statusCode,
-                        Body = expectedResponseBody
-                    }
+                    ContentType = "application/yaml",
+                    StatusCode = statusCode,
+                    Body = expectedResponseBody
                 }
             };
 
@@ -108,14 +102,11 @@ namespace MockWebApi.IntegrationTests.Tests
                 Route = testUriPath,
                 LifecyclePolicy = LifecyclePolicy.ApplyOnce,
                 RequestBodyType = "text/plain",
-                Results = new HttpResult[]
+                Result = new HttpResult()
                 {
-                    new HttpResult()
-                    {
-                        ContentType = "application/yaml",
-                        StatusCode = statusCode,
-                        Body = expectedResponseBody
-                    }
+                    ContentType = "application/yaml",
+                    StatusCode = statusCode,
+                    Body = expectedResponseBody
                 }
             };
 

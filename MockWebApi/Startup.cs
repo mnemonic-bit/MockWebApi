@@ -17,6 +17,8 @@ using MockWebApi.Templating;
 using System;
 using System.Reflection;
 
+using ServiceConfiguration = MockWebApi.Configuration.ServiceConfiguration;
+
 namespace MockWebApi
 {
     public class Startup
@@ -38,6 +40,7 @@ namespace MockWebApi
             services.AddTransient<IConfigurationReader, ConfigurationReader>();
             services.AddTransient<IConfigurationWriter, ConfigurationWriter>();
 
+            services.AddTransient<IServiceConfiguration, ServiceConfiguration>();
             services.AddTransient<IServiceConfigurationReader, ServiceConfigurationReader>();
             services.AddTransient<IServiceConfigurationWriter, ServiceConfigurationWriter>();
 
@@ -48,7 +51,7 @@ namespace MockWebApi
                 Audience = "AUDIENCE",
                 Issuer = "ISSUER",
                 Expiration = TimeSpan.FromHours(1),
-                SigningKey = "slkdjflskdjflksdjfklsdjflskf"
+                SigningKey = "slkdjflskdjflksdjfklsdjflskf" // TODO: configure this?
             });
             services.AddTransient<IJwtService, JwtService>();
             services.AddTransient<IAuthorizationService, AuthorizationService>();

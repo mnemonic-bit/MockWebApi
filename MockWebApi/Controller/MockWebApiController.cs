@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using MockWebApi.Auth;
+using MockWebApi.Configuration;
 using MockWebApi.Configuration.Model;
 using MockWebApi.Data;
 using MockWebApi.Extension;
@@ -22,14 +23,14 @@ namespace MockWebApi.Controller
     {
 
         private readonly ILogger<ServiceApiController> _logger;
-        private readonly IConfigurationCollection _serverConfig;
+        private readonly IServiceConfiguration _serverConfig;
         private readonly IRouteMatcher<EndpointDescription> _routeMatcher;
         private readonly IAuthorizationService _authorizationService;
         private readonly ITemplateExecutor _templateExecutor;
 
         public MockWebApiController(
             ILogger<ServiceApiController> logger,
-            IConfigurationCollection serverConfig,
+            IServiceConfiguration serverConfig,
             IRouteMatcher<EndpointDescription> routeMatcher,
             IAuthorizationService authorizationService,
             ITemplateExecutor templateExecutor)
@@ -119,23 +120,14 @@ namespace MockWebApi.Controller
 
         private (EndpointDescription, IDictionary<string, string>) GetDefaultEndpointDescription()
         {
-            // TODO: get this instance from the server-configuration
-
-            HttpResult httpResult = new HttpResult()
-            {
-                StatusCode = (HttpStatusCode)_serverConfig.Get<int>(ConfigurationCollection.Parameters.DefaultHttpStatusCode),
-                ContentType = _serverConfig.Get<string>(ConfigurationCollection.Parameters.DefaultContentType)
-            };
+            DefaultEndpointDescription defaultEndpointDescription = _serverConfig.DefaultEndpointDescription;
 
             IDictionary<string, string> variables = new Dictionary<string, string>();
 
             EndpointDescription endpointDescription = new EndpointDescription()
             {
-                ReturnCookies = true,
-                Results = new HttpResult[]
-                {
-                    httpResult
-                }
+                ReturnCookies = defaultEndpointDescription.ReturnCookies,
+                Result = defaultEndpointDescription.Result
             };
 
             return (endpointDescription, variables);
@@ -143,7 +135,7 @@ namespace MockWebApi.Controller
 
         private async Task MockResponse(EndpointDescription endpointDescription, IDictionary<string, string> variables)
         {
-            HttpResult httpResult = endpointDescription.Results.FirstOrDefault();
+            HttpResult httpResult = endpointDescription.Result;
 
             HttpResult response = await ExecuteTemplate(httpResult, variables);
 
@@ -160,8 +152,8 @@ namespace MockWebApi.Controller
                 return;
             }
 
-            HttpContext.Response.StatusCode = (int?)response?.StatusCode ?? _serverConfig.Get<int>(ConfigurationCollection.Parameters.DefaultHttpStatusCode);
-            HttpContext.Response.ContentType = response.ContentType ?? _serverConfig.Get<string>(ConfigurationCollection.Parameters.DefaultContentType);
+            HttpContext.Response.StatusCode = (int?)response?.StatusCode ?? _serverConfig.ConfigurationCollection.Get<int>(ConfigurationCollection.Parameters.DefaultHttpStatusCode);
+            HttpContext.Response.ContentType = response.ContentType ?? _serverConfig.ConfigurationCollection.Get<string>(ConfigurationCollection.Parameters.DefaultContentType);
 
             response.Headers = HttpContext.Response.Headers.ToDictionary();
 

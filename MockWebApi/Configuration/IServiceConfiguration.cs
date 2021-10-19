@@ -1,6 +1,14 @@
-﻿namespace MockWebApi.Configuration
+﻿using MockWebApi.Configuration.Model;
+using MockWebApi.Data;
+
+namespace MockWebApi.Configuration
 {
-    internal interface IServiceConfiguration
+    public interface IServiceConfiguration
     {
+
+        DefaultEndpointDescription DefaultEndpointDescription { get; set; }
+
+        IConfigurationCollection ConfigurationCollection { get; }
+
     }
 }

@@ -5,7 +5,7 @@ namespace MockWebApi.Configuration
     public interface IServiceConfigurationReader
     {
 
-        public void ConfigureService(ServiceConfiguration configuration);
+        public void ConfigureService(MockedWebApiServiceConfiguration configuration);
 
     }
 }

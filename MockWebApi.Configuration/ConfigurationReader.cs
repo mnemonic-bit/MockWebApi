@@ -12,7 +12,7 @@ namespace MockWebApi.Configuration
         {
         }
 
-        public ServiceConfiguration ReadConfiguration(string fileName)
+        public MockedWebApiServiceConfiguration ReadConfiguration(string fileName)
         {
             if (!File.Exists(fileName))
             {
@@ -26,7 +26,7 @@ namespace MockWebApi.Configuration
             return ReadConfiguration(fileContents, fileExtension.ToUpper());
         }
 
-        public ServiceConfiguration ReadConfiguration(string configuration, string configurationFormat)
+        public MockedWebApiServiceConfiguration ReadConfiguration(string configuration, string configurationFormat)
         {
             switch (configurationFormat)
             {
@@ -42,15 +42,15 @@ namespace MockWebApi.Configuration
             }
         }
 
-        public ServiceConfiguration ReadFromJson(string text)
+        public MockedWebApiServiceConfiguration ReadFromJson(string text)
         {
-            ServiceConfiguration configuration = DeserializeJson<ServiceConfiguration>(text);
+            MockedWebApiServiceConfiguration configuration = DeserializeJson<MockedWebApiServiceConfiguration>(text);
             return configuration;
         }
 
-        public ServiceConfiguration ReadFromYaml(string text)
+        public MockedWebApiServiceConfiguration ReadFromYaml(string text)
         {
-            ServiceConfiguration config = DeserializeYaml<ServiceConfiguration>(text);
+            MockedWebApiServiceConfiguration config = DeserializeYaml<MockedWebApiServiceConfiguration>(text);
             return config;
         }
 

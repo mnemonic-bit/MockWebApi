@@ -10,7 +10,6 @@ using MockWebApi.Data;
 using MockWebApi.Extension;
 using MockWebApi.GraphQL;
 using MockWebApi.Routing;
-using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -26,7 +25,7 @@ namespace MockWebApi.Controller
     {
 
         private readonly ILogger<ServiceApiController> _logger;
-        private readonly IConfigurationCollection _serverConfig;
+        private readonly IServiceConfiguration _serverConfig;
         private readonly IRequestHistory _dataStore;
         private readonly IRouteMatcher<EndpointDescription> _routeMatcher;
         private readonly IJwtService _jwtService;
@@ -34,7 +33,7 @@ namespace MockWebApi.Controller
 
         public ServiceApiController(
             ILogger<ServiceApiController> logger,
-            IConfigurationCollection serverConfig,
+            IServiceConfiguration serverConfig,
             IRequestHistory dataStore,
             IRouteMatcher<EndpointDescription> routeMatcher,
             IJwtService jwtService,
@@ -88,9 +87,9 @@ namespace MockWebApi.Controller
         {
             foreach (KeyValuePair<string, string> parameter in Request.Query.ToDictionary())
             {
-                if (_serverConfig.Contains(parameter.Key))
+                if (_serverConfig.ConfigurationCollection.Contains(parameter.Key))
                 {
-                    _serverConfig[parameter.Key] = parameter.Value;
+                    _serverConfig.ConfigurationCollection[parameter.Key] = parameter.Value;
                 }
             }
 
@@ -109,7 +108,7 @@ namespace MockWebApi.Controller
         [HttpGet("configure/route")]
         public IActionResult GetRoutes([FromQuery] string outputFormat = "YAML")
         {
-            ServiceConfiguration serviceConfiguration = _configurationWriter.GetServiceConfiguration();
+            MockedWebApiServiceConfiguration serviceConfiguration = _configurationWriter.GetServiceConfiguration();
             string endpointConfigsAsString = _configurationWriter.WriteConfiguration(serviceConfiguration, outputFormat);
 
             return Ok(endpointConfigsAsString);
@@ -150,8 +149,42 @@ namespace MockWebApi.Controller
             return Ok($"The route '{routeKey}' has been deleted.");
         }
 
+        [HttpGet("configure/default")]
+        public IActionResult GetDefault([FromQuery] string outputFormat = "YAML")
+        {
+
+            //TODO: serialize the default configuration before returning it.
+            string defaultConfigAsString = "TODO";
+
+            return Ok(defaultConfigAsString);
+        }
+
+        [HttpPost("configure/default")]
+        public async Task<IActionResult> ConfigureDefault()
+        {
+            string configAsString = await GetBody();
+            DefaultEndpointDescription defaultEndpointDescription = DeserializeYaml<DefaultEndpointDescription>(configAsString);
+
+            if (defaultEndpointDescription == null)
+            {
+                return BadRequest($"Unable to deserialize the request-body YAML into a default endpoint configuration.");
+            }
+
+
+
+            return Ok($"Configured mocked default response.");
+        }
+
+        [HttpDelete("configure/default")]
+        public IActionResult ResetDefault()
+        {
+            //TODO: reset config to factory settings.
+
+            return Ok($"The default has been reset to factory settings.");
+        }
+
         [HttpGet("jwt")]
-        public IActionResult GetJwtTokenViaHttpGet( [FromQuery] string userName)
+        public IActionResult GetJwtTokenViaHttpGet([FromQuery] string userName)
         {
             if (string.IsNullOrEmpty(userName))
             {
@@ -169,11 +202,11 @@ namespace MockWebApi.Controller
         }
 
         [HttpGet("graphql")]
-        public async Task<IActionResult> ExecuteGraphQlQuery( [FromQuery] string queryString)
+        public async Task<IActionResult> ExecuteGraphQlQuery([FromQuery] string queryString)
         {
-            var schema = new Schema { Query = new RequestHistoryItemQuery(_dataStore) };
+            Schema schema = new Schema { Query = new RequestHistoryItemQuery(_dataStore) };
 
-            var json = await schema.ExecuteAsync(_ =>
+            string json = await schema.ExecuteAsync(_ =>
             {
                 _.Query = queryString;
             });
