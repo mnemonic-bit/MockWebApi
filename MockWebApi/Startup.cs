@@ -77,6 +77,7 @@ namespace MockWebApi
 
             app.UseRouting();
 
+            app.UseMiddleware<TimeMeasurementMiddleware>();
             app.UseMiddleware<StoreRequestDataMiddleware>();
             app.UseMiddleware<LoggingMiddleware>();
 

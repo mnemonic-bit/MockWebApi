@@ -67,6 +67,7 @@ namespace MockWebApi.Data
             public static readonly string TrackServiceApiCalls = "TrackServiceApiCalls";
             public static readonly string LogServiceApiCalls = "LogServiceApiCalls";
             public static readonly string DefaultContentType = "DefaultContentType";
+            public static readonly string MeasureRequestTimings = "MeasureRequestTimings";
         }
 
     }
