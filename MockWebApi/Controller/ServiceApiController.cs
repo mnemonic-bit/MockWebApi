@@ -5,12 +5,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using MockWebApi.Auth;
 using MockWebApi.Configuration;
+using MockWebApi.Configuration.Extensions;
 using MockWebApi.Configuration.Model;
 using MockWebApi.Data;
 using MockWebApi.Extension;
 using MockWebApi.GraphQL;
 using MockWebApi.Routing;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -76,7 +76,15 @@ namespace MockWebApi.Controller
         [HttpGet("configure")]
         public IActionResult GetConfiguration()
         {
-            string configYaml = SerializeToYaml(_serviceConfiguration);
+            MockedWebApiServiceConfiguration config = new MockedWebApiServiceConfiguration()
+            {
+                DefaultEndpointDescription = _serviceConfiguration.DefaultEndpointDescription,
+                JwtServiceOptions = _serviceConfiguration.JwtServiceOptions,
+                EndpointDescriptions = _serviceConfiguration.RouteMatcher.GetAllRoutes().ToArray()
+            };
+
+            string configYaml = SerializeToYaml(config);
+
             return Ok(configYaml);
         }
 
@@ -85,18 +93,41 @@ namespace MockWebApi.Controller
         {
             string body = await HttpContext.Request.GetBody(Encoding.UTF8);
 
-            _serviceConfiguration.ReadFromYaml(body);
+            MockedWebApiServiceConfiguration config = body.DeserializeYaml<MockedWebApiServiceConfiguration>();
+
+            // First set all null fields of the uploaded config to the values
+            // which are currently used on this server.
+            config.JwtServiceOptions ??= _serviceConfiguration.JwtServiceOptions;
+            config.DefaultEndpointDescription ??= _serviceConfiguration.DefaultEndpointDescription;
+
+            // Then overwrite all config values of the server with what
+            // the merge of both configs now is.
+            _serviceConfiguration.DefaultEndpointDescription = config.DefaultEndpointDescription;
+            _serviceConfiguration.JwtServiceOptions = config.JwtServiceOptions;
+
+            foreach (EndpointDescription endpointDescription in (config.EndpointDescriptions ?? new EndpointDescription[] { }))
+            {
+                _serviceConfiguration.RouteMatcher.AddRoute(endpointDescription.Route, endpointDescription);
+            }
 
             return Ok();
+        }
+
+        [HttpDelete("configure")]
+        public IActionResult ResetToDefault()
+        {
+            _serviceConfiguration.ResetToDefault();
+
+            return Ok($"The default has been reset to factory settings.");
         }
 
         [HttpGet("configure/route")]
         public IActionResult GetRoutes([FromQuery] string outputFormat = "YAML")
         {
             MockedWebApiServiceConfiguration serviceConfiguration = _configurationWriter.GetServiceConfiguration();
-            string endpointConfigsAsString = _configurationWriter.WriteConfiguration(serviceConfiguration, outputFormat);
+            string endpointDescriptionsAsString = serviceConfiguration.EndpointDescriptions.Serialize(outputFormat);
 
-            return Ok(endpointConfigsAsString);
+            return Ok(endpointDescriptionsAsString);
         }
 
         [HttpPost("configure/route")]
@@ -158,14 +189,6 @@ namespace MockWebApi.Controller
             _serviceConfiguration.DefaultEndpointDescription = defaultEndpointDescription;
 
             return Ok($"Configured mocked default response.");
-        }
-
-        [HttpDelete("configure/default")]
-        public IActionResult ResetToDefault()
-        {
-            _serviceConfiguration.ResetToDefault();
-
-            return Ok($"The default has been reset to factory settings.");
         }
 
         [HttpGet("jwt")]

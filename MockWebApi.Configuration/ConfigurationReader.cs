@@ -1,4 +1,5 @@
 ﻿using MockWebApi.Configuration.Model;
+using MockWebApi.Extension;
 using Newtonsoft.Json;
 using System.IO;
 using YamlDotNet.Serialization;
@@ -44,28 +45,14 @@ namespace MockWebApi.Configuration
 
         public MockedWebApiServiceConfiguration ReadFromJson(string text)
         {
-            MockedWebApiServiceConfiguration configuration = DeserializeJson<MockedWebApiServiceConfiguration>(text);
+            MockedWebApiServiceConfiguration configuration = text.DeserializeJson<MockedWebApiServiceConfiguration>();
             return configuration;
         }
 
         public MockedWebApiServiceConfiguration ReadFromYaml(string text)
         {
-            MockedWebApiServiceConfiguration config = DeserializeYaml<MockedWebApiServiceConfiguration>(text);
+            MockedWebApiServiceConfiguration config = text.DeserializeYaml<MockedWebApiServiceConfiguration>();
             return config;
-        }
-
-        private T DeserializeYaml<T>(string yamlText)
-        {
-            IDeserializer deserializer = new DeserializerBuilder()
-                .Build();
-
-            return deserializer.Deserialize<T>(yamlText);
-        }
-
-        private T DeserializeJson<T>(string jsonText)
-        {
-            T result = JsonConvert.DeserializeObject<T>(jsonText);
-            return result;
         }
 
         private string GetFileExtension(string fileName)

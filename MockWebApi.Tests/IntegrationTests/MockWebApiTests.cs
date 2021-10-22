@@ -1,6 +1,5 @@
 using MockWebApi.Configuration.Model;
 using MockWebApi.Tests.TestUtils;
-using System;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -17,24 +16,26 @@ namespace MockWebApi.IntegrationTests.Tests
         public async Task ConfigureRoute_ShouldConfigureRoute()
         {
             // Arrange
+            IntegrationTestServer integrationTestServer = new IntegrationTestServer();
+            HttpClient httpClient = integrationTestServer.CreateHttpClient();
+            HttpTestClient httpTestClient = new HttpTestClient(httpClient);
+
             string testUriPath = "/brand/new/path";
             string responseBody = "some body";
 
-            EndpointDescription endpointConfiguration = new EndpointDescription()
+            EndpointDescription endpointConfiguration = EndpointDescriptionFactory.CreateEndpointDescription(
+                testUriPath,
+                HttpStatusCode.Created,
+                responseBody);
+
+            MockedWebApiServiceConfiguration serviceConfiguration = new MockedWebApiServiceConfiguration()
             {
-                Route = testUriPath,
-                LifecyclePolicy = LifecyclePolicy.ApplyOnce,
-                RequestBodyType = "text/plain",
-                Result = new HttpResult()
-                {
-                    ContentType = "application/yaml",
-                    StatusCode = HttpStatusCode.Created,
-                    Body = responseBody
-                }
+                LogServiceApiCalls = false,
+                TrackServiceApiCalls = true
             };
 
-            MockWebApiClient webApiClient = new MockWebApiClient(new Uri("http://localhost:5000"));
-            bool configureWebApiResult = await webApiClient.Configure(trackServiceApiCalls: true);
+            MockWebApiClient webApiClient = new MockWebApiClient(httpClient);
+            bool configureWebApiResult = await webApiClient.ConfigureMockWebApi(serviceConfiguration);
             bool configureRouteResult = await webApiClient.ConfigureRoute(endpointConfiguration);
 
             // Act
@@ -58,18 +59,10 @@ namespace MockWebApi.IntegrationTests.Tests
             string expectedResponseBody = "some: body";
             HttpStatusCode statusCode = HttpStatusCode.Created;
 
-            EndpointDescription endpointConfiguration = new EndpointDescription()
-            {
-                Route = testUriPath,
-                LifecyclePolicy = LifecyclePolicy.ApplyOnce,
-                RequestBodyType = "text/plain",
-                Result = new HttpResult()
-                {
-                    ContentType = "application/yaml",
-                    StatusCode = statusCode,
-                    Body = expectedResponseBody
-                }
-            };
+            EndpointDescription endpointConfiguration = EndpointDescriptionFactory.CreateEndpointDescription(
+                testUriPath,
+                statusCode,
+                expectedResponseBody);
 
             MockWebApiClient webApiClient = new MockWebApiClient(httpClient);
             bool configureRouteResult = await webApiClient.ConfigureRoute(endpointConfiguration);
@@ -97,18 +90,10 @@ namespace MockWebApi.IntegrationTests.Tests
             string expectedResponseBody = "some: body";
             HttpStatusCode statusCode = HttpStatusCode.Created;
 
-            EndpointDescription endpointConfiguration = new EndpointDescription()
-            {
-                Route = testUriPath,
-                LifecyclePolicy = LifecyclePolicy.ApplyOnce,
-                RequestBodyType = "text/plain",
-                Result = new HttpResult()
-                {
-                    ContentType = "application/yaml",
-                    StatusCode = statusCode,
-                    Body = expectedResponseBody
-                }
-            };
+            EndpointDescription endpointConfiguration = EndpointDescriptionFactory.CreateEndpointDescription(
+                testUriPath,
+                statusCode,
+                expectedResponseBody);
 
             MockWebApiClient webApiClient = new MockWebApiClient(httpClient);
             bool configureRouteResult = await webApiClient.ConfigureRoute(endpointConfiguration);

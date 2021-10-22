@@ -8,11 +8,14 @@ namespace MockWebApi.Client.RestEase
     public interface IMockWebApiClient
     {
 
-        [Post("configure")]
-        Task<Response<string>> Configure([Query] int? DefaultHttpStatusCode = null, [Query] string DefaultContentType = null, [Query] bool? TrackServiceApiCalls = null, [Query] bool? LogServiceApiCalls = null);
-
         [Get("configure")]
-        Task<Response<string>> GetConfiguration();
+        Task<Response<string>> DownloadConfiguration();
+
+        [Post("configure")]
+        Task<Response<string>> UploadConfiguration([Body] string configAsYanml);
+
+        [Delete("configure")]
+        Task<Response<string>> ResetConfiguration([Body] string configAsYanml);
 
         [Get("configure/route")]
         Task<Response<string>> GetRoutes();

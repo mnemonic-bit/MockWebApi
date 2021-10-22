@@ -9,6 +9,8 @@ namespace MockWebApi.Configuration
 
         DefaultEndpointDescription DefaultEndpointDescription { get; set; }
 
+        JwtServiceOptions JwtServiceOptions { get; set; }
+
         IConfigurationCollection ConfigurationCollection { get; }
 
         IRouteMatcher<EndpointDescription> RouteMatcher { get; }
