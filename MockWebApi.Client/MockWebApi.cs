@@ -16,30 +16,46 @@ namespace MockWebApi.Client
 
         private readonly IMockWebApiClient _webApi;
 
+        /// <summary>
+        /// Inits a new instance of the MockWebApi client with the URL
+        /// where the mock service can be reached.
+        /// </summary>
+        /// <param name="uri">The URL to contact the mocked web service.</param>
         public MockWebApi(Uri uri)
         {
             _webApi = RestClient.For<IMockWebApiClient>(uri);
         }
 
+        /// <summary>
+        /// Inits a new instance of the MockWebApi client with a HttpClient
+        /// which is used to reach the mock service.
+        /// </summary>
+        /// <param name="httpClient">The HttpClient which has the details of how to connect to the mock service.</param>
         public MockWebApi(HttpClient httpClient)
         {
             _webApi = RestClient.For<IMockWebApiClient>(httpClient);
         }
 
-        public async Task<bool> ConfigureMockWebApi(ServiceConfiguration serviceConfiguration)
+        /// <summary>
+        /// Uploads the configuration of the MockWebApi to a running instance.
+        /// The server which receives this call will set up all routes and settings
+        /// according to the given configuraiton structure.
+        /// </summary>
+        /// <param name="serviceConfiguration">The configuration that will be uploaded to the server.</param>
+        /// <returns>Returns true of the server responded with OK.</returns>
+        public async Task<bool> ConfigureMockWebApi(MockedWebApiServiceConfiguration serviceConfiguration)
         {
-            bool overallSuccess = await Configure(
-                defaultHttpStatusCode: serviceConfiguration.DefaultHttpStatusCode,
-                defaultContentType: serviceConfiguration.DefaultContentType,
-                trackServiceApiCalls: serviceConfiguration.TrackServiceApiCalls,
-                logServiceApiCalls: serviceConfiguration.LogServiceApiCalls);
+            ConfigurationWriter configurationWriter = new ConfigurationWriter();
+            string configurationAsYaml = configurationWriter.WriteConfiguration(serviceConfiguration);
 
-            foreach (EndpointDescription endpointDescription in serviceConfiguration.EndpointDescriptions)
+            Response<string> response = await _webApi.UploadConfiguration(configurationAsYaml);
+
+            if (!response.ResponseMessage.IsSuccessStatusCode)
             {
-                overallSuccess &= await ConfigureRoute(endpointDescription);
+                return false;
             }
 
-            return overallSuccess;
+            return true;
         }
 
         /// <summary>
@@ -50,49 +66,25 @@ namespace MockWebApi.Client
         public Task<bool> ConfigureMockWebApi(string fileName)
         {
             IConfigurationReader configrationReader = new ConfigurationReader();
-            ServiceConfiguration serviceConfiguration = configrationReader.ReadConfiguration(fileName);
+            MockedWebApiServiceConfiguration serviceConfiguration = configrationReader.ReadConfiguration(fileName);
 
             return ConfigureMockWebApi(serviceConfiguration);
         }
 
-        public Task<bool> ConfigureMockWebApi(string configuration, string format = "YAML")
+        public async Task<MockedWebApiServiceConfiguration> DownloadMockWebApiConfiguration(string format = "YAML")
         {
-            ConfigurationReader configurationReader = new ConfigurationReader();
-            ServiceConfiguration serviceConfiguration = configurationReader.ReadConfiguration(configuration, format);
-
-            return ConfigureMockWebApi(serviceConfiguration);
-        }
-
-        public async Task<string> DownloadMockWebApiConfiguration(string format = "YAML")
-        {
-            EndpointDescription[] endpointDescriptions = await GetRoutes();
-
-            ServiceConfiguration serviceConfiguration = new ServiceConfiguration()
-            {
-                EndpointDescriptions = endpointDescriptions
-            };
-
-            ConfigurationWriter configurationWriter = new ConfigurationWriter();
-
-            string configuration = configurationWriter.WriteConfiguration(serviceConfiguration, format);
-
-            return configuration;
-        }
-
-        public async Task<bool> Configure(int? defaultHttpStatusCode = null, string defaultContentType = null, bool? trackServiceApiCalls = null, bool? logServiceApiCalls = null)
-        {
-            Response<string> response = await _webApi.Configure(
-                DefaultHttpStatusCode: defaultHttpStatusCode,
-                DefaultContentType: defaultContentType,
-                TrackServiceApiCalls: trackServiceApiCalls,
-                LogServiceApiCalls: logServiceApiCalls);
+            Response<string> response = await _webApi.DownloadConfiguration();
 
             if (!response.ResponseMessage.IsSuccessStatusCode)
             {
-                return false;
+                return null;
             }
 
-            return true;
+            string configurationAsString = response.StringContent;
+            ConfigurationReader configurationReader = new ConfigurationReader();
+            MockedWebApiServiceConfiguration configuration = configurationReader.ReadConfiguration(configurationAsString, format);
+
+            return configuration;
         }
 
         public async Task<EndpointDescription[]> GetRoutes()

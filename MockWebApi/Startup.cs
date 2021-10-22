@@ -1,3 +1,4 @@
+using GraphQL.Server;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -10,10 +11,13 @@ using MockWebApi.Configuration;
 using MockWebApi.Configuration.Model;
 using MockWebApi.Data;
 using MockWebApi.Extension;
+using MockWebApi.GraphQL;
 using MockWebApi.Middleware;
 using MockWebApi.Templating;
 using System;
 using System.Reflection;
+
+using ServiceConfiguration = MockWebApi.Configuration.ServiceConfiguration;
 
 namespace MockWebApi
 {
@@ -30,7 +34,7 @@ namespace MockWebApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSingleton<IConfigurationCollection>(new ConfigurationCollection());
+            services.AddSingleton<IServiceConfiguration, ServiceConfiguration>();
             services.AddSingleton<IRequestHistory>(new RequestHistory());
 
             services.AddTransient<IConfigurationReader, ConfigurationReader>();
@@ -39,20 +43,14 @@ namespace MockWebApi
             services.AddTransient<IServiceConfigurationReader, ServiceConfigurationReader>();
             services.AddTransient<IServiceConfigurationWriter, ServiceConfigurationWriter>();
 
-            //TODO: change this, change the configuration in general to include this structure,
-            // make it changable at runtime.
-            services.AddSingleton(new JwtServiceOptions()
-            {
-                Audience = "AUDIENCE",
-                Issuer = "ISSUER",
-                Expiration = TimeSpan.FromHours(1),
-                SigningKey = "slkdjflskdjflksdjfklsdjflskf"
-            });
             services.AddTransient<IJwtService, JwtService>();
             services.AddTransient<IAuthorizationService, AuthorizationService>();
 
             services.AddTransient<ITemplateExecutor, TemplateExecutor>();
             services.AddTransient<ITemplateParser, TemplateParser>();
+
+            // GraphQL schema types...
+            services.AddSingleton<RequestHistorySchema>();
 
             services.AddControllers();
             services.AddDynamicRouting();
@@ -61,6 +59,10 @@ namespace MockWebApi
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "MockWebApi", Version = "v1" });
             });
+
+            services.AddGraphQL()
+                .AddGraphTypes(ServiceLifetime.Scoped)
+                .AddSystemTextJson();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -88,6 +90,9 @@ namespace MockWebApi
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+
+                endpoints.MapGraphQL<RequestHistorySchema>("graphql");
+                endpoints.MapGraphQLPlayground("playground");
 
                 endpoints.MapControllerRoute(
                     name: "some-route-name",

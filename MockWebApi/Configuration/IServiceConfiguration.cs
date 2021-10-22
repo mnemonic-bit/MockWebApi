@@ -1,6 +1,23 @@
-﻿namespace MockWebApi.Configuration
+﻿using MockWebApi.Configuration.Model;
+using MockWebApi.Data;
+using MockWebApi.Routing;
+
+namespace MockWebApi.Configuration
 {
-    internal interface IServiceConfiguration
+    public interface IServiceConfiguration
     {
+
+        DefaultEndpointDescription DefaultEndpointDescription { get; set; }
+
+        JwtServiceOptions JwtServiceOptions { get; set; }
+
+        IConfigurationCollection ConfigurationCollection { get; }
+
+        IRouteMatcher<EndpointDescription> RouteMatcher { get; }
+
+        void ResetToDefault();
+
+        bool ReadFromYaml(string configYaml);
+
     }
 }

@@ -1,4 +1,5 @@
 ﻿using MockWebApi.Configuration.Model;
+using MockWebApi.Extension;
 using Newtonsoft.Json;
 using System.IO;
 using YamlDotNet.Serialization;
@@ -12,7 +13,7 @@ namespace MockWebApi.Configuration
         {
         }
 
-        public ServiceConfiguration ReadConfiguration(string fileName)
+        public MockedWebApiServiceConfiguration ReadConfiguration(string fileName)
         {
             if (!File.Exists(fileName))
             {
@@ -26,7 +27,7 @@ namespace MockWebApi.Configuration
             return ReadConfiguration(fileContents, fileExtension.ToUpper());
         }
 
-        public ServiceConfiguration ReadConfiguration(string configuration, string configurationFormat)
+        public MockedWebApiServiceConfiguration ReadConfiguration(string configuration, string configurationFormat)
         {
             switch (configurationFormat)
             {
@@ -42,30 +43,16 @@ namespace MockWebApi.Configuration
             }
         }
 
-        public ServiceConfiguration ReadFromJson(string text)
+        public MockedWebApiServiceConfiguration ReadFromJson(string text)
         {
-            ServiceConfiguration configuration = DeserializeJson<ServiceConfiguration>(text);
+            MockedWebApiServiceConfiguration configuration = text.DeserializeJson<MockedWebApiServiceConfiguration>();
             return configuration;
         }
 
-        public ServiceConfiguration ReadFromYaml(string text)
+        public MockedWebApiServiceConfiguration ReadFromYaml(string text)
         {
-            ServiceConfiguration config = DeserializeYaml<ServiceConfiguration>(text);
+            MockedWebApiServiceConfiguration config = text.DeserializeYaml<MockedWebApiServiceConfiguration>();
             return config;
-        }
-
-        private T DeserializeYaml<T>(string yamlText)
-        {
-            IDeserializer deserializer = new DeserializerBuilder()
-                .Build();
-
-            return deserializer.Deserialize<T>(yamlText);
-        }
-
-        private T DeserializeJson<T>(string jsonText)
-        {
-            T result = JsonConvert.DeserializeObject<T>(jsonText);
-            return result;
         }
 
         private string GetFileExtension(string fileName)

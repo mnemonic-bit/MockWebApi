@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using MockWebApi.Auth;
+using MockWebApi.Configuration;
 using MockWebApi.Configuration.Model;
 using MockWebApi.Data;
 using MockWebApi.Extension;
@@ -22,21 +23,18 @@ namespace MockWebApi.Controller
     {
 
         private readonly ILogger<ServiceApiController> _logger;
-        private readonly IConfigurationCollection _serverConfig;
-        private readonly IRouteMatcher<EndpointDescription> _routeMatcher;
+        private readonly IServiceConfiguration _serviceConfiguration;
         private readonly IAuthorizationService _authorizationService;
         private readonly ITemplateExecutor _templateExecutor;
 
         public MockWebApiController(
             ILogger<ServiceApiController> logger,
-            IConfigurationCollection serverConfig,
-            IRouteMatcher<EndpointDescription> routeMatcher,
+            IServiceConfiguration serverConfig,
             IAuthorizationService authorizationService,
             ITemplateExecutor templateExecutor)
         {
             _logger = logger;
-            _serverConfig = serverConfig;
-            _routeMatcher = routeMatcher;
+            _serviceConfiguration = serverConfig;
             _authorizationService = authorizationService;
             _templateExecutor = templateExecutor;
         }
@@ -50,9 +48,13 @@ namespace MockWebApi.Controller
         /// <returns></returns>
         public async Task MockResults()
         {
+            // TODO: add a cancellation token to wherever we
+            // can use it to stop a long-running request.
+            //CancellationToken cancellationToken = HttpContext.RequestAborted;
+
             RequestInformation requestInformation = GetRequestInformation(HttpContext);
 
-            string requestUri = $"{Request.Path}{Request.QueryString}";
+            string requestUri = Request.PathWithParameters();
             bool requestUriDidMatch = TryGetHttpResult(requestUri, out EndpointDescription endpointDescription, out IDictionary<string, string> variables);
 
             if (!CkeckAuthorization(HttpContext, endpointDescription))
@@ -96,7 +98,7 @@ namespace MockWebApi.Controller
 
         private bool TryGetHttpResult(string uri, out EndpointDescription endpointDescription, out IDictionary<string, string> variables)
         {
-            if (_routeMatcher.TryMatch(uri, out RouteMatch<EndpointDescription> routeMatch))
+            if (_serviceConfiguration.RouteMatcher.TryMatch(uri, out RouteMatch<EndpointDescription> routeMatch))
             {
                 //TODO: clone the found routing information to make it tamper-proof
                 // and guard the config done by the user against changes made
@@ -115,31 +117,19 @@ namespace MockWebApi.Controller
 
         private (EndpointDescription, IDictionary<string, string>) GetDefaultEndpointDescription()
         {
-            // TODO: get this instance from the server-configuration
-
-            HttpResult httpResult = new HttpResult()
-            {
-                StatusCode = (HttpStatusCode)_serverConfig.Get<int>(ConfigurationCollection.Parameters.DefaultHttpStatusCode),
-                ContentType = _serverConfig.Get<string>(ConfigurationCollection.Parameters.DefaultContentType)
-            };
+            DefaultEndpointDescription defaultEndpointDescription = _serviceConfiguration.DefaultEndpointDescription;
 
             IDictionary<string, string> variables = new Dictionary<string, string>();
 
-            EndpointDescription endpointDescription = new EndpointDescription()
-            {
-                ReturnCookies = true,
-                Results = new HttpResult[]
-                {
-                    httpResult
-                }
-            };
+            EndpointDescription endpointDescription = new EndpointDescription();
+            defaultEndpointDescription.CopyTo(endpointDescription);
 
             return (endpointDescription, variables);
         }
 
         private async Task MockResponse(EndpointDescription endpointDescription, IDictionary<string, string> variables)
         {
-            HttpResult httpResult = endpointDescription.Results.FirstOrDefault();
+            HttpResult httpResult = endpointDescription.Result;
 
             HttpResult response = await ExecuteTemplate(httpResult, variables);
 
@@ -156,18 +146,22 @@ namespace MockWebApi.Controller
                 return;
             }
 
-            HttpContext.Response.StatusCode = (int?)response?.StatusCode ?? _serverConfig.Get<int>(ConfigurationCollection.Parameters.DefaultHttpStatusCode);
-            HttpContext.Response.ContentType = response.ContentType ?? _serverConfig.Get<string>(ConfigurationCollection.Parameters.DefaultContentType);
+            HttpContext.Response.StatusCode = (int?)response?.StatusCode ?? _serviceConfiguration.ConfigurationCollection.Get<int>(ConfigurationCollection.Parameters.DefaultHttpStatusCode);
+            HttpContext.Response.ContentType = response.ContentType ?? _serviceConfiguration.ConfigurationCollection.Get<string>(ConfigurationCollection.Parameters.DefaultContentType);
+
+            response.Headers = HttpContext.Response.Headers.ToDictionary();
 
             if (endpointDescription.ReturnCookies)
             {
-                foreach (var cookie in HttpContext.Request.Cookies)
+                // This one mirrors the cookies from the request.
+                foreach (KeyValuePair<string, string> cookie in HttpContext.Request.Cookies)
                 {
                     HttpContext.Response.Cookies.Append(cookie.Key, cookie.Value);
                 }
             }
 
-            foreach (var cookie in response.Cookies)
+            // This one inserts/overwrites the cookies from the endpoint-configuration.
+            foreach (KeyValuePair<string, string> cookie in response.Cookies)
             {
                 HttpContext.Response.Cookies.Append(cookie.Key, cookie.Value);
             }
@@ -184,7 +178,7 @@ namespace MockWebApi.Controller
         {
             if (routeMatch.RouteInformation.LifecyclePolicy == LifecyclePolicy.ApplyOnce)
             {
-                _routeMatcher.Remove(routeMatch.RouteInformation.Route);
+                _serviceConfiguration.RouteMatcher.Remove(routeMatch.RouteInformation.Route);
             }
         }
 
@@ -202,7 +196,7 @@ namespace MockWebApi.Controller
             result.Body = await ExecuteTemplate(result.Body, variables);
             result.ContentType = await ExecuteTemplate(result.ContentType, variables);
 
-            var httpStatusCodeString = await ExecuteTemplate($"{ (int)(result.StatusCode) }", variables);
+            string httpStatusCodeString = await ExecuteTemplate($"{ (int)(result.StatusCode) }", variables);
             HttpStatusCode? newHttpStatusCode = ConvertToHttpStatusCode(httpStatusCodeString);
             if (newHttpStatusCode.HasValue)
             {
@@ -224,7 +218,7 @@ namespace MockWebApi.Controller
 
         private HttpStatusCode? ConvertToHttpStatusCode(string value)
         {
-            if (!Int32.TryParse(value, out int numericalValue))
+            if (!int.TryParse(value, out int numericalValue))
             {
                 return null;
             }

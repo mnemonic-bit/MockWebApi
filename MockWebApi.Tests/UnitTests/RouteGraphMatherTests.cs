@@ -168,5 +168,62 @@ namespace MockWebApi.Tests.UnitTests
             Assert.NotNull(info);
         }
 
+        [Theory]
+        [InlineData("/some/path", "/some/path")]
+        [InlineData("/{variable1}/{variable2}/start", "/{variable1}/{variable2}/start")]
+        [InlineData("/{variable}/fixed/start", "/{variable}/fixed/start")]
+        public void TryFind_ShouldReturnInfoItem_WhenSameRouteIsSearchedFor(string pathTemplate, string path)
+        {
+            // Arrange
+            RouteGraphMatcher<EndpointDescription> graphMatcher = new RouteGraphMatcher<EndpointDescription>();
+
+            EndpointDescription endpointDescription = new EndpointDescription()
+            {
+                Route = pathTemplate,
+                PersistRequestInformation = true
+            };
+            graphMatcher.AddRoute(pathTemplate, endpointDescription);
+
+            // Act
+            bool result = graphMatcher.TryFindRoute(path, out EndpointDescription info);
+
+            // Assert
+            Assert.True(result);
+            Assert.NotNull(info);
+            Assert.Equal(endpointDescription, info);
+        }
+
+        [Theory]
+        [InlineData("/some/path", "/some/path")]
+        [InlineData("/{variable1}/{variable2}/start", "/{variable1}/{variable2}/start")]
+        [InlineData("/{variable}/fixed/start", "/{variable}/fixed/start")]
+        public void TryFind_ShouldReplaceInfoItem_WhenSamePathIsAddedWithNewInfos(string pathTemplate, string path)
+        {
+            // Arrange
+            RouteGraphMatcher<EndpointDescription> graphMatcher = new RouteGraphMatcher<EndpointDescription>();
+
+            EndpointDescription endpointDescription = new EndpointDescription()
+            {
+                Route = pathTemplate,
+                PersistRequestInformation = true
+            };
+            graphMatcher.AddRoute(pathTemplate, endpointDescription);
+
+            EndpointDescription newEndpointDescription = new EndpointDescription()
+            {
+                Route = pathTemplate,
+                PersistRequestInformation = false
+            };
+
+            // Act
+            graphMatcher.AddRoute(pathTemplate, newEndpointDescription);
+            bool result = graphMatcher.TryFindRoute(path, out EndpointDescription info);
+
+            // Assert
+            Assert.True(result);
+            Assert.NotNull(info);
+            Assert.Equal(newEndpointDescription, info);
+        }
+
     }
 }

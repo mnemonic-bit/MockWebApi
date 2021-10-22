@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using MockWebApi.Configuration;
 using MockWebApi.Configuration.Model;
 using MockWebApi.Data;
 using MockWebApi.Model;
@@ -12,22 +13,16 @@ namespace MockWebApi.Middleware
     {
 
         private readonly RequestDelegate _nextDelegate;
-
-        private readonly IConfigurationCollection _serverConfig;
-
-        private readonly IRouteMatcher<EndpointDescription> _routeMatcher;
-
+        private readonly IServiceConfiguration _serverConfig;
         private readonly ILogger<StoreRequestDataMiddleware> _logger;
 
         public LoggingMiddleware(
             RequestDelegate next,
-            IConfigurationCollection serverConfig,
-            IRouteMatcher<EndpointDescription> routeMatcher,
+            IServiceConfiguration serverConfig,
             ILogger<StoreRequestDataMiddleware> logger)
         {
             _nextDelegate = next;
             _serverConfig = serverConfig;
-            _routeMatcher = routeMatcher;
             _logger = logger;
         }
 
@@ -50,9 +45,9 @@ namespace MockWebApi.Middleware
 
         private bool RequestShouldBeLogged(HttpRequest request)
         {
-            bool logServiceApiCalls = _serverConfig.Get<bool>(ConfigurationCollection.Parameters.LogServiceApiCalls);
+            bool logServiceApiCalls = _serverConfig.ConfigurationCollection.Get<bool>(ConfigurationCollection.Parameters.LogServiceApiCalls);
             bool startsWithServiceApi = request.Path.StartsWithSegments("/service-api");
-            bool customRouteExists = _routeMatcher.TryMatch(request.Path, out RouteMatch<EndpointDescription> routeMatch);
+            bool customRouteExists = _serverConfig.RouteMatcher.TryMatch(request.Path, out RouteMatch<EndpointDescription> routeMatch);
             bool routeLogRule = customRouteExists && routeMatch.RouteInformation.LogRequestInformation || !customRouteExists;
 
             return startsWithServiceApi && logServiceApiCalls || !startsWithServiceApi && routeLogRule;

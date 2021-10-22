@@ -30,14 +30,14 @@ namespace MockWebApi.Extension
             {
                 if (!required)
                 {
-                    serviceConfigurationReader.ConfigureService(new ServiceConfiguration());
+                    serviceConfigurationReader.ConfigureService(new MockedWebApiServiceConfiguration());
                 }
                 return required ? throw new FileNotFoundException($"Configuration file not found ('{configFileName}').") : app;
             }
 
             IConfigurationReader configurationReader = app.ApplicationServices.GetService<IConfigurationReader>();
 
-            ServiceConfiguration serviceConfiguration = configurationReader.ReadFromYaml(configFileContents);
+            MockedWebApiServiceConfiguration serviceConfiguration = configurationReader.ReadFromYaml(configFileContents);
 
             serviceConfigurationReader.ConfigureService(serviceConfiguration);
 

@@ -5,6 +5,10 @@ using System.Threading.Tasks;
 
 namespace MockWebApi.Tests.TestUtils
 {
+    /// <summary>
+    /// This test client is used to send simple HTTP calls to our
+    /// mock web API to test configured routes.
+    /// </summary>
     internal class HttpTestClient
     {
 

@@ -6,6 +6,7 @@ using System.Linq;
 namespace MockWebApi.Routing
 {
     public class RouteGraphMatcher<TInfo> : IRouteMatcher<TInfo>
+        where TInfo : class
     {
 
         private readonly RouteGraphNode _matchGraph;
@@ -21,13 +22,16 @@ namespace MockWebApi.Routing
         {
             lock (_routes)
             {
-                if (ContainsRoute(routeTemplate))
+                RouteParser routeParser = new RouteParser();
+                Route route = routeParser.Parse(routeTemplate);
+
+                if (TryFindRoute(route, out MatchCandidate candidate))
                 {
+                    RouteInfo foundRouteInfo = candidate.PartCandidate.Infos.First(routeInfo => routeInfo.Info == candidate.Info);
+                    foundRouteInfo.Info = routeInfo;
                     return;
                 }
 
-                RouteParser routeParser = new RouteParser();
-                Route route = routeParser.Parse(routeTemplate);
                 AddRouteToMatchGraph(route, routeInfo);
                 _routes.Add(routeTemplate, routeInfo);
             }
@@ -82,16 +86,23 @@ namespace MockWebApi.Routing
                 RouteParser routeParser = new RouteParser();
                 Route parsedRoute = routeParser.Parse(path);
 
-                return TryFindRoute(parsedRoute, out info);
+                if (!TryFindRoute(parsedRoute, out MatchCandidate candidate))
+                {
+                    info = default(TInfo);
+                    return false;
+                }
+
+                info = candidate.Info;
+                return true;
             }
         }
 
 
         #region TryFindRoute
 
-        private bool TryFindRoute(Route route, out TInfo info)
+        private bool TryFindRoute(Route route, out MatchCandidate candidate)
         {
-            info = default(TInfo);
+            candidate = default(MatchCandidate);
 
             ICollection<MatchCandidate> initialCandidates = new HashSet<MatchCandidate>
             {
@@ -114,7 +125,7 @@ namespace MockWebApi.Routing
                 return false;
             }
 
-            info = candidates.Single().Info;
+            candidate = candidates.Single();
 
             return true;
         }
@@ -187,6 +198,7 @@ namespace MockWebApi.Routing
                     candidate.Info = info.Info;
                     candidate.Parameters.AddAll(info.Parameters);
                     candidate.NextNode = literalPartCandidates.NextNode;
+                    candidate.PartCandidate = literalPartCandidates;
 
                     return candidate;
                 })
@@ -197,6 +209,7 @@ namespace MockWebApi.Routing
                 MatchCandidate singleMatchCandidate = new MatchCandidate();
                 singleMatchCandidate.Info = default(TInfo);
                 singleMatchCandidate.NextNode = literalPartCandidates.NextNode;
+                singleMatchCandidate.PartCandidate = literalPartCandidates;
 
                 nextCandidates.Add(singleMatchCandidate);
             }
@@ -220,6 +233,7 @@ namespace MockWebApi.Routing
                             candidate.Info = info.Info;
                             candidate.Parameters.AddAll(info.Parameters);
                             candidate.NextNode = variablePart.NextNode;
+                            candidate.PartCandidate = variablePart;
 
                             return candidate;
                         })
@@ -230,6 +244,7 @@ namespace MockWebApi.Routing
                         MatchCandidate singleMatchCandidate = new MatchCandidate();
                         singleMatchCandidate.Info = default(TInfo);
                         singleMatchCandidate.NextNode = variablePart.NextNode;
+                        singleMatchCandidate.PartCandidate = variablePart;
 
                         newCandidates.Add(singleMatchCandidate);
                     }
@@ -766,9 +781,26 @@ namespace MockWebApi.Routing
                 Info = info;
             }
 
-            public TInfo Info { get; }
+            public TInfo Info { get; internal set; }
 
             public IDictionary<string, string> Parameters { get; } = new Dictionary<string, string>(); // TODO: fix this, this might not belong to a route information item.
+
+            public override bool Equals(object obj)
+            {
+                if (!(obj is RouteInfo))
+                {
+                    return false;
+                }
+
+                RouteInfo routeInfo = obj as RouteInfo;
+
+                if (routeInfo == null)
+                {
+                    return false;
+                }
+
+                return routeInfo.Info == Info;
+            }
 
         }
 
@@ -816,6 +848,8 @@ namespace MockWebApi.Routing
             }
 
             public RouteGraphNode NextNode { get; set; }
+
+            public PartCandidate PartCandidate { get; set; }
 
             public TInfo Info { get; set; }
 

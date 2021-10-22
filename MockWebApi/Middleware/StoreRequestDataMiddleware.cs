@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.Logging;
+using MockWebApi.Configuration;
 using MockWebApi.Configuration.Model;
 using MockWebApi.Data;
 using MockWebApi.Extension;
@@ -9,6 +10,7 @@ using MockWebApi.Routing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace MockWebApi.Middleware
@@ -17,26 +19,19 @@ namespace MockWebApi.Middleware
     {
 
         private readonly RequestDelegate _nextDelegate;
-
-        private readonly IConfigurationCollection _serverConfig;
-
+        private readonly IServiceConfiguration _serverConfig;
         private readonly IRequestHistory _dataStore;
-
-        private readonly IRouteMatcher<EndpointDescription> _routeMatcher;
-
         private readonly ILogger<StoreRequestDataMiddleware> _logger;
 
         public StoreRequestDataMiddleware(
             RequestDelegate next,
-            IConfigurationCollection serverConfig,
+            IServiceConfiguration serverConfig,
             IRequestHistory dataStore,
-            IRouteMatcher<EndpointDescription> routeMatcher,
             ILogger<StoreRequestDataMiddleware> logger)
         {
             _nextDelegate = next;
             _serverConfig = serverConfig;
             _dataStore = dataStore;
-            _routeMatcher = routeMatcher;
             _logger = logger;
         }
 
@@ -47,13 +42,14 @@ namespace MockWebApi.Middleware
             RequestInformation requestInfos = await CreateRequestInformation(request);
             context.Items.Add(MiddlewareConstants.MockWebApiHttpRequestInfomation, requestInfos);
 
-            if (RequestShouldNotBeStored(request))
-            {
-                await _nextDelegate(context);
-                return;
-            }
+            bool skipStoringTheRequest = RequestShouldNotBeStored(request);
 
             await _nextDelegate(context);
+
+            if (skipStoringTheRequest)
+            {
+                return;
+            }
 
             HttpResult httpResult = GetHttpResultFromContext(context);
             StoreRequestAndResponse(requestInfos, httpResult);
@@ -61,9 +57,9 @@ namespace MockWebApi.Middleware
 
         private bool RequestShouldNotBeStored(HttpRequest request)
         {
-            bool trackServiceApiCalls = _serverConfig.Get<bool>(ConfigurationCollection.Parameters.TrackServiceApiCalls);
+            bool trackServiceApiCalls = _serverConfig.ConfigurationCollection.Get<bool>(ConfigurationCollection.Parameters.TrackServiceApiCalls);
             bool startsWithServiceApi = request.Path.StartsWithSegments("/service-api");
-            bool routeOptOut = _routeMatcher.TryMatch(request.Path, out RouteMatch<EndpointDescription> routeMatch) && !routeMatch.RouteInformation.PersistRequestInformation;
+            bool routeOptOut = _serverConfig.RouteMatcher.TryMatch(request.PathWithParameters(), out RouteMatch<EndpointDescription> routeMatch) && !routeMatch.RouteInformation.PersistRequestInformation;
 
             return startsWithServiceApi && !trackServiceApiCalls || routeOptOut;
         }
@@ -83,7 +79,7 @@ namespace MockWebApi.Middleware
                 HttpHeaders = request.Headers.ToDictionary()
             };
 
-            string requestBody = await request.GetBody();
+            string requestBody = await request.GetBody(Encoding.UTF8);
             requestBody = requestBody.Replace("\r\n", "\n");
             requestInfos.Body = requestBody;
 

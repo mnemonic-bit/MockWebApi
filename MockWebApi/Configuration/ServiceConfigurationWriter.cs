@@ -9,20 +9,17 @@ namespace MockWebApi.Configuration
     {
 
         private readonly IConfigurationWriter _configurationWriter;
-        private readonly IConfigurationCollection _serviceConfiguration;
-        private readonly IRouteMatcher<EndpointDescription> _routeMatcher;
+        private readonly IServiceConfiguration _serviceConfiguration;
 
         public ServiceConfigurationWriter(
             IConfigurationWriter configurationWriter,
-            IConfigurationCollection serviceConfiguration,
-            IRouteMatcher<EndpointDescription> routeMatcher)
+            IServiceConfiguration serviceConfiguration)
         {
             _configurationWriter = configurationWriter;
             _serviceConfiguration = serviceConfiguration;
-            _routeMatcher = routeMatcher;
         }
 
-        public string WriteConfiguration(ServiceConfiguration serviceConfiguration, string outputFormat = "YAML")
+        public string WriteConfiguration(MockedWebApiServiceConfiguration serviceConfiguration, string outputFormat = "YAML")
         {
             switch (outputFormat.ToUpper())
             {
@@ -42,17 +39,18 @@ namespace MockWebApi.Configuration
             }
         }
 
-        public ServiceConfiguration GetServiceConfiguration()
+        public MockedWebApiServiceConfiguration GetServiceConfiguration()
         {
-            ServiceConfiguration serviceConfiguration = new ServiceConfiguration
+            MockedWebApiServiceConfiguration serviceConfiguration = new MockedWebApiServiceConfiguration
             {
                 //TODO: make the getters accept nullable types (e.g. 'bool?')
-                TrackServiceApiCalls = _serviceConfiguration.Get<bool>(ConfigurationCollection.Parameters.TrackServiceApiCalls),
-                LogServiceApiCalls = _serviceConfiguration.Get<bool>(ConfigurationCollection.Parameters.LogServiceApiCalls),
-                DefaultHttpStatusCode = _serviceConfiguration.Get<int>(ConfigurationCollection.Parameters.DefaultHttpStatusCode),
-                DefaultContentType = _serviceConfiguration.Get<string>(ConfigurationCollection.Parameters.DefaultContentType),
+                TrackServiceApiCalls = _serviceConfiguration.ConfigurationCollection.Get<bool>(ConfigurationCollection.Parameters.TrackServiceApiCalls),
+                LogServiceApiCalls = _serviceConfiguration.ConfigurationCollection.Get<bool>(ConfigurationCollection.Parameters.LogServiceApiCalls),
+                //TODO: implement converting default endpoint definition
+                //DefaultHttpStatusCode = _serviceConfiguration.Get<int>(ConfigurationCollection.Parameters.DefaultHttpStatusCode),
+                //DefaultContentType = _serviceConfiguration.Get<string>(ConfigurationCollection.Parameters.DefaultContentType),
 
-                EndpointDescriptions = _routeMatcher.GetAllRoutes().ToArray()
+                EndpointDescriptions = _serviceConfiguration.RouteMatcher.GetAllRoutes().ToArray()
             };
 
             return serviceConfiguration;

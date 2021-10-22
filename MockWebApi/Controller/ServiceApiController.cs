@@ -1,14 +1,19 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using GraphQL;
+using GraphQL.NewtonsoftJson;
+using GraphQL.Types;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using MockWebApi.Auth;
 using MockWebApi.Configuration;
+using MockWebApi.Configuration.Extensions;
 using MockWebApi.Configuration.Model;
 using MockWebApi.Data;
 using MockWebApi.Extension;
+using MockWebApi.GraphQL;
 using MockWebApi.Routing;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using YamlDotNet.Serialization;
 
@@ -20,24 +25,21 @@ namespace MockWebApi.Controller
     {
 
         private readonly ILogger<ServiceApiController> _logger;
-        private readonly IConfigurationCollection _serverConfig;
+        private readonly IServiceConfiguration _serviceConfiguration;
         private readonly IRequestHistory _dataStore;
-        private readonly IRouteMatcher<EndpointDescription> _routeMatcher;
         private readonly IJwtService _jwtService;
         private readonly IServiceConfigurationWriter _configurationWriter;
 
         public ServiceApiController(
             ILogger<ServiceApiController> logger,
-            IConfigurationCollection serverConfig,
+            IServiceConfiguration serviceConfig,
             IRequestHistory dataStore,
-            IRouteMatcher<EndpointDescription> routeMatcher,
             IJwtService jwtService,
             IServiceConfigurationWriter configurationWriter)
         {
             _logger = logger;
-            _serverConfig = serverConfig;
+            _serviceConfiguration = serviceConfig;
             _dataStore = dataStore;
-            _routeMatcher = routeMatcher;
             _jwtService = jwtService;
             _configurationWriter = configurationWriter;
         }
@@ -74,53 +76,72 @@ namespace MockWebApi.Controller
         [HttpGet("configure")]
         public IActionResult GetConfiguration()
         {
-            return Ok(_serverConfig.ToString());
+            MockedWebApiServiceConfiguration config = new MockedWebApiServiceConfiguration()
+            {
+                DefaultEndpointDescription = _serviceConfiguration.DefaultEndpointDescription,
+                JwtServiceOptions = _serviceConfiguration.JwtServiceOptions,
+                EndpointDescriptions = _serviceConfiguration.RouteMatcher.GetAllRoutes().ToArray()
+            };
+
+            string configYaml = SerializeToYaml(config);
+
+            return Ok(configYaml);
         }
 
         [HttpPost("configure")]
-        public IActionResult Configure()
+        public async Task<IActionResult> Configure()
         {
-            foreach (KeyValuePair<string, string> parameter in Request.Query.ToDictionary())
+            string body = await HttpContext.Request.GetBody(Encoding.UTF8);
+
+            MockedWebApiServiceConfiguration config = body.DeserializeYaml<MockedWebApiServiceConfiguration>();
+
+            // First set all null fields of the uploaded config to the values
+            // which are currently used on this server.
+            config.JwtServiceOptions ??= _serviceConfiguration.JwtServiceOptions;
+            config.DefaultEndpointDescription ??= _serviceConfiguration.DefaultEndpointDescription;
+
+            // Then overwrite all config values of the server with what
+            // the merge of both configs now is.
+            _serviceConfiguration.DefaultEndpointDescription = config.DefaultEndpointDescription;
+            _serviceConfiguration.JwtServiceOptions = config.JwtServiceOptions;
+
+            foreach (EndpointDescription endpointDescription in (config.EndpointDescriptions ?? new EndpointDescription[] { }))
             {
-                if (_serverConfig.Contains(parameter.Key))
-                {
-                    _serverConfig[parameter.Key] = parameter.Value;
-                }
+                _serviceConfiguration.RouteMatcher.AddRoute(endpointDescription.Route, endpointDescription);
             }
 
             return Ok();
         }
 
         [HttpDelete("configure")]
-        public async Task<IActionResult> ResetToDefault()
+        public IActionResult ResetToDefault()
         {
-            await DeleteRoute();
-            _routeMatcher.RemoveAll();
+            _serviceConfiguration.ResetToDefault();
 
-            return Ok();
+            return Ok($"The default has been reset to factory settings.");
         }
 
         [HttpGet("configure/route")]
         public IActionResult GetRoutes([FromQuery] string outputFormat = "YAML")
         {
-            ServiceConfiguration serviceConfiguration = _configurationWriter.GetServiceConfiguration();
-            string endpointConfigsAsString = _configurationWriter.WriteConfiguration(serviceConfiguration, outputFormat);
+            MockedWebApiServiceConfiguration serviceConfiguration = _configurationWriter.GetServiceConfiguration();
+            string endpointDescriptionsAsString = serviceConfiguration.EndpointDescriptions.Serialize(outputFormat);
 
-            return Ok(endpointConfigsAsString);
+            return Ok(endpointDescriptionsAsString);
         }
 
         [HttpPost("configure/route")]
         public async Task<IActionResult> ConfigureRoute()
         {
             string configAsString = await GetBody();
-            EndpointDescription endpointDescription = DeserializeYaml<EndpointDescription>(configAsString);
+            EndpointDescription endpointDescription = configAsString.DeserializeYaml<EndpointDescription>();
 
             if (endpointDescription == null)
             {
                 return BadRequest($"Unable to deserialize the request-body YAML into an endpoint configuration.");
             }
 
-            _routeMatcher.AddRoute(endpointDescription.Route, endpointDescription);
+            _serviceConfiguration.RouteMatcher.AddRoute(endpointDescription.Route, endpointDescription);
 
             return Ok($"Configured route '{endpointDescription.Route}'.");
         }
@@ -132,11 +153,11 @@ namespace MockWebApi.Controller
 
             if (string.IsNullOrEmpty(routeKey))
             {
-                _routeMatcher.RemoveAll();
+                _serviceConfiguration.RouteMatcher.RemoveAll();
                 return Ok("All routes have been deleted.");
             }
 
-            if (!_routeMatcher.Remove(routeKey))
+            if (!_serviceConfiguration.RouteMatcher.Remove(routeKey))
             {
                 return BadRequest($"The route '{routeKey}' was not configured, so nothing was deleted.");
             }
@@ -144,15 +165,61 @@ namespace MockWebApi.Controller
             return Ok($"The route '{routeKey}' has been deleted.");
         }
 
-        [HttpPost("configure/jwt")]
-        public async Task<IActionResult> GetJwtToken()
+        [HttpGet("configure/default")]
+        public IActionResult GetDefault([FromQuery] string outputFormat = "YAML")
+        {
+            DefaultEndpointDescription defaultEndpointDescription = _serviceConfiguration.DefaultEndpointDescription;
+
+            string defaultConfigAsYaml = SerializeToYaml(defaultEndpointDescription);
+
+            return Ok(defaultConfigAsYaml);
+        }
+
+        [HttpPost("configure/default")]
+        public async Task<IActionResult> ConfigureDefault()
         {
             string configAsString = await GetBody();
-            JwtCredentialUser user = DeserializeYaml<JwtCredentialUser>(configAsString);
+            DefaultEndpointDescription defaultEndpointDescription = configAsString.DeserializeYaml<DefaultEndpointDescription>();
+
+            if (defaultEndpointDescription == null)
+            {
+                return BadRequest($"Unable to deserialize the request-body YAML into a default endpoint configuration.");
+            }
+
+            _serviceConfiguration.DefaultEndpointDescription = defaultEndpointDescription;
+
+            return Ok($"Configured mocked default response.");
+        }
+
+        [HttpGet("jwt")]
+        public IActionResult GetJwtTokenViaHttpGet([FromQuery] string userName)
+        {
+            if (string.IsNullOrEmpty(userName))
+            {
+                return BadRequest("No user name was given in this request.");
+            }
+
+            JwtCredentialUser user = new JwtCredentialUser()
+            {
+                Name = userName
+            };
 
             string token = _jwtService.CreateToken(user);
 
             return Ok(token);
+        }
+
+        [HttpGet("graphql")]
+        public async Task<IActionResult> ExecuteGraphQlQuery([FromQuery] string queryString)
+        {
+            Schema schema = new Schema { Query = new RequestHistoryItemQuery(_dataStore) };
+
+            string json = await schema.ExecuteAsync(_ =>
+            {
+                _.Query = queryString;
+            });
+
+            return Ok(json);
         }
 
         private string GetAllInformation()
@@ -182,18 +249,9 @@ namespace MockWebApi.Controller
             return stringWriter.ToString();
         }
 
-        private T DeserializeYaml<T>(string yamlText)
-        {
-            IDeserializer deserializer = new DeserializerBuilder()
-                //.WithNamingConvention(CamelCaseNamingConvention.Instance)
-                .Build();
-
-            return deserializer.Deserialize<T>(yamlText);
-        }
-
         private async Task<string> GetBody()
         {
-            string config = await Request.GetBody();
+            string config = await Request.GetBody(Encoding.UTF8);
             config = config.Replace("\r\n", "\n");
             return config;
         }

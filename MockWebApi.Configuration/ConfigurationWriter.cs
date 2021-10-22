@@ -1,4 +1,5 @@
-﻿using MockWebApi.Configuration.Model;
+﻿using MockWebApi.Configuration.Extensions;
+using MockWebApi.Configuration.Model;
 using Newtonsoft.Json;
 using System.IO;
 using YamlDotNet.Serialization;
@@ -12,7 +13,7 @@ namespace MockWebApi.Configuration
         {
         }
 
-        public string WriteConfiguration(ServiceConfiguration serviceConfiguration, string outputFormat = "YAML")
+        public string WriteConfiguration(MockedWebApiServiceConfiguration serviceConfiguration, string outputFormat = "YAML")
         {
             switch (outputFormat.ToUpper())
             {
@@ -32,28 +33,14 @@ namespace MockWebApi.Configuration
             }
         }
 
-        public string WriteToJson(ServiceConfiguration serviceConfiguration)
+        public string WriteToJson(MockedWebApiServiceConfiguration serviceConfiguration)
         {
-            return SerializeToJson(serviceConfiguration);
+            return serviceConfiguration.SerializeToJson();
         }
 
-        public string WriteToYaml(ServiceConfiguration serviceConfiguration)
+        public string WriteToYaml(MockedWebApiServiceConfiguration serviceConfiguration)
         {
-            return SerializeToYaml(serviceConfiguration);
-        }
-
-        private string SerializeToJson<TObject>(TObject value)
-        {
-            string result = JsonConvert.SerializeObject(value, Formatting.Indented);
-            return result;
-        }
-
-        private string SerializeToYaml<TObject>(TObject value)
-        {
-            StringWriter stringWriter = new StringWriter();
-            Serializer serializer = new Serializer();
-            serializer.Serialize(stringWriter, value);
-            return stringWriter.ToString();
+            return serviceConfiguration.SerializeToYaml();
         }
 
     }

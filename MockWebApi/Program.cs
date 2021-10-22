@@ -1,41 +1,18 @@
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using MockWebApi.Extension;
-using Serilog;
-using Serilog.Filters;
+using MockWebApi.Service;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MockWebApi
 {
     public class Program
     {
 
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
-            CreateHostBuilder(args)
-                .Build()
-                .Run();
-        }
+            MockService mockService = new MockService(
+                MockHostBuilder.Create(args));
 
-        public static IHostBuilder CreateHostBuilder(string[] args)
-        {
-            Log.Logger = new LoggerConfiguration()
-                .WriteTo.Console()
-                .Filter.ByExcluding(Matching.FromSource("Microsoft"))
-                .CreateLogger();
-            
-            return Host
-                .CreateDefaultBuilder(args)
-                .ConfigureLogging(logBuilder =>
-                {
-                    logBuilder.AddConsole();
-                })
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder
-                        .UseEnvironment("Development")
-                        .SetupMockWebApi();
-                });
+            mockService.StartService();
         }
 
     }
