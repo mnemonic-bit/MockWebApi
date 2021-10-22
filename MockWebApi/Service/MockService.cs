@@ -1,7 +1,5 @@
 ﻿using Microsoft.Extensions.Hosting;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,13 +15,42 @@ namespace MockWebApi.Service
     {
 
         private readonly IHostBuilder _hostBuilder;
+        private Thread _serviceThread;
+        private readonly CancellationTokenSource _cancellationTokenSource;
 
         public MockService(IHostBuilder hostBuilder)
         {
             _hostBuilder = hostBuilder;
+            _cancellationTokenSource = new CancellationTokenSource();
         }
 
-        public async Task StartServiceAsync(CancellationToken cancellationToken = default)
+        public void StartService()
+        {
+            _serviceThread = new Thread(() => ThreadStart(_cancellationTokenSource.Token));
+            _serviceThread.Start();
+        }
+
+        public bool StopService(int millisecondTimeout = 300000)
+        {
+            _cancellationTokenSource.Cancel();
+            bool threadWasAborted = _serviceThread.Join(millisecondTimeout);
+            return threadWasAborted;
+        }
+
+        private void ThreadStart(CancellationToken cancellationToken)
+        {
+            try
+            {
+                Task task = BuildAndStartService(cancellationToken);
+                task.Wait();
+            }
+            catch (OperationCanceledException)
+            {
+
+            }
+        }
+
+        private async Task BuildAndStartService(CancellationToken cancellationToken = default)
         {
             await _hostBuilder
                 .Build()

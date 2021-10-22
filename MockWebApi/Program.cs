@@ -1,4 +1,5 @@
 using MockWebApi.Service;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MockWebApi
@@ -11,7 +12,7 @@ namespace MockWebApi
             MockService mockService = new MockService(
                 MockHostBuilder.Create(args));
 
-            await mockService.StartServiceAsync();
+            mockService.StartService();
         }
 
     }

@@ -43,15 +43,6 @@ namespace MockWebApi
             services.AddTransient<IServiceConfigurationReader, ServiceConfigurationReader>();
             services.AddTransient<IServiceConfigurationWriter, ServiceConfigurationWriter>();
 
-            //TODO: change this, change the configuration in general to include this structure,
-            // make it changable at runtime.
-            services.AddSingleton(new JwtServiceOptions()
-            {
-                Audience = "AUDIENCE",
-                Issuer = "ISSUER",
-                Expiration = TimeSpan.FromHours(1),
-                SigningKey = "slkdjflskdjflksdjfklsdjflskf" // TODO: configure this?
-            });
             services.AddTransient<IJwtService, JwtService>();
             services.AddTransient<IAuthorizationService, AuthorizationService>();
 

@@ -1,5 +1,6 @@
 ﻿using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
+using MockWebApi.Configuration;
 using MockWebApi.Configuration.Model;
 using Newtonsoft.Json;
 using System;
@@ -20,9 +21,9 @@ namespace MockWebApi.Auth
         private readonly SigningCredentials _signingCredentials;
         private readonly JwtSecurityTokenHandler _jwtSecurityTokenHandler;
 
-        public JwtService(JwtServiceOptions options)
+        public JwtService(IServiceConfiguration serviceConfiguration)
         {
-            _options = options;
+            _options = serviceConfiguration.JwtServiceOptions;
             _signingCredentials = CreateSigningCredentials(_options.SigningKey);
             _jwtSecurityTokenHandler = new JwtSecurityTokenHandler();
         }
