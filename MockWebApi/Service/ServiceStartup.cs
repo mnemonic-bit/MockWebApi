@@ -19,12 +19,12 @@ using System.Reflection;
 
 using ServiceConfiguration = MockWebApi.Configuration.ServiceConfiguration;
 
-namespace MockWebApi
+namespace MockWebApi.Service
 {
-    public class Startup
+    public class MockServiceStartup
     {
 
-        public Startup(IConfiguration configuration)
+        public MockServiceStartup(IConfiguration configuration)
         {
             Configuration = configuration;
         }
@@ -66,7 +66,7 @@ namespace MockWebApi
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<MockServiceStartup> logger)
         {
             if (env.IsDevelopment())
             {
@@ -103,14 +103,14 @@ namespace MockWebApi
             WriteBanner(logger);
         }
 
-        private void WriteBanner(ILogger<Startup> logger)
+        private void WriteBanner(ILogger<MockServiceStartup> logger)
         {
             logger.LogInformation($"MockWebApi service version {GetVersion()} has been configured.\n");
         }
 
         private Version GetVersion()
         {
-            Assembly thisAssembly = Assembly.GetAssembly(typeof(Startup));
+            Assembly thisAssembly = Assembly.GetAssembly(typeof(MockServiceStartup));
 
             Version assemblyVersion = thisAssembly.GetName().Version;
 
