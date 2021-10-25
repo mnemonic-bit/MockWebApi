@@ -35,6 +35,7 @@ namespace MockWebApi.Service
                 {
                     webBuilder
                         .UseEnvironment("Development")
+                        .UseUrls("http://0.0.0.0:5000") //TODO make this dynamic
                         .SetupMockWebApi();
                 });
         }

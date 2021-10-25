@@ -1,17 +1,13 @@
-using GraphQL.Server;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using MockWebApi.Auth;
 using MockWebApi.Configuration;
-using MockWebApi.Configuration.Model;
 using MockWebApi.Data;
 using MockWebApi.Extension;
-using MockWebApi.GraphQL;
 using MockWebApi.Middleware;
 using MockWebApi.Templating;
 using System;
@@ -49,51 +45,31 @@ namespace MockWebApi.Service
             services.AddTransient<ITemplateExecutor, TemplateExecutor>();
             services.AddTransient<ITemplateParser, TemplateParser>();
 
-            // GraphQL schema types...
-            services.AddSingleton<RequestHistorySchema>();
-
-            services.AddControllers();
             services.AddDynamicRouting();
 
-            services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "MockWebApi", Version = "v1" });
-            });
+            services.AddControllers(); //TODO: this will be obsolete after we rewrote the routing
 
-            services.AddGraphQL()
-                .AddGraphTypes(ServiceLifetime.Scoped)
-                .AddSystemTextJson();
+            //TODO: add an implementation of this class below to provide
+            // Swagger-capabilities to the end-user for the dynamic methods
+            // this mock-service provides.
+            //Microsoft.AspNetCore.Mvc.ApiExplorer.IApiDescriptionGroupCollectionProvider
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<MockServiceStartup> logger)
         {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-                app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "MockWebApi v1"));
-            }
-
-            app.UseRouting();
+            app.UseRouting(); //TODO: this will be replaced as soon as we have our own extended routing incoporated
 
             app.UseMiddleware<StoreRequestDataMiddleware>();
             app.UseMiddleware<LoggingMiddleware>();
 
             app.UseDynamicRouting();
 
-            app.UseAuthorization();
-
             string configurationFileName = Configuration.GetValue<string>("ServiceConfigurationFileName", "MockWebApiConfiguration.yml");
             app.LoadServiceConfiguration(configurationFileName, false);
 
-            app.UseEndpoints(endpoints =>
+            app.UseEndpoints(endpoints => //TODO: Use a different method to incorporate the routing of dynamic endpoints
             {
-                endpoints.MapControllers();
-
-                endpoints.MapGraphQL<RequestHistorySchema>("graphql");
-                endpoints.MapGraphQLPlayground("playground");
-
                 endpoints.MapControllerRoute(
                     name: "some-route-name",
                     pattern: "{**slug}",

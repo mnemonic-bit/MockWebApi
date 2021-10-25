@@ -11,6 +11,7 @@ using MockWebApi.Data;
 using MockWebApi.Extension;
 using MockWebApi.GraphQL;
 using MockWebApi.Routing;
+using MockWebApi.Service;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -42,6 +43,17 @@ namespace MockWebApi.Controller
             _dataStore = dataStore;
             _jwtService = jwtService;
             _configurationWriter = configurationWriter;
+        }
+
+        [HttpPost("start")]
+        public IActionResult StartNewMockApi([FromQuery] string uri)
+        {
+            MockService mockService = new MockService(
+                MockHostBuilder.Create(new string[] { }));
+
+            mockService.StartService();
+
+            return Ok("A new mock web API has been started successfully");
         }
 
         [HttpGet("request/{id?}")]

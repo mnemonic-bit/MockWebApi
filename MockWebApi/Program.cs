@@ -15,14 +15,6 @@ namespace MockWebApi
 
         public static async Task Main(string[] args)
         {
-            //TODO: use this code to fire-up a mock-web-api from the main contraoller
-            /*
-            MockService mockService = new MockService(
-                MockHostBuilder.Create(args));
-
-            mockService.StartService();
-            */
-
             CreateHostBuilder(args)
                 .Build()
                 .Run();
@@ -50,6 +42,7 @@ namespace MockWebApi
                 {
                     webBuilder
                         .UseEnvironment("Development")
+                        .UseUrls("http://0.0.0.0:6000") //TODO make this dynamic
                         .SetupMockWebApiService();
                 });
         }
