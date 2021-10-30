@@ -7,6 +7,10 @@ namespace MockWebApi.Configuration
     public interface IServiceConfiguration
     {
 
+        string ServiceName { get; set; }
+
+        string Url { get; set; }
+
         DefaultEndpointDescription DefaultEndpointDescription { get; set; }
 
         JwtServiceOptions JwtServiceOptions { get; set; }

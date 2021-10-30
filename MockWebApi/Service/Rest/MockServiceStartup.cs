@@ -15,7 +15,7 @@ using System.Reflection;
 
 using ServiceConfiguration = MockWebApi.Configuration.ServiceConfiguration;
 
-namespace MockWebApi.Service
+namespace MockWebApi.Service.Rest
 {
     public class MockServiceStartup
     {
@@ -30,7 +30,6 @@ namespace MockWebApi.Service
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSingleton<IServiceConfiguration, ServiceConfiguration>();
             services.AddSingleton<IRequestHistory>(new RequestHistory());
 
             services.AddTransient<IConfigurationReader, ConfigurationReader>();
@@ -65,7 +64,7 @@ namespace MockWebApi.Service
 
             app.UseDynamicRouting();
 
-            string configurationFileName = Configuration.GetValue<string>("ServiceConfigurationFileName", "MockWebApiConfiguration.yml");
+            string configurationFileName = Configuration.GetValue("ServiceConfigurationFileName", "MockWebApiConfiguration.yml");
             app.LoadServiceConfiguration(configurationFileName, false);
 
             app.UseEndpoints(endpoints => //TODO: Use a different method to incorporate the routing of dynamic endpoints

@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Hosting;
-using MockWebApi.Service;
+using MockWebApi.Service.Rest;
 using Serilog;
 
 namespace MockWebApi.Extension
@@ -11,7 +11,6 @@ namespace MockWebApi.Extension
         {
             webHostBuilder
                 .UseStartup<MockServiceStartup>()
-                //.UseUrls("https://0.0.0.0:6001;http://0.0.0.0:6000")
                 .UseSerilog();
 
             return webHostBuilder;

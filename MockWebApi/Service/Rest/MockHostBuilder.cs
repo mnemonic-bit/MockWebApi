@@ -5,7 +5,7 @@ using MockWebApi.Extension;
 using Serilog;
 using Serilog.Filters;
 
-namespace MockWebApi.Service
+namespace MockWebApi.Service.Rest
 {
     /// <summary>
     /// Provides a host builder for creating the MockService.
@@ -13,12 +13,9 @@ namespace MockWebApi.Service
     public class MockHostBuilder
     {
 
-        public static IHostBuilder Create(string[] args)
+        public static IHostBuilder Create(string baseUrls = "http://0.0.0.0:5000", string environment = "Development")
         {
-            if (args == null)
-            {
-                args = new string[] { };
-            }
+            string[] args = new string[] { };
 
             Log.Logger = new LoggerConfiguration()
                 .WriteTo.Console()
@@ -34,8 +31,8 @@ namespace MockWebApi.Service
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder
-                        .UseEnvironment("Development")
-                        .UseUrls("http://0.0.0.0:5000") //TODO make this dynamic
+                        .UseEnvironment(environment)
+                        .UseUrls(baseUrls)
                         .SetupMockWebApi();
                 });
         }

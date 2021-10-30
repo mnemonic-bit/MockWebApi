@@ -1,6 +1,7 @@
 using GraphQL.Server;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -13,8 +14,11 @@ using MockWebApi.Data;
 using MockWebApi.Extension;
 using MockWebApi.GraphQL;
 using MockWebApi.Middleware;
+using MockWebApi.Routing;
+using MockWebApi.Service;
 using MockWebApi.Templating;
 using System;
+using System.Linq;
 using System.Reflection;
 
 using ServiceConfiguration = MockWebApi.Configuration.ServiceConfiguration;
@@ -34,6 +38,8 @@ namespace MockWebApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSingleton<IHostService, HostService>();
+            services.AddSingleton<IHostConfiguration, HostConfiguration>();
             services.AddSingleton<IServiceConfiguration, ServiceConfiguration>();
             services.AddSingleton<IRequestHistory>(new RequestHistory());
 
@@ -58,6 +64,7 @@ namespace MockWebApi
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "MockWebApi", Version = "v1" });
+                c.AddServer(new OpenApiServer() { Url = "http://0.0.0.0:5000" });
             });
 
             services.AddGraphQL()
