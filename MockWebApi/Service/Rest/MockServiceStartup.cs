@@ -67,8 +67,9 @@ namespace MockWebApi.Service.Rest
             string configurationFileName = Configuration.GetValue("ServiceConfigurationFileName", "MockWebApiConfiguration.yml");
             app.LoadServiceConfiguration(configurationFileName, false);
 
-            app.UseEndpoints(endpoints => //TODO: Use a different method to incorporate the routing of dynamic endpoints
+            app.UseEndpoints(endpoints =>
             {
+                //TODO: Use middleware for this instead.
                 endpoints.MapControllerRoute(
                     name: "some-route-name",
                     pattern: "{**slug}",

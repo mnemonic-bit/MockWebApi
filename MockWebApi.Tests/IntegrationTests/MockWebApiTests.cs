@@ -16,6 +16,7 @@ namespace MockWebApi.IntegrationTests.Tests
         public async Task ConfigureRoute_ShouldConfigureRoute()
         {
             // Arrange
+            string serviceName = "TEST-SERVICE";
             IntegrationTestServer integrationTestServer = new IntegrationTestServer();
             HttpClient httpClient = integrationTestServer.CreateHttpClient();
             HttpTestClient httpTestClient = new HttpTestClient(httpClient);
@@ -36,10 +37,10 @@ namespace MockWebApi.IntegrationTests.Tests
 
             MockWebApiClient webApiClient = new MockWebApiClient(httpClient);
             bool configureWebApiResult = await webApiClient.ConfigureMockWebApi(serviceConfiguration);
-            bool configureRouteResult = await webApiClient.ConfigureRoute(endpointConfiguration);
+            bool configureRouteResult = await webApiClient.ConfigureRoute(serviceName, endpointConfiguration);
 
             // Act
-            EndpointDescription[] endpointConfigurations = await webApiClient.GetRoutes();
+            EndpointDescription[] endpointConfigurations = await webApiClient.GetRoutes(serviceName);
 
             // Assert
             Assert.True(configureWebApiResult);
@@ -51,6 +52,7 @@ namespace MockWebApi.IntegrationTests.Tests
         public async Task ConfigureRoute_ShouldReturnBody_WhenRouteIsConfigured()
         {
             // Arrange
+            string serviceName = "TEST-SERVICE";
             IntegrationTestServer integrationTestServer = new IntegrationTestServer();
             HttpClient httpClient = integrationTestServer.CreateHttpClient();
             HttpTestClient httpTestClient = new HttpTestClient(httpClient);
@@ -65,7 +67,7 @@ namespace MockWebApi.IntegrationTests.Tests
                 expectedResponseBody);
 
             MockWebApiClient webApiClient = new MockWebApiClient(httpClient);
-            bool configureRouteResult = await webApiClient.ConfigureRoute(endpointConfiguration);
+            bool configureRouteResult = await webApiClient.ConfigureRoute(serviceName, endpointConfiguration);
 
             // Act
             HttpResponseMessage responseMessage = await httpTestClient.SendMessage(testUriPath, "Test message");
@@ -82,6 +84,7 @@ namespace MockWebApi.IntegrationTests.Tests
         public async Task ConfigureRoute_ShouldReturnDefaultResponse_WhenRouteIsDeleted()
         {
             // Arrange
+            string serviceName = "TEST-SERVICE";
             IntegrationTestServer integrationTestServer = new IntegrationTestServer();
             HttpClient httpClient = integrationTestServer.CreateHttpClient();
             HttpTestClient httpTestClient = new HttpTestClient(httpClient);
@@ -96,8 +99,8 @@ namespace MockWebApi.IntegrationTests.Tests
                 expectedResponseBody);
 
             MockWebApiClient webApiClient = new MockWebApiClient(httpClient);
-            bool configureRouteResult = await webApiClient.ConfigureRoute(endpointConfiguration);
-            bool deleteRouteResult = await webApiClient.DeleteRoute(endpointConfiguration.Route);
+            bool configureRouteResult = await webApiClient.ConfigureRoute(serviceName, endpointConfiguration);
+            bool deleteRouteResult = await webApiClient.DeleteRoute(serviceName, endpointConfiguration.Route);
 
             // Act
             HttpResponseMessage responseMessage = await httpTestClient.SendMessage(testUriPath, "Test message");
