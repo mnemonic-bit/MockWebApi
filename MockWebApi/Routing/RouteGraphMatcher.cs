@@ -455,9 +455,7 @@ namespace MockWebApi.Routing
             ICollection<MatchCandidate> filteredCandidates = candidates
                 .Select(candidate =>
                 {
-                    MatchCandidate newMatchCandidates = new MatchCandidate();
-                    newMatchCandidates.Info = candidate.Info;
-                    return newMatchCandidates;
+                    return new MatchCandidate(candidate);
                 })
                 .Where(predicate)
                 .Where(candidate => candidate.Info != null)
@@ -537,7 +535,6 @@ namespace MockWebApi.Routing
                     .Where(candidate => isLastNode ? candidate.Info != null : candidate.Info == null)
                     .Select(candidate =>
                     {
-                        //candidate.Infos.Select(info => info.Variables.AddAll(match.Variables)); //TODO refactor
                         candidate.Variables.AddAll(match.Variables);
                         return candidate;
                     }));
@@ -564,7 +561,9 @@ namespace MockWebApi.Routing
                 return false;
             }
 
-            matchCandidates = matchCandidates.Where(candidate => isLastNode ? candidate.Info != null : candidate.Info == null).ToHashSet();
+            matchCandidates = matchCandidates
+                .Where(candidate => isLastNode ? candidate.Info != null : candidate.Info == null)
+                .ToHashSet();
 
             if (matchCandidates.Count() == 0)
             {
@@ -601,6 +600,7 @@ namespace MockWebApi.Routing
                         .Select(info =>
                         {
                             MatchCandidate matchCandidate = new MatchCandidate();
+                            matchCandidate.Parameters.AddAll(info.Parameters);
                             matchCandidate.Info = info.Info; // TODO: fix this, this is most likely not correct.
                             return matchCandidate;
                         })
@@ -659,12 +659,7 @@ namespace MockWebApi.Routing
 
                     candidate.Variables.AddAll(variablesFromParameters);
 
-                    MatchCandidate newCandidate = new MatchCandidate();
-                    newCandidate.Info = candidate.Info;
-                    newCandidate.Variables.AddAll(candidate.Variables);
-                    newCandidate.Parameters.AddAll(candidate.Parameters);
-
-                    return newCandidate;
+                    return new MatchCandidate(candidate);
                 })
                 .Where(candidates => candidates != null)
                 .ToList();
@@ -830,9 +825,23 @@ namespace MockWebApi.Routing
         private class MatchCandidate
         {
 
+            /// <summary>
+            /// Creates an empty MatchCandidate.
+            /// </summary>
             public MatchCandidate()
             {
 
+            }
+
+            /// <summary>
+            /// The copy-constructor.
+            /// </summary>
+            /// <param name="matchCandidate"></param>
+            internal MatchCandidate(MatchCandidate matchCandidate)
+            {
+                Info = matchCandidate.Info;
+                Parameters.AddAll(matchCandidate.Parameters);
+                Variables.AddAll(matchCandidate.Variables);
             }
 
             /// <summary>

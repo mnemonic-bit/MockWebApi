@@ -1,9 +1,12 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using MockWebApi.Configuration;
+using MockWebApi.Extension;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MockWebApi.Service
+namespace MockWebApi.Service.Rest
 {
     /// <summary>
     /// The MockService is the component which represents an instance
@@ -11,22 +14,46 @@ namespace MockWebApi.Service
     /// instances at the same time, we encapsulated this in a class
     /// of its own.
     /// </summary>
-    public class MockService
+    public class MockService : IService
     {
 
         private readonly IHostBuilder _hostBuilder;
         private Thread _serviceThread;
         private readonly CancellationTokenSource _cancellationTokenSource;
 
+        private ServiceConfigurationProxy _serviceConfigurationProxy;
+
+        public ServiceState ServiceState
+        {
+            get
+            {
+                return _serviceThread?.ThreadState.GetServiceState() ?? ServiceState.NotStarted;
+            }
+        }
+
+        public IServiceConfiguration ServiceConfiguration
+        {
+            get
+            {
+                return _serviceConfigurationProxy.BaseConfiguration;
+            }
+            set
+            {
+                _serviceConfigurationProxy.BaseConfiguration = value;
+            }
+        }
+
         public MockService(IHostBuilder hostBuilder)
         {
             _hostBuilder = hostBuilder;
+            _serviceConfigurationProxy = new ServiceConfigurationProxy(new ServiceConfiguration());
             _cancellationTokenSource = new CancellationTokenSource();
         }
 
         public void StartService()
         {
             _serviceThread = new Thread(() => ThreadStart(_cancellationTokenSource.Token));
+            _serviceThread.IsBackground = true; // mocked interfaces can always be shut down with no warning
             _serviceThread.Start();
         }
 
@@ -53,6 +80,10 @@ namespace MockWebApi.Service
         private async Task BuildAndStartService(CancellationToken cancellationToken = default)
         {
             await _hostBuilder
+                .ConfigureServices(services =>
+                {
+                    services.AddSingleton<IServiceConfiguration>(_serviceConfigurationProxy);
+                })
                 .Build()
                 .RunAsync(cancellationToken);
         }

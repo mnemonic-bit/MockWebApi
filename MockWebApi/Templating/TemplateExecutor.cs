@@ -36,7 +36,7 @@ namespace MockWebApi.Templating
             foreach(string templateExpression in templateExpressions)
             {
                 object result = await scriptEvaluator.RunLineOfCodeAsync(templateExpression);
-                evaluatedTemplateExpressions.Add(result.ToString());
+                evaluatedTemplateExpressions.Add(result?.ToString() ?? "");
             }
 
             return evaluatedTemplateExpressions.ToArray();
@@ -44,8 +44,9 @@ namespace MockWebApi.Templating
 
         private string GenerateInitScript(IDictionary<string, string> variables)
         {
-            string result = string.Join("\n", variables.Select(g => $"string {g.Key} = \"{g.Value}\";"));
-            return result;
+            string initializeVariables = string.Join("\n", variables.Select(g => $"string {g.Key} = \"{g.Value}\";"));
+
+            return initializeVariables;
         }
 
     }

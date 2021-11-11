@@ -25,20 +25,27 @@ namespace MockWebApi.Auth
                 return false;
             }
 
-            string[] headerParts = authorizationHeader.Split(':');
+            int splitPosition = authorizationHeader.IndexOf(' ');
 
-            if (headerParts.Length < 2)
+            if (splitPosition == -1)
             {
                 return false;
             }
 
-            if (headerParts.Length > 2)
+            (string authorizationMethod, string authorizationHeaderValue) = authorizationHeader.SplitAt(splitPosition);
+
+            authorizationMethod = authorizationMethod.Trim();
+            authorizationHeaderValue = authorizationHeaderValue.TrimStart();
+
+            if (string.IsNullOrEmpty(authorizationMethod))
             {
-                throw new InvalidOperationException($"The authorizatin header has a second colon in it, this might not compute well. Please check if this is OK by design.");
+                return false;
             }
 
-            string authorizationMethod = headerParts[0].Trim();
-            string authorizationHeaderValue = headerParts[1].TrimStart();
+            if (string.IsNullOrEmpty(authorizationHeaderValue))
+            {
+                return false;
+            }
 
             switch (authorizationMethod)
             {

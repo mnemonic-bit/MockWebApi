@@ -1,30 +1,25 @@
-using GraphQL.Server;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.OpenApi.Models;
 using MockWebApi.Auth;
 using MockWebApi.Configuration;
 using MockWebApi.Data;
 using MockWebApi.Extension;
-using MockWebApi.GraphQL;
 using MockWebApi.Middleware;
-using MockWebApi.Service;
 using MockWebApi.Templating;
 using System;
 using System.Reflection;
 
 using ServiceConfiguration = MockWebApi.Configuration.ServiceConfiguration;
 
-namespace MockWebApi
+namespace MockWebApi.Service.Rest
 {
-    public class Startup
+    public class MockServiceStartup
     {
 
-        public Startup(IConfiguration configuration)
+        public MockServiceStartup(IConfiguration configuration)
         {
             Configuration = configuration;
         }
@@ -34,9 +29,6 @@ namespace MockWebApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSingleton<IHostService, HostService>();
-            services.AddSingleton<IHostConfiguration, HostConfiguration>();
-            //services.AddSingleton<IServiceConfiguration, ServiceConfiguration>(); // TODO: test if it works without this, then remove this
             services.AddSingleton<IRequestHistory>(new RequestHistory());
 
             services.AddTransient<IConfigurationReader, ConfigurationReader>();
@@ -51,64 +43,45 @@ namespace MockWebApi
             services.AddTransient<ITemplateExecutor, TemplateExecutor>();
             services.AddTransient<ITemplateParser, TemplateParser>();
 
-            // GraphQL schema types...
-            services.AddSingleton<RequestHistorySchema>();
-
-            services.AddControllers();
             services.AddDynamicRouting();
 
-            services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "MockWebApi", Version = "v1" });
-                c.AddServer(new OpenApiServer() { Url = "http://0.0.0.0:5000" });
-            });
-
-            services.AddGraphQL()
-                .AddGraphTypes(ServiceLifetime.Scoped)
-                .AddSystemTextJson();
+            //TODO: add an implementation of this class below to provide
+            // Swagger-capabilities to the end-user for the dynamic methods
+            // this mock-service provides.
+            //Microsoft.AspNetCore.Mvc.ApiExplorer.IApiDescriptionGroupCollectionProvider
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<MockServiceStartup> logger)
         {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-                app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "MockWebApi v1"));
-            }
-
-            app.UseRouting();
-
             app.UseMiddleware<StoreRequestDataMiddleware>();
             app.UseMiddleware<LoggingMiddleware>();
+            app.UseMiddleware<MockedRestMiddleware>();
 
+            /*
             app.UseDynamicRouting();
-
-            app.UseAuthorization();
-
-            string configurationFileName = Configuration.GetValue<string>("ServiceConfigurationFileName", "MockWebApiConfiguration.yml");
-            app.LoadServiceConfiguration(configurationFileName, false);
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapControllers();
-
-                endpoints.MapGraphQL<RequestHistorySchema>("graphql");
-                endpoints.MapGraphQLPlayground("playground");
+                //TODO: Use middleware for this instead.
+                endpoints.MapControllerRoute(
+                    name: "some-route-name",
+                    pattern: "{**slug}",
+                    defaults: new { controller = "MockWebApi", action = "MockResults" });
             });
+            */
 
             WriteBanner(logger);
         }
 
-        private void WriteBanner(ILogger<Startup> logger)
+        private void WriteBanner(ILogger<MockServiceStartup> logger)
         {
             logger.LogInformation($"MockWebApi service version {GetVersion()} has been configured.\n");
         }
 
         private Version GetVersion()
         {
-            Assembly thisAssembly = Assembly.GetAssembly(typeof(Startup));
+            Assembly thisAssembly = Assembly.GetAssembly(typeof(MockServiceStartup));
 
             Version assemblyVersion = thisAssembly.GetName().Version;
 
