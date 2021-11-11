@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.OpenApi.Models;
 using MockWebApi.Auth;
 using MockWebApi.Configuration;
 using MockWebApi.Data;
@@ -46,8 +45,6 @@ namespace MockWebApi.Service.Rest
 
             services.AddDynamicRouting();
 
-            services.AddControllers(); //TODO: this will be obsolete after we rewrote the routing
-
             //TODO: add an implementation of this class below to provide
             // Swagger-capabilities to the end-user for the dynamic methods
             // this mock-service provides.
@@ -57,15 +54,12 @@ namespace MockWebApi.Service.Rest
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<MockServiceStartup> logger)
         {
-            app.UseRouting(); //TODO: this will be replaced as soon as we have our own extended routing incoporated
-
             app.UseMiddleware<StoreRequestDataMiddleware>();
             app.UseMiddleware<LoggingMiddleware>();
+            app.UseMiddleware<MockedRestMiddleware>();
 
+            /*
             app.UseDynamicRouting();
-
-            string configurationFileName = Configuration.GetValue("ServiceConfigurationFileName", "MockWebApiConfiguration.yml");
-            app.LoadServiceConfiguration(configurationFileName, false);
 
             app.UseEndpoints(endpoints =>
             {
@@ -75,6 +69,7 @@ namespace MockWebApi.Service.Rest
                     pattern: "{**slug}",
                     defaults: new { controller = "MockWebApi", action = "MockResults" });
             });
+            */
 
             WriteBanner(logger);
         }

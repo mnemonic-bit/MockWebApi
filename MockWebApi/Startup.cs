@@ -1,7 +1,6 @@
 using GraphQL.Server;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -9,16 +8,13 @@ using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using MockWebApi.Auth;
 using MockWebApi.Configuration;
-using MockWebApi.Configuration.Model;
 using MockWebApi.Data;
 using MockWebApi.Extension;
 using MockWebApi.GraphQL;
 using MockWebApi.Middleware;
-using MockWebApi.Routing;
 using MockWebApi.Service;
 using MockWebApi.Templating;
 using System;
-using System.Linq;
 using System.Reflection;
 
 using ServiceConfiguration = MockWebApi.Configuration.ServiceConfiguration;
@@ -40,7 +36,7 @@ namespace MockWebApi
         {
             services.AddSingleton<IHostService, HostService>();
             services.AddSingleton<IHostConfiguration, HostConfiguration>();
-            services.AddSingleton<IServiceConfiguration, ServiceConfiguration>();
+            //services.AddSingleton<IServiceConfiguration, ServiceConfiguration>(); // TODO: test if it works without this, then remove this
             services.AddSingleton<IRequestHistory>(new RequestHistory());
 
             services.AddTransient<IConfigurationReader, ConfigurationReader>();

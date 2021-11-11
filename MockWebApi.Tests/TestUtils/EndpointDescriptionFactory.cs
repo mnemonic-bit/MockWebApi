@@ -8,8 +8,23 @@ using System.Threading.Tasks;
 
 namespace MockWebApi.Tests.TestUtils
 {
-    internal class EndpointDescriptionFactory
+    internal static class EndpointDescriptionFactory
     {
+
+        public static DefaultEndpointDescription CreateDefaultEndpointDescription()
+        {
+            DefaultEndpointDescription defaultEndpointDescription = new DefaultEndpointDescription()
+            {
+                CheckAuthorization = false,
+                Result = new HttpResult()
+                {
+                    StatusCode = HttpStatusCode.OK,
+                    Body = "THIS-IS-A-MOCKED-RESULT"
+                }
+            };
+
+            return defaultEndpointDescription;
+        }
 
         public static EndpointDescription CreateEndpointDescription(string path, HttpStatusCode httpStatusCode)
         {

@@ -1,12 +1,10 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using MockWebApi.Auth;
 using MockWebApi.Configuration;
 using MockWebApi.Configuration.Model;
 using MockWebApi.Data;
 using MockWebApi.Extension;
-using MockWebApi.Middleware;
 using MockWebApi.Model;
 using MockWebApi.Routing;
 using MockWebApi.Templating;
@@ -17,61 +15,60 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MockWebApi.Controller
+namespace MockWebApi.Middleware
 {
-    public class MockWebApiController : ControllerBase
+    /// <summary>
+    /// This middleware uses the service configuration to produce
+    /// a tailored repsonse for a request. This is a terminal middleware,
+    /// i.e. no other RequestDelegate will be called.
+    /// </summary>
+    public class MockedRestMiddleware
     {
 
-        private readonly ILogger<ServiceApiController> _logger;
+        private readonly RequestDelegate _nextDelegate;
         private readonly IServiceConfiguration _serviceConfiguration;
         private readonly IAuthorizationService _authorizationService;
         private readonly ITemplateExecutor _templateExecutor;
+        private readonly ILogger<StoreRequestDataMiddleware> _logger;
 
-        public MockWebApiController(
-            ILogger<ServiceApiController> logger,
-            IServiceConfiguration serverConfig,
+        public MockedRestMiddleware(
+            RequestDelegate next,
+            IServiceConfiguration serverConfiguration,
             IAuthorizationService authorizationService,
-            ITemplateExecutor templateExecutor)
+            ITemplateExecutor templateExecutor,
+            ILogger<StoreRequestDataMiddleware> logger)
         {
-            _logger = logger;
-            _serviceConfiguration = serverConfig;
+            _nextDelegate = next;
+            _serviceConfiguration = serverConfiguration;
             _authorizationService = authorizationService;
             _templateExecutor = templateExecutor;
+            _logger = logger;
         }
 
-        /// <summary>
-        /// This method implements the REST API for all mocked
-        /// URL paths. It uses the configuration to create a response
-        /// for each URL, and in case for some URL there is no response
-        /// configured, it creates a default response.
-        /// </summary>
-        /// <returns></returns>
-        public async Task MockResults()
+        public async Task InvokeAsync(HttpContext context)
         {
             // TODO: add a cancellation token to wherever we
             // can use it to stop a long-running request.
             //CancellationToken cancellationToken = HttpContext.RequestAborted;
 
-            RequestInformation requestInformation = GetRequestInformation(HttpContext);
+            RequestInformation requestInformation = GetRequestInformation(context);
 
-            string requestUri = Request.PathWithParameters();
+            string requestUri = context.Request.PathWithParameters();
             bool requestUriDidMatch = TryGetHttpResult(requestUri, out EndpointDescription endpointDescription, out IDictionary<string, string> variables);
 
-            if (!CkeckAuthorization(HttpContext, endpointDescription))
+            if (!CkeckAuthorization(context, endpointDescription))
             {
-                //TODO: default authorization-failed response?
-                return;
+                (endpointDescription, variables) = GetErrorResponseEndpointDescription();
             }
 
             requestInformation.PathMatchedTemplate = requestUriDidMatch;
 
-            await MockResponse(endpointDescription, variables);
+            await MockResponse(context, endpointDescription, variables);
         }
 
 
-
         ////////////////////////////////////////////////////////////////
-
+        ////////////////////////////////////////////////////////////////
 
 
         private bool CkeckAuthorization(HttpContext httpContext, EndpointDescription endpointDescription)
@@ -117,60 +114,69 @@ namespace MockWebApi.Controller
 
         private (EndpointDescription, IDictionary<string, string>) GetDefaultEndpointDescription()
         {
-            DefaultEndpointDescription defaultEndpointDescription = _serviceConfiguration.DefaultEndpointDescription;
+            EndpointDescription endpointDescription = new EndpointDescription();
+            _serviceConfiguration.DefaultEndpointDescription.CopyTo(endpointDescription);
 
             IDictionary<string, string> variables = new Dictionary<string, string>();
-
-            EndpointDescription endpointDescription = new EndpointDescription();
-            defaultEndpointDescription.CopyTo(endpointDescription);
 
             return (endpointDescription, variables);
         }
 
-        private async Task MockResponse(EndpointDescription endpointDescription, IDictionary<string, string> variables)
+        private (EndpointDescription, IDictionary<string, string>) GetErrorResponseEndpointDescription()
+        {
+            EndpointDescription endpointDescription = new EndpointDescription();
+            //TODO: create a config for the error-respoonse
+            _serviceConfiguration.ErrorResponseEndpointDescription.CopyTo(endpointDescription);
+
+            IDictionary<string, string> variables = new Dictionary<string, string>();
+
+            return (endpointDescription, variables);
+        }
+
+        private async Task MockResponse(HttpContext context, EndpointDescription endpointDescription, IDictionary<string, string> variables)
         {
             HttpResult httpResult = endpointDescription.Result;
 
             HttpResult response = await ExecuteTemplate(httpResult, variables);
 
             response.IsMockedResult = true; // Move this line to TryGetHttpResult()
-            HttpContext.Items.Add(MiddlewareConstants.MockWebApiHttpResponse, response);
+            context.Items.Add(MiddlewareConstants.MockWebApiHttpResponse, response);
 
-            await FillResponse(endpointDescription, response);
+            await FillResponse(context, endpointDescription, response);
         }
 
-        private async Task FillResponse(EndpointDescription endpointDescription, HttpResult response)
+        private async Task FillResponse(HttpContext context, EndpointDescription endpointDescription, HttpResult response)
         {
             if (response == null)
             {
                 return;
             }
 
-            HttpContext.Response.StatusCode = (int?)response?.StatusCode ?? _serviceConfiguration.ConfigurationCollection.Get<int>(ConfigurationCollection.Parameters.DefaultHttpStatusCode);
-            HttpContext.Response.ContentType = response.ContentType ?? _serviceConfiguration.ConfigurationCollection.Get<string>(ConfigurationCollection.Parameters.DefaultContentType);
+            context.Response.StatusCode = (int?)response?.StatusCode ?? _serviceConfiguration.ConfigurationCollection.Get<int>(ConfigurationCollection.Parameters.DefaultHttpStatusCode);
+            context.Response.ContentType = response.ContentType ?? _serviceConfiguration.ConfigurationCollection.Get<string>(ConfigurationCollection.Parameters.DefaultContentType);
 
-            response.Headers = HttpContext.Response.Headers.ToDictionary();
+            response.Headers = context.Response.Headers.ToDictionary();
 
             if (endpointDescription.ReturnCookies)
             {
                 // This one mirrors the cookies from the request.
-                foreach (KeyValuePair<string, string> cookie in HttpContext.Request.Cookies)
+                foreach (KeyValuePair<string, string> cookie in context.Request.Cookies)
                 {
-                    HttpContext.Response.Cookies.Append(cookie.Key, cookie.Value);
+                    context.Response.Cookies.Append(cookie.Key, cookie.Value);
                 }
             }
 
             // This one inserts/overwrites the cookies from the endpoint-configuration.
             foreach (KeyValuePair<string, string> cookie in response.Cookies)
             {
-                HttpContext.Response.Cookies.Append(cookie.Key, cookie.Value);
+                context.Response.Cookies.Append(cookie.Key, cookie.Value);
             }
 
             string body = response.Body;
             if (body != null)
             {
                 byte[] bodyArray = Encoding.UTF8.GetBytes(response.Body);
-                await HttpContext.Response.BodyWriter.WriteAsync(new ReadOnlyMemory<byte>(bodyArray));
+                await context.Response.BodyWriter.WriteAsync(new ReadOnlyMemory<byte>(bodyArray));
             }
         }
 
@@ -184,7 +190,7 @@ namespace MockWebApi.Controller
 
         private RequestInformation GetRequestInformation(HttpContext context)
         {
-            HttpContext.Items.TryGetValue(MiddlewareConstants.MockWebApiHttpRequestInfomation, out object contextItem);
+            context.Items.TryGetValue(MiddlewareConstants.MockWebApiHttpRequestInfomation, out object contextItem);
             RequestInformation requestInformation = contextItem as RequestInformation;
             return requestInformation;
         }
@@ -234,6 +240,7 @@ namespace MockWebApi.Controller
 
             return null;
         }
+
 
     }
 }

@@ -32,6 +32,7 @@ namespace MockWebApi.Tests.UnitTests
         }
 
         [Theory]
+        [InlineData("/{variable}/fixed/start", "/fixed/{variable}/start")]
         [InlineData("/{variable1}/{variable2}/start", "/{variable}/fixed/start")]
         [InlineData("/{variable1}/fixed/{variable2}", "/{variable}/fixed/start")]
         public void AddRoute_ShouldThrowException_WhenOverlappingRoutesAreGiven(string pathTemplate1, string pathTemplate2)
@@ -46,8 +47,7 @@ namespace MockWebApi.Tests.UnitTests
         }
 
         [Theory]
-        [InlineData(new string[] { "/some/path" }, "/some/path")]
-        //[InlineData(new string[] { "/{variable1}/{variable2}/start", "/{variable}/fixed/start" }, "/different/fixed/start")]
+        [InlineData(new string[] { "/{variable1}/{variable2}/start", "/{variable}/fixed/start" }, "/different/fixed/start")]
         //[InlineData(new string[] { "/{variable1}/start/{variable2}", "/{variable}/start/fixed" }, "/different/start/fixed")]
         public void TryMatch_ShouldFindMatch_scratch_method(string[] pathTemplates, string path)
         {
@@ -74,8 +74,6 @@ namespace MockWebApi.Tests.UnitTests
         [Theory]
         [InlineData(new string[] { "/some/path" }, "/some/path")]
         [InlineData(new string[] { "/some/path/" }, "/some/path")]
-        [InlineData(new string[] { "/some/path?var1=value1&var2=value2" }, "/some/path?var1=value1&var2=value2")]
-        [InlineData(new string[] { "/some/path?var1={param1}&var2=value2" }, "/some/path?var1=some-value&var2=value2")]
         [InlineData(new string[] { "/some/other/path", "/some/path/" }, "/some/path")]
         [InlineData(new string[] { "/some/{variable}/path", "/some/different/path" }, "/some/different/path")]
         [InlineData(new string[] { "/some/{variable}/path", "/some/different/path" }, "/some/static/path")]
@@ -91,7 +89,34 @@ namespace MockWebApi.Tests.UnitTests
         [InlineData(new string[] { "/some/specific/path", "/some/speficic/path/detail" }, "/some/speficic/path/detail")]
         [InlineData(new string[] { "/some/specific/path?emptyParam=&paramWithValue=ABC", "/some/specific/path?emptyParam=&paramWithValue=XYZ" }, "/some/specific/path?emptyParam=&paramWithValue=ABC")]
         [InlineData(new string[] { "/some/specific/path?emptyParam=&paramWithValue=ABC", "/some/specific/path?emptyParam=&paramWithValue={var}" }, "/some/specific/path?emptyParam=&paramWithValue=A")]
+        [InlineData(new string[] { "/some/path?var1={param1}&var2=value2" }, "/some/path?var1=some-value&var2=value2")]
+        [InlineData(new string[] { "/some/path?var1={param1}&var2=value2" }, "/some/path?var2=value2")]
         public void TryMatch_ShouldFindMatch(string[] pathTemplates, string path)
+        {
+            // Arrange
+            RouteGraphMatcher<EndpointDescription> graphMatcher = new RouteGraphMatcher<EndpointDescription>();
+
+            foreach (string pathTemplate in pathTemplates)
+            {
+                EndpointDescription endpointDescription = new EndpointDescription()
+                {
+                    Route = pathTemplate
+                };
+                graphMatcher.AddRoute(pathTemplate, endpointDescription);
+            }
+
+            // Act
+            bool result = graphMatcher.TryMatch(path, out RouteMatch<EndpointDescription> routeMatch);
+
+            // Assert
+            Assert.True(result);
+            Assert.NotNull(routeMatch);
+        }
+
+        [Theory]
+        [InlineData(new string[] { "/some/path?var1=value1" }, "/some/path?var1=value1&var2=value2")]
+        [InlineData(new string[] { "/some/path?var1=value1&var2=value2" }, "/some/path?var1=value1&var2=value2")]
+        public void TryMatch_ShouldFindMatchWithParameters(string[] pathTemplates, string path)
         {
             // Arrange
             RouteGraphMatcher<EndpointDescription> graphMatcher = new RouteGraphMatcher<EndpointDescription>();

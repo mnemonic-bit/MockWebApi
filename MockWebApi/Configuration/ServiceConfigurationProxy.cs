@@ -15,6 +15,8 @@ namespace MockWebApi.Configuration
 
         public DefaultEndpointDescription DefaultEndpointDescription { get => BaseConfiguration.DefaultEndpointDescription; set => BaseConfiguration.DefaultEndpointDescription = value; }
 
+        public DefaultEndpointDescription ErrorResponseEndpointDescription { get => BaseConfiguration.ErrorResponseEndpointDescription; set => BaseConfiguration.ErrorResponseEndpointDescription = value; }
+
         public JwtServiceOptions JwtServiceOptions { get => BaseConfiguration.JwtServiceOptions; set => BaseConfiguration.JwtServiceOptions = value; }
 
         public IConfigurationCollection ConfigurationCollection => BaseConfiguration.ConfigurationCollection;
