@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using MockWebApi.Extension;
-using System.Threading.Tasks;
 
 namespace MockWebApi
 {

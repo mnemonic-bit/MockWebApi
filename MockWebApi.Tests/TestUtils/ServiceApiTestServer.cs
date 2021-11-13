@@ -7,13 +7,13 @@ using System.Net.Http;
 
 namespace MockWebApi.Tests.TestUtils
 {
-    internal class MockWebApiServiceTestServer
+    internal class ServiceApiTestServer
     {
 
         private readonly TestServer _testServer;
         private ServiceConfigurationProxy _serviceConfigurationProxy;
 
-        internal MockWebApiServiceTestServer(IServiceConfiguration serviceConfiguration)
+        internal ServiceApiTestServer(IServiceConfiguration serviceConfiguration)
         {
             _serviceConfigurationProxy = new ServiceConfigurationProxy(serviceConfiguration);
             _testServer = CreateTestServer();
