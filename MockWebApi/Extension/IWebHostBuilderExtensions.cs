@@ -20,7 +20,7 @@ namespace MockWebApi.Extension
         {
             webHostBuilder
                 .UseStartup<Startup>()
-                .UseUrls("https://0.0.0.0:6001;http://0.0.0.0:6000")
+                .UseUrls("http://0.0.0.0:6000")
                 .UseSerilog();
 
             return webHostBuilder;
