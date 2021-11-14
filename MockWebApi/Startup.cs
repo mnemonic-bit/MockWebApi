@@ -36,7 +36,7 @@ namespace MockWebApi
         {
             services.AddSingleton<IHostService, HostService>();
             services.AddSingleton<IHostConfiguration, HostConfiguration>();
-            //services.AddSingleton<IServiceConfiguration, ServiceConfiguration>(); // TODO: test if it works without this, then remove this
+            services.AddSingleton<IServiceConfiguration, ServiceConfiguration>();
             services.AddSingleton<IRequestHistory>(new RequestHistory());
 
             services.AddTransient<IConfigurationReader, ConfigurationReader>();
