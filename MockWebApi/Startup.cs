@@ -103,7 +103,7 @@ namespace MockWebApi
 
         private void WriteBanner(ILogger<Startup> logger)
         {
-            logger.LogInformation($"MockWebApi service version {GetVersion()} has been configured.\n");
+            logger.LogInformation($"MockWebApi service version {GetVersion()} has been started.\n");
         }
 
         private Version GetVersion()
