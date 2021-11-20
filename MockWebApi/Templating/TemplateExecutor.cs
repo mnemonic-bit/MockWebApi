@@ -19,33 +19,40 @@ namespace MockWebApi.Templating
         {
             Template template = _templateParser.Parse(templateText);
 
-            string[] parameters = await Evaluate(variables, template.Parameters);
+            string scriptInitCode = GenerateInitScript(variables);
+            ScriptEvaluator scriptEvaluator = new ScriptEvaluator(scriptInitCode);
 
-            string result = string.Format(template.FormatString, parameters);
+            var calcualtedFragments = await Task.WhenAll(template
+                .Fragments
+                .Select(fragment => EvaluateFragment(scriptEvaluator, fragment)));
+
+            string result = string.Concat(calcualtedFragments);
 
             return result;
         }
 
-        private async Task<string[]> Evaluate(IDictionary<string, string> vairables, string[] templateExpressions)
+        private async Task<string> EvaluateFragment(ScriptEvaluator scriptEvaluator, Fragment fragment)
         {
-            string scriptInitCode = GenerateInitScript(vairables);
+            dynamic realFragment = fragment;
+            return await EvaluateFragment(scriptEvaluator, realFragment);
+        }
 
-            ScriptEvaluator scriptEvaluator = new ScriptEvaluator(scriptInitCode);
+        private async Task<string> EvaluateFragment(ScriptEvaluator scriptEvaluator, ScriptFragment fragment)
+        {
+            object result = await scriptEvaluator.RunLineOfCodeAsync(fragment.ScriptText);
+            return result?.ToString() ?? "";
+        }
 
-            IList<string> evaluatedTemplateExpressions = new List<string>();
-            foreach(string templateExpression in templateExpressions)
-            {
-                object result = await scriptEvaluator.RunLineOfCodeAsync(templateExpression);
-                evaluatedTemplateExpressions.Add(result.ToString());
-            }
-
-            return evaluatedTemplateExpressions.ToArray();
+        private Task<String> EvaluateFragment(ScriptEvaluator scriptEvaluator, StringFragment fragment)
+        {
+            return Task.FromResult(fragment.Text);
         }
 
         private string GenerateInitScript(IDictionary<string, string> variables)
         {
-            string result = string.Join("\n", variables.Select(g => $"string {g.Key} = \"{g.Value}\";"));
-            return result;
+            string initializeVariables = string.Join("\n", variables.Select(g => $"string {g.Key} = \"{g.Value}\";"));
+
+            return initializeVariables;
         }
 
     }

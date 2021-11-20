@@ -48,7 +48,7 @@ namespace MockWebApi.Client
             ConfigurationWriter configurationWriter = new ConfigurationWriter();
             string configurationAsYaml = configurationWriter.WriteConfiguration(serviceConfiguration);
 
-            Response<string> response = await _webApi.UploadConfiguration(configurationAsYaml);
+            Response<string> response = await _webApi.UploadConfiguration(serviceConfiguration.ServiceName, configurationAsYaml);
 
             if (!response.ResponseMessage.IsSuccessStatusCode)
             {
@@ -71,9 +71,9 @@ namespace MockWebApi.Client
             return ConfigureMockWebApi(serviceConfiguration);
         }
 
-        public async Task<MockedWebApiServiceConfiguration> DownloadMockWebApiConfiguration(string format = "YAML")
+        public async Task<MockedWebApiServiceConfiguration> DownloadMockWebApiConfiguration(string serviceName, string format = "YAML")
         {
-            Response<string> response = await _webApi.DownloadConfiguration();
+            Response<string> response = await _webApi.DownloadConfiguration(serviceName);
 
             if (!response.ResponseMessage.IsSuccessStatusCode)
             {
@@ -87,9 +87,9 @@ namespace MockWebApi.Client
             return configuration;
         }
 
-        public async Task<EndpointDescription[]> GetRoutes()
+        public async Task<EndpointDescription[]> GetRoutes(string serviceName)
         {
-            Response<string> response = await _webApi.GetRoutes();
+            Response<string> response = await _webApi.GetRoutes(serviceName);
 
             if (!response.ResponseMessage.IsSuccessStatusCode)
             {
@@ -102,10 +102,10 @@ namespace MockWebApi.Client
             return endpointConfigurations;
         }
 
-        public async Task<bool> ConfigureRoute(EndpointDescription endpointConfiguration)
+        public async Task<bool> ConfigureRoute(string serviceName, EndpointDescription endpointConfiguration)
         {
             string configAsYaml = SerializeToYaml(endpointConfiguration);
-            Response<string> response = await _webApi.ConfigureRoute(configAsYaml);
+            Response<string> response = await _webApi.ConfigureRoute(serviceName, configAsYaml);
 
             if (!response.ResponseMessage.IsSuccessStatusCode)
             {
@@ -115,9 +115,9 @@ namespace MockWebApi.Client
             return true;
         }
 
-        public async Task<bool> DeleteRoute(string routeKey)
+        public async Task<bool> DeleteRoute(string serviceName, string routeKey)
         {
-            Response<string> response = await _webApi.DeleteRoute(routeKey);
+            Response<string> response = await _webApi.DeleteRoute(serviceName, routeKey);
 
             if (!response.ResponseMessage.IsSuccessStatusCode)
             {
@@ -132,14 +132,14 @@ namespace MockWebApi.Client
             throw new NotImplementedException();
         }
 
-        public async Task GetAllRequests()
+        public async Task GetAllRequests(string serviceName)
         {
-            await GetLastRequests(null);
+            await GetLastRequests(serviceName, null);
         }
 
-        public async Task<RequestInformation[]> GetLastRequests(int? count)
+        public async Task<RequestInformation[]> GetLastRequests(string serviceName, int? count)
         {
-            Response<string> response = await _webApi.GetLastRequests(count);
+            Response<string> response = await _webApi.GetLastRequests(serviceName, count);
 
             if (!response.ResponseMessage.IsSuccessStatusCode)
             {
@@ -151,17 +151,14 @@ namespace MockWebApi.Client
             return requestInformation;
         }
 
-        public async Task<string> GetJwtToken(JwtCredentialUser user)
+        public async Task<string> GetJwtToken(string serviceName, JwtCredentialUser user)
         {
-            Response<string> response = await _webApi.GetJwtToken(user);
-
+            Response<string> response = await _webApi.GetJwtToken(serviceName, user);
             if (!response.ResponseMessage.IsSuccessStatusCode)
             {
                 return null;
             }
-
             string token = response.StringContent;
-
             return token;
         }
 

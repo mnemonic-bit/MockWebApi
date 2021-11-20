@@ -1,17 +1,21 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
+using MockWebApi.Configuration;
 using MockWebApi.Extension;
 using System.Net.Http;
 
 namespace MockWebApi.Tests.TestUtils
 {
-    internal class IntegrationTestServer
+    internal class MockWebApiTestServer
     {
 
         private readonly TestServer _testServer;
+        private ServiceConfigurationProxy _serviceConfigurationProxy;
 
-        internal IntegrationTestServer()
+        internal MockWebApiTestServer(IServiceConfiguration serviceConfiguration)
         {
+            _serviceConfigurationProxy = new ServiceConfigurationProxy(serviceConfiguration);
             _testServer = CreateTestServer();
         }
 
@@ -28,7 +32,11 @@ namespace MockWebApi.Tests.TestUtils
         private TestServer CreateTestServer()
         {
             IWebHostBuilder hostBuilder = new WebHostBuilder()
-                .SetupMockWebApi();
+                .SetupMockWebApi()
+                .ConfigureServices(services =>
+                {
+                    services.AddSingleton<IServiceConfiguration>(_serviceConfigurationProxy);
+                });
 
             TestServer testServer = new TestServer(hostBuilder);
 
