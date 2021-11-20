@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 using MockWebApi.Service.Rest;
+using MockWebApi.Service;
 using Serilog;
 
 namespace MockWebApi.Extension
