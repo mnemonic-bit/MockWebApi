@@ -6,12 +6,11 @@ using System.Web;
 
 namespace MockWebApi.Routing
 {
-    public class RouteParser
+    public class RouteParser : IRouteParser
     {
 
         public RouteParser()
         {
-
         }
 
         public Route Parse(string url)

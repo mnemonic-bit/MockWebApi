@@ -9,18 +9,19 @@ namespace MockWebApi.Routing
         where TInfo : class
     {
 
-        private readonly RouteGraphNode _matchGraph;
-        private readonly IDictionary<string, TInfo> _routes;
+        private readonly IRouteParser _routeParser;
 
-        public RouteGraphMatcher()
+        private readonly RouteGraphNode _matchGraph;
+
+        public RouteGraphMatcher(IRouteParser routeParser)
         {
+            _routeParser = routeParser;
             _matchGraph = new RouteGraphNode();
-            _routes = new Dictionary<string, TInfo>();
         }
 
         public void AddRoute(string routeTemplate, TInfo routeInfo)
         {
-            lock (_routes)
+            lock (_matchGraph)
             {
                 RouteParser routeParser = new RouteParser();
                 Route route = routeParser.Parse(routeTemplate);
@@ -33,13 +34,12 @@ namespace MockWebApi.Routing
                 }
 
                 AddRouteToMatchGraph(route, routeInfo);
-                _routes.Add(routeTemplate, routeInfo);
             }
         }
 
         public bool ContainsRoute(string routeTemplate)
         {
-            lock (_routes)
+            lock (_matchGraph)
             {
                 return TryFindRoute(routeTemplate, out TInfo _);
             }
@@ -47,12 +47,15 @@ namespace MockWebApi.Routing
 
         public IEnumerable<TInfo> GetAllRoutes()
         {
-            return _routes.Values;
+            lock (_matchGraph)
+            {
+                throw new NotImplementedException($"{nameof(GetAllRoutes)} lacks an implementation.");
+            }
         }
 
         public bool Remove(string routeTemplate)
         {
-            lock (_routes)
+            lock (_matchGraph)
             {
                 if (!ContainsRoute(routeTemplate))
                 {
@@ -63,25 +66,23 @@ namespace MockWebApi.Routing
                 Route route = routeParser.Parse(routeTemplate);
                 RemoveRouteFromMatchGraph(route);
 
-                return _routes.Remove(routeTemplate);
+                return true;
             }
         }
 
         public void RemoveAll()
         {
-            lock(_routes)
+            lock (_matchGraph)
             {
                 _matchGraph.Literals.Clear();
                 _matchGraph.Parent = null;
                 _matchGraph.Variables.Clear();
-
-                _routes.Clear();
             }
         }
 
         public bool TryFindRoute(string path, out TInfo info)
         {
-            lock (_routes)
+            lock (_matchGraph)
             {
                 RouteParser routeParser = new RouteParser();
                 Route parsedRoute = routeParser.Parse(path);
@@ -261,7 +262,7 @@ namespace MockWebApi.Routing
 
         public bool TryMatch(string path, out RouteMatch<TInfo> routeMatch)
         {
-            lock (_routes)
+            lock (_matchGraph)
             {
                 RouteParser routeParser = new RouteParser();
                 Route parsedRoute = routeParser.Parse(path);
@@ -350,19 +351,45 @@ namespace MockWebApi.Routing
 
         private bool RemoveRouteFromMatchGraph(Route route)
         {
-            RouteGraphNode leafNode = route.Parts.Aggregate(_matchGraph, RemoveRouteFromMatchGraph);
+            if (!TryFindRoute(route, out MatchCandidate candidate))
+            {
+                return false;
+            }
+
+            RouteGraphNode lastNode = candidate.NextNode.Parent;
+
+            IEnumerable<RouteGraphNode> reversedNodePath = EnumerateGraphNodes(lastNode);
+            IEnumerable<Route.Part> reversedRouteParts = route.Parts.Reverse();
+
+            // Remove the info item from the last node
+            RemoveInfoItemFromMatchGraphNode(lastNode, reversedRouteParts.First());
+
+            List<RouteGraphNode> result = Enumerable.Zip(reversedRouteParts, reversedNodePath)
+                .Select(pair => RemoveRouteFromMatchGraph(pair.Second, pair.First, false) )
+                .ToList();
+
             return true;
         }
 
-        private RouteGraphNode RemoveRouteFromMatchGraph(RouteGraphNode graph, Route.Part part)
+        private IEnumerable<RouteGraphNode> EnumerateGraphNodes(RouteGraphNode graphNode)
+        {
+            while (graphNode != null)
+            {
+                RouteGraphNode nextGraphNode = graphNode;
+                graphNode = graphNode.Parent;
+                yield return nextGraphNode;
+            }
+        }
+
+        private RouteGraphNode RemoveInfoItemFromMatchGraphNode(RouteGraphNode graph, Route.Part part)
         {
             if (part is Route.LiteralPart literalPart)
             {
-                return RemoveLiteralPartFromMatchGraph(graph, literalPart);
+                return RemoveInfoItemFromLiteralPartOfMatchGraphNode(graph, literalPart);
             }
             else if (part is Route.VariablePart variablePart)
             {
-                return RemoveVariablePartFromMatchGraph(graph, variablePart);
+                return RemoveInfoItemFromVariablePartOfMatchGraphNode(graph, variablePart);
             }
             else
             {
@@ -370,22 +397,66 @@ namespace MockWebApi.Routing
             }
         }
 
-        private RouteGraphNode RemoveLiteralPartFromMatchGraph(RouteGraphNode graph, Route.LiteralPart part)
+        private RouteGraphNode RemoveInfoItemFromLiteralPartOfMatchGraphNode(RouteGraphNode graph, Route.LiteralPart part)
         {
             if (!graph.Literals.TryGetValue(part, out LiteralPartCandidates candidates))
             {
                 throw new InvalidOperationException($"Internal Error: Trying to remove part of route which does not exist.");
             }
 
-            //TODO: re-implement this
-            //LiteralPartCandidates candidateToRemove = candidates.Single(candidate => candidate.LiteralPart.Equals(part)); // TODO: remove this
-            //candidates.
-            //candidates.Infos.Remove(candidateToRemove.Infos.FirstOrDefault());
+            RouteInfo infoToRemove = candidates.Infos.FirstOrDefault(); //TODO: fix this, we have to identify the routing info that belongs to the path that is removed.
+            candidates.Infos.Remove(infoToRemove);
 
             return candidates.NextNode;
         }
 
-        private RouteGraphNode RemoveVariablePartFromMatchGraph(RouteGraphNode graph, Route.VariablePart part)
+        private RouteGraphNode RemoveInfoItemFromVariablePartOfMatchGraphNode(RouteGraphNode graph, Route.VariablePart part)
+        {
+            VariablePartCandidates candidateToRemove = graph.Variables.FirstOrDefault();// (candidate => candidate.IsLast); // TODO, add the part to this class to check and filter for it.
+
+            if (candidateToRemove == null)
+            {
+                throw new InvalidOperationException($"Internal Error: Trying to remove part of route which does not exist.");
+            }
+
+            graph.Variables.Remove(candidateToRemove);
+
+            // TODO: this is not correct and was changed due to a rewrite of the algorithm
+            return graph;
+        }
+
+        private RouteGraphNode RemoveRouteFromMatchGraph(RouteGraphNode graph, Route.Part part, bool isLast)
+        {
+            if (part is Route.LiteralPart literalPart)
+            {
+                return RemoveLiteralPartFromMatchGraph(graph, literalPart, isLast);
+            }
+            else if (part is Route.VariablePart variablePart)
+            {
+                return RemoveVariablePartFromMatchGraph(graph, variablePart, isLast);
+            }
+            else
+            {
+                throw new InvalidOperationException($"Internal error: Type of route part is not supported.");
+            }
+        }
+
+        private RouteGraphNode RemoveLiteralPartFromMatchGraph(RouteGraphNode graph, Route.LiteralPart part, bool isLast)
+        {
+            if (!graph.Literals.TryGetValue(part, out LiteralPartCandidates candidates))
+            {
+                throw new InvalidOperationException($"Internal Error: Trying to remove part of route which does not exist.");
+            }
+
+            if (!graph.Literals.Remove(part))
+            {
+                throw new InvalidOperationException($"Internal Error: Trying to remove literal part, but removing it from the list returned false.");
+            }
+
+            return candidates.NextNode;
+        }
+
+        private RouteGraphNode RemoveVariablePartFromMatchGraph(RouteGraphNode graph, Route.VariablePart part, bool isLast)
         {
             VariablePartCandidates candidateToRemove = graph.Variables.FirstOrDefault();// (candidate => candidate.IsLast); // TODO, add the part to this class to check and filter for it.
 
@@ -771,12 +842,29 @@ namespace MockWebApi.Routing
         private class RouteInfo
         {
 
+            private TInfo _info;
+
             public RouteInfo(TInfo info)
             {
-                Info = info;
+                if (info == null)
+                {
+                    throw new ArgumentException($"Cannot set null as info-item.");
+                }
+
+                _info = info;
             }
 
-            public TInfo Info { get; internal set; }
+            public TInfo Info
+            {
+                get
+                {
+                    return _info;
+                }
+                internal set
+                {
+                    _info = value ?? throw new ArgumentException($"Cannot set null as info-item.");
+                }
+            }
 
             public IDictionary<string, string> Parameters { get; } = new Dictionary<string, string>(); // TODO: fix this, this might not belong to a route information item.
 
@@ -795,6 +883,11 @@ namespace MockWebApi.Routing
                 }
 
                 return routeInfo.Info == Info;
+            }
+
+            public override int GetHashCode()
+            {
+                return base.GetHashCode();
             }
 
         }

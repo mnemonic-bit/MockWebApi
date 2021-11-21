@@ -53,7 +53,7 @@ namespace MockWebApi.Configuration
         public void ResetToDefault()
         {
             ConfigurationCollection = new ConfigurationCollection();
-            RouteMatcher = new RouteGraphMatcher<EndpointDescription>();
+            RouteMatcher = new RouteGraphMatcher<EndpointDescription>(new RouteParser());
             DefaultEndpointDescription = CreateDefaultEndpointDescription();
             ErrorResponseEndpointDescription = CreateErrorResponseEndpointDescription();
             JwtServiceOptions = CreateJwtServiceOptions();
