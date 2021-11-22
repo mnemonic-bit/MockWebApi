@@ -112,7 +112,7 @@ namespace MockWebApi.Tests.UnitTests
 
         [Theory]
         [InlineData(new string[] { "/some/path/with/less/segments", "/some/path/with/more/segments" }, "/some/path")]
-        //[InlineData(new string[] { "/segment1/segment2/start" }, "/{variable1}/{variable2}/start")]
+        [InlineData(new string[] { "/segment1/segment2/start" }, "/{variable1}/{variable2}/start")]
         public void DeleteRoute_ShouldLeaveOtherInfoItems_WhenShorterPathIsDeleted(string[] pathTemplates, string path)
         {
             // Arrange

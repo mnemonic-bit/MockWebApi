@@ -448,9 +448,15 @@ namespace MockWebApi.Routing
                 throw new InvalidOperationException($"Internal Error: Trying to remove part of route which does not exist.");
             }
 
-            if (!graph.Literals.Remove(part))
+            // If the follow-up graph node is empty, we can remove
+            // the part from the collection of literals, which unlinks
+            // the graph at this node.
+            if (candidates.NextNode?.IsEmpty ?? true)
             {
-                throw new InvalidOperationException($"Internal Error: Trying to remove literal part, but removing it from the list returned false.");
+                if (!graph.Literals.Remove(part))
+                {
+                    throw new InvalidOperationException($"Internal Error: Trying to remove literal part, but removing it from the list returned false.");
+                }
             }
 
             return candidates.NextNode;
