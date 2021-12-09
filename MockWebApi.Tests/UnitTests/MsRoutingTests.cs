@@ -14,7 +14,7 @@ namespace MockWebApi.Tests.UnitTests
 
             // Act
             RouteTemplate routeTemplate = TemplateParser.Parse(template);
-            
+
             // Assert
 
         }

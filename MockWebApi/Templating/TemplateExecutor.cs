@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -33,7 +32,7 @@ namespace MockWebApi.Templating
             ScriptEvaluator scriptEvaluator = new ScriptEvaluator(scriptInitCode);
 
             IList<string> evaluatedTemplateExpressions = new List<string>();
-            foreach(string templateExpression in templateExpressions)
+            foreach (string templateExpression in templateExpressions)
             {
                 object result = await scriptEvaluator.RunLineOfCodeAsync(templateExpression);
                 evaluatedTemplateExpressions.Add(result?.ToString() ?? "");

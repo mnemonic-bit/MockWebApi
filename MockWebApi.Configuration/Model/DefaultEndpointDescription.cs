@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace MockWebApi.Configuration.Model
+﻿namespace MockWebApi.Configuration.Model
 {
     /// <summary>
     /// The DefaultEndpointDescription  is used to describe the default behaviour

@@ -87,27 +87,44 @@ namespace MockWebApi.Tests.UnitTests
         [InlineData("/some/path", "/some/path")]
         [InlineData("/{variable1}/{variable2}/start", "/{variable1}/{variable2}/start")]
         [InlineData("/{variable}/fixed/start", "/{variable}/fixed/start")]
-        public void DeleteRoute_ShouldRemoveInfoItem(string pathTemplate, string path)
+        public void DeleteRoute_ShouldRemoveInfoItem(string pathTemplate, string pathToRemove)
         {
             // Arrange
             IRouteParser routeParser = new RouteParser();
             RouteGraphMatcher<EndpointDescription> graphMatcher = new RouteGraphMatcher<EndpointDescription>(routeParser);
 
-            EndpointDescription endpointDescription = new EndpointDescription()
-            {
-                Route = pathTemplate,
-                PersistRequestInformation = true
-            };
+            graphMatcher.AddRoute(pathTemplate);
 
             // Act
-            graphMatcher.AddRoute(pathTemplate, endpointDescription);
-            bool removeResult = graphMatcher.Remove(pathTemplate);
-            bool result = graphMatcher.TryFindRoute(path, out EndpointDescription info);
+            bool removeResult = graphMatcher.Remove(pathToRemove);
+            bool result = graphMatcher.TryFindRoute(pathTemplate, out EndpointDescription info);
 
             // Assert
             Assert.True(removeResult);
             Assert.False(result);
             Assert.Null(info);
+        }
+
+
+        [Theory]
+        [InlineData("/{variable}/fixed/start", "/some/fixed/start")]
+        [InlineData("/{variable1}/{variable2}/start", "/{variable1}/specific/start")]
+        public void DeleteRoute_ShouldNotRemoveInfoItem_WhenPathDoesNotMatchInDetail(string pathTemplate, string pathToRemove)
+        {
+            // Arrange
+            IRouteParser routeParser = new RouteParser();
+            RouteGraphMatcher<EndpointDescription> graphMatcher = new RouteGraphMatcher<EndpointDescription>(routeParser);
+
+            graphMatcher.AddRoute(pathTemplate);
+
+            // Act
+            bool removeResult = graphMatcher.Remove(pathToRemove);
+            bool result = graphMatcher.TryFindRoute(pathTemplate, out EndpointDescription info);
+
+            // Assert
+            Assert.False(removeResult);
+            Assert.True(result);
+            Assert.NotNull(info);
         }
 
         [Theory]
@@ -119,7 +136,7 @@ namespace MockWebApi.Tests.UnitTests
             IRouteParser routeParser = new RouteParser();
             RouteGraphMatcher<EndpointDescription> graphMatcher = new RouteGraphMatcher<EndpointDescription>(routeParser);
 
-            foreach(string pathTemplate in pathTemplates)
+            foreach (string pathTemplate in pathTemplates)
             {
                 graphMatcher.AddRoute(pathTemplate);
             }
@@ -136,10 +153,52 @@ namespace MockWebApi.Tests.UnitTests
         }
 
         [Theory]
-        [InlineData(new string[] { "/some/path/with/less/segments", "/some/path/with/more/segments", "/some/path" }, "/some/path/with/less/segments")]
-        //[InlineData(new string[] { "/{variable1}/{variable2}/start", "/{variable}/fixed/start" }, "/different/fixed/start")]
-        //[InlineData(new string[] { "/{variable1}/start/{variable2}", "/{variable}/start/fixed" }, "/different/start/fixed")]
-        public void TryMatch_ShouldFindMatch_scratch_method(string[] pathTemplates, string path)
+        [InlineData("/some/specific/path", "/some/specific/path/with/more/segments")]
+        public void GetAllRoutes_ShouldListAllAddedRoutes(string pathTemplate1, string pathTemplate2)
+        {
+            // Arrange
+            IRouteParser routeParser = new RouteParser();
+            RouteGraphMatcher<EndpointDescription> graphMatcher = new RouteGraphMatcher<EndpointDescription>(routeParser);
+
+            string[] expectedRoutes = new string[] { pathTemplate1, pathTemplate2 };
+
+            foreach (string pathTemplate in expectedRoutes)
+            {
+                graphMatcher.AddRoute(pathTemplate);
+            }
+
+            // Act
+            var routes = graphMatcher
+                .GetAllRoutes()
+                .Select(info => info.Route)
+                .ToArray();
+
+            // Assert
+            Assert.Equal(expectedRoutes, routes);
+        }
+
+        [Theory]
+        [InlineData(new string[] { "/some/path" }, "/some/path")]
+        [InlineData(new string[] { "/some/path" }, "/some/path/")]
+        [InlineData(new string[] { "/some/path/" }, "/some/path")]
+        [InlineData(new string[] { "/some/path/" }, "/some/path/")]
+        [InlineData(new string[] { "/some/other/path", "/some/path/" }, "/some/path")]
+        [InlineData(new string[] { "/some/path/with/less/segments", "/some/path/with/more/segments", "/some/path" }, "/some/path")]
+        [InlineData(new string[] { "/some/path", "/some/path/with/less/segments", "/some/path/with/more/segments" }, "/some/path")]
+        [InlineData(new string[] { "/some/{variable}/path", "/some/different/path" }, "/some/different/path")]
+        [InlineData(new string[] { "/some/{variable}/path", "/some/different/path" }, "/some/static/path")]
+        [InlineData(new string[] { "/some/{variable}/path", "/some/{variable}/path/with/more/segments" }, "/some/different/path")]
+        [InlineData(new string[] { "/some/{variable}/path", "/some/{variable}/path/with/more/segments" }, "/some/different/path/with/more/segments")]
+        [InlineData(new string[] { "/{variable1}/{variable2}/start/end", "/{variable}/fixed/start" }, "/different/fixed/start")]
+        [InlineData(new string[] { "/{variable1}/fixed/{variable2}", "/{variable}/fixed/start/end" }, "/different/fixed/start")]
+        [InlineData(new string[] { "/{variable1}/{variable2}/start/end", "/{variable}/fixed/start" }, "/different/fixed/start/end")]
+        [InlineData(new string[] { "/{variable1}/fixed/{variable2}", "/{variable}/fixed/start/end" }, "/different/fixed/start/end")]
+        [InlineData(new string[] { "/some/specific/path", "/some/speficic/path/detail" }, "/some/specific/path")]
+        [InlineData(new string[] { "/some/specific/path", "/some/speficic/path/detail" }, "/some/speficic/path/detail")]
+        [InlineData(new string[] { "/some/specific/path?emptyParam=&paramWithValue=ABC", "/some/specific/path?emptyParam=&paramWithValue=XYZ" }, "/some/specific/path?emptyParam=&paramWithValue=ABC")]
+        [InlineData(new string[] { "/some/specific/path?emptyParam=&paramWithValue=ABC", "/some/specific/path?emptyParam=&paramWithValue={var}" }, "/some/specific/path?emptyParam=&paramWithValue=A")]
+        [InlineData(new string[] { "/some/path?var1={param1}&var2=value2" }, "/some/path?var1=some-value&var2=value2")]
+        public void TryMatch_ShouldFindMatch(string[] pathTemplates, string path)
         {
             // Arrange
             IRouteParser routeParser = new RouteParser();
@@ -147,11 +206,31 @@ namespace MockWebApi.Tests.UnitTests
 
             foreach (string pathTemplate in pathTemplates)
             {
-                EndpointDescription endpointDescription = new EndpointDescription()
-                {
-                    Route = pathTemplate
-                };
-                graphMatcher.AddRoute(pathTemplate, endpointDescription);
+                graphMatcher.AddRoute(pathTemplate);
+            }
+
+            // Act
+            bool result = graphMatcher.TryMatch(path, out RouteMatch<EndpointDescription> routeMatch);
+
+            // Assert
+            Assert.True(result);
+            Assert.NotNull(routeMatch);
+        }
+
+        //TODO: needs to implement an ordering of candidates according
+        // to the specificy of route matching.
+        [Theory]
+        [InlineData(new string[] { "/{variable1}/{variable2}/start", "/{variable}/fixed/start" }, "/different/fixed/start")]
+        [InlineData(new string[] { "/{variable1}/start/{variable2}", "/{variable}/start/fixed" }, "/different/start/fixed")]
+        public void TryMatch_ShouldFindMostSpecificMatch(string[] pathTemplates, string path)
+        {
+            // Arrange
+            IRouteParser routeParser = new RouteParser();
+            RouteGraphMatcher<EndpointDescription> graphMatcher = new RouteGraphMatcher<EndpointDescription>(routeParser);
+
+            foreach (string pathTemplate in pathTemplates)
+            {
+                graphMatcher.AddRoute(pathTemplate);
             }
 
             // Act
@@ -163,28 +242,9 @@ namespace MockWebApi.Tests.UnitTests
         }
 
         [Theory]
-        [InlineData(new string[] { "/some/path" }, "/some/path")]
-        [InlineData(new string[] { "/some/path/" }, "/some/path")]
-        [InlineData(new string[] { "/some/other/path", "/some/path/" }, "/some/path")]
-        [InlineData(new string[] { "/some/path/with/less/segments", "/some/path/with/more/segments", "/some/path" }, "/some/path")]
-        [InlineData(new string[] { "/some/path", "/some/path/with/less/segments", "/some/path/with/more/segments" }, "/some/path")]
-        [InlineData(new string[] { "/some/{variable}/path", "/some/different/path" }, "/some/different/path")]
-        [InlineData(new string[] { "/some/{variable}/path", "/some/different/path" }, "/some/static/path")]
-        [InlineData(new string[] { "/some/{variable}/path", "/some/{variable}/path/with/more/segments" }, "/some/different/path")]
-        [InlineData(new string[] { "/some/{variable}/path", "/some/{variable}/path/with/more/segments" }, "/some/different/path/with/more/segments")]
-        [InlineData(new string[] { "/{variable1}/{variable2}/start", "/{variable}/fixed/start" }, "/different/fixed/start")]
-        [InlineData(new string[] { "/{variable1}/start/{variable2}", "/{variable}/start/fixed" }, "/different/start/fixed")]
-        [InlineData(new string[] { "/{variable1}/{variable2}/start/end", "/{variable}/fixed/start" }, "/different/fixed/start")]
-        [InlineData(new string[] { "/{variable1}/fixed/{variable2}", "/{variable}/fixed/start/end" }, "/different/fixed/start")]
-        [InlineData(new string[] { "/{variable1}/{variable2}/start/end", "/{variable}/fixed/start" }, "/different/fixed/start/end")]
-        [InlineData(new string[] { "/{variable1}/fixed/{variable2}", "/{variable}/fixed/start/end" }, "/different/fixed/start/end")]
-        [InlineData(new string[] { "/some/specific/path", "/some/speficic/path/detail" }, "/some/specific/path")]
-        [InlineData(new string[] { "/some/specific/path", "/some/speficic/path/detail" }, "/some/speficic/path/detail")]
-        [InlineData(new string[] { "/some/specific/path?emptyParam=&paramWithValue=ABC", "/some/specific/path?emptyParam=&paramWithValue=XYZ" }, "/some/specific/path?emptyParam=&paramWithValue=ABC")]
-        [InlineData(new string[] { "/some/specific/path?emptyParam=&paramWithValue=ABC", "/some/specific/path?emptyParam=&paramWithValue={var}" }, "/some/specific/path?emptyParam=&paramWithValue=A")]
-        [InlineData(new string[] { "/some/path?var1={param1}&var2=value2" }, "/some/path?var1=some-value&var2=value2")]
+        [InlineData(new string[] { "/some/path?var1={param1}&var2=value2" }, "/some/path?var1=&var2=value2")]
         [InlineData(new string[] { "/some/path?var1={param1}&var2=value2" }, "/some/path?var2=value2")]
-        public void TryMatch_ShouldFindMatch(string[] pathTemplates, string path)
+        public void TryMatch_ShouldFindMatch_WhenVariableParametersAreNotGiven(string[] pathTemplates, string path)
         {
             // Arrange
             IRouteParser routeParser = new RouteParser();
@@ -192,11 +252,7 @@ namespace MockWebApi.Tests.UnitTests
 
             foreach (string pathTemplate in pathTemplates)
             {
-                EndpointDescription endpointDescription = new EndpointDescription()
-                {
-                    Route = pathTemplate
-                };
-                graphMatcher.AddRoute(pathTemplate, endpointDescription);
+                graphMatcher.AddRoute(pathTemplate);
             }
 
             // Act
@@ -218,11 +274,7 @@ namespace MockWebApi.Tests.UnitTests
 
             foreach (string pathTemplate in pathTemplates)
             {
-                EndpointDescription endpointDescription = new EndpointDescription()
-                {
-                    Route = pathTemplate
-                };
-                graphMatcher.AddRoute(pathTemplate, endpointDescription);
+                graphMatcher.AddRoute(pathTemplate);
             }
 
             // Act
@@ -248,11 +300,7 @@ namespace MockWebApi.Tests.UnitTests
 
             foreach (string pathTemplate in pathTemplates)
             {
-                EndpointDescription endpointDescription = new EndpointDescription()
-                {
-                    Route = pathTemplate
-                };
-                graphMatcher.AddRoute(pathTemplate, endpointDescription);
+                graphMatcher.AddRoute(pathTemplate);
             }
 
             // Act
@@ -275,11 +323,7 @@ namespace MockWebApi.Tests.UnitTests
 
             foreach (string pathTemplate in pathTemplates)
             {
-                EndpointDescription endpointDescription = new EndpointDescription()
-                {
-                    Route = pathTemplate
-                };
-                graphMatcher.AddRoute(pathTemplate, endpointDescription);
+                graphMatcher.AddRoute(pathTemplate);
             }
 
             // Act

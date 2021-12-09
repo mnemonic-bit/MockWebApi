@@ -49,7 +49,7 @@ namespace MockWebApi.Routing
         {
             lock (_matchGraph)
             {
-                throw new NotImplementedException($"{nameof(GetAllRoutes)} lacks an implementation.");
+                return EnumerateAllCandidates(_matchGraph);
             }
         }
 
@@ -99,6 +99,40 @@ namespace MockWebApi.Routing
         }
 
 
+        #region GetAllRoutes
+
+        private IEnumerable<TInfo> EnumerateAllCandidates(RouteGraphNode graphNode)
+        {
+            if (graphNode == null)
+            {
+                return Enumerable.Empty<TInfo>();
+            }
+
+            var literalCandidates = graphNode.Literals
+                .SelectMany(literal => literal.Value.Infos)
+                .Select(info => info.Info);
+
+            var variableCandidates = graphNode.Variables
+                .SelectMany(variable => variable.Infos)
+                .Select(info => info.Info);
+
+            var recursiveCandidates = graphNode.Literals
+                .Select(literal => literal.Value)
+                .SelectMany(graphNode => EnumerateAllCandidates(graphNode.NextNode));
+
+            var recursiveVariableCandidates = graphNode.Variables
+                .Select(variable => variable.NextNode)
+                .SelectMany(graphNode => EnumerateAllCandidates(graphNode));
+
+            return literalCandidates
+                .Concat(variableCandidates)
+                .Concat(recursiveCandidates)
+                .Concat(recursiveVariableCandidates);
+        }
+
+        #endregion
+
+
         #region TryFindRoute
 
         private bool TryFindRoute(Route route, out MatchCandidate candidate)
@@ -121,7 +155,12 @@ namespace MockWebApi.Routing
                 return false;
             }
 
-            if (candidates.Count > 1)
+            if (!TryMatchParameters(route, candidates, out candidates))
+            {
+                return false;
+            }
+
+            if (candidates.Count != 1)
             {
                 return false;
             }
@@ -260,6 +299,8 @@ namespace MockWebApi.Routing
         #endregion
 
 
+        #region TryMatch
+
         public bool TryMatch(string path, out RouteMatch<TInfo> routeMatch)
         {
             lock (_matchGraph)
@@ -365,7 +406,7 @@ namespace MockWebApi.Routing
             RemoveInfoItemFromMatchGraphNode(lastNode, reversedRouteParts.First());
 
             List<RouteGraphNode> result = Enumerable.Zip(reversedRouteParts, reversedNodePath)
-                .Select(pair => RemoveRouteFromMatchGraph(pair.Second, pair.First, false) )
+                .Select(pair => RemoveRouteFromMatchGraph(pair.Second, pair.First, false))
                 .ToList();
 
             return true;
@@ -501,6 +542,11 @@ namespace MockWebApi.Routing
             {
                 return false;
             }
+
+            //TODO: the next two if-statements are special handlings of a more
+            // general case, which is ordering the route matches according to
+            // their specificy, and choosing that candidate which has the most
+            // specific route.
 
             if (TryGetFixedCandidate(candidates, out match))
             {
@@ -647,10 +693,11 @@ namespace MockWebApi.Routing
                 return false;
             }
 
-            if (isLastNode && matchCandidates.Count() > 1)
-            {
-                return false;
-            }
+            //TODO: Check if removing this will not break all other tests
+            //if (isLastNode && matchCandidates.Count() > 1)
+            //{
+            //    return false;
+            //}
 
             return true;
         }
@@ -667,11 +714,11 @@ namespace MockWebApi.Routing
 
         private bool TryMatchLiteralPart(RouteGraphNode graph, Route.LiteralPart literalPart, bool isLastNode, out ICollection<MatchCandidate> matchCandidates)
         {
-            matchCandidates = default;
+            matchCandidates = new HashSet<MatchCandidate>();
 
             if (graph.Literals.TryGetValue(literalPart, out LiteralPartCandidates literalPartCandidates))
             {
-                if (isLastNode ? literalPartCandidates.Infos.Count > 0 : literalPartCandidates.Infos.Count == 0)
+                if (isLastNode && literalPartCandidates.Infos.Count > 0)
                 {
                     matchCandidates = literalPartCandidates.Infos
                         .Select(info =>
@@ -683,6 +730,14 @@ namespace MockWebApi.Routing
                         })
                         .ToHashSet();
 
+                    MatchCandidate matchCandidate = new MatchCandidate();
+                    matchCandidate.NextNode = literalPartCandidates.NextNode;
+                    matchCandidates.Add(matchCandidate);
+
+                    return true;
+                }
+                else if (!isLastNode)
+                {
                     MatchCandidate matchCandidate = new MatchCandidate();
                     matchCandidate.NextNode = literalPartCandidates.NextNode;
                     matchCandidates.Add(matchCandidate);
@@ -718,11 +773,15 @@ namespace MockWebApi.Routing
                     return matchCandidates;
                 });
 
-            matchCandidates = new HashSet<MatchCandidate>();
             matchCandidates.AddAll(nextVariableNodes);
 
             return true;
         }
+
+        #endregion TryMatch
+
+
+        #region Common Matcher
 
         private bool TryMatchParameters(Route route, ICollection<MatchCandidate> currentCandidates, out ICollection<MatchCandidate> candidates)
         {
@@ -736,7 +795,10 @@ namespace MockWebApi.Routing
 
                     candidate.Variables.AddAll(variablesFromParameters);
 
-                    return new MatchCandidate(candidate);
+                    MatchCandidate newMatchCandidate = new MatchCandidate(candidate);
+                    newMatchCandidate.NextNode = candidate.NextNode;
+
+                    return newMatchCandidate;
                 })
                 .Where(candidates => candidates != null)
                 .ToList();
@@ -768,12 +830,19 @@ namespace MockWebApi.Routing
         {
             matchedParameter = null;
 
+            bool variableValueIsParameter = VariableValueIsParameterName(variableValue, out string parameterName);
+
             if (!parameters.TryGetValue(variableName, out string parameterValue))
             {
+                if (variableValueIsParameter)
+                {
+                    matchedParameter = new KeyValuePair<string, string>(parameterName, "");
+                    return true;
+                }
                 return false;
             }
 
-            if (!VariableValueIsParameterName(variableValue, out string parameterName))
+            if (!variableValueIsParameter)
             {
                 return variableValue == parameterValue;
             }
@@ -803,6 +872,9 @@ namespace MockWebApi.Routing
         {
             return variable.Substring(1, variable.Length - 2);
         }
+
+        #endregion
+
 
         /// <summary>
         /// A node in the node-graph is an instance which holds references

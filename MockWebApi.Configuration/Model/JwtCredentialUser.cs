@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace MockWebApi.Configuration.Model
+﻿namespace MockWebApi.Configuration.Model
 {
     public class JwtCredentialUser
     {

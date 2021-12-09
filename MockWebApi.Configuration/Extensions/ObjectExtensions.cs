@@ -23,7 +23,7 @@ namespace MockWebApi.Configuration.Extensions
 
         public static string Serialize<TObject>(this TObject obj, string format = "YAML") // TODO: change the format parameter from string to enum
         {
-            switch(format)
+            switch (format)
             {
                 case "YAML":
                     return obj.SerializeToYaml<TObject>();

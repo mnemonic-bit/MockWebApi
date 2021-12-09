@@ -1,15 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.Logging;
-using MockWebApi.Configuration.Model;
-using MockWebApi.Data;
-using MockWebApi.Extension;
-using MockWebApi.Model;
-using MockWebApi.Routing;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace MockWebApi.Middleware
