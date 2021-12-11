@@ -3,9 +3,7 @@
     public class Template
     {
 
-        public string FormatString { get; set; }
-
-        public string[] Parameters { get; set; }
+        public Fragment[] Fragments { get; set; }
 
     }
 }

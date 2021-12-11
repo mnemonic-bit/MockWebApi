@@ -7,10 +7,10 @@ namespace MockWebApi.Tests.UnitTests
     {
 
         [Theory]
-        [InlineData("skldfj sldkjf sdlkfj sfd\n sldkfjslkdfjl")]
-        [InlineData("some useful {text}\n but with no teplate pattern inside")]
-        [InlineData("some useful {text\n but with no teplate} pattern inside")]
-        public void Parse_ShouldReturnTheSameText_WhenNoTemplatingMarksAreMissing(string text)
+        [InlineData("Hello!")]
+        [InlineData("Hello World!")]
+        [InlineData("Hello\nWorld!")]
+        public void Parse_ShouldReturnOnlyOneFragment_WhenOnlyTextIsParsed(string text)
         {
             // Arrange
             TemplateParser parser = new TemplateParser();
@@ -19,24 +19,36 @@ namespace MockWebApi.Tests.UnitTests
             Template template = parser.Parse(text);
 
             // Assert
-            Assert.Equal(text, template.FormatString);
-            Assert.Empty(template.Parameters);
+            Assert.Single(template.Fragments);
+
+            Fragment fragment = template.Fragments[0];
+            Assert.IsType<StringFragment>(template.Fragments[0]);
+
+            StringFragment stringFragment = fragment as StringFragment;
+            Assert.Equal(text, stringFragment.Text);
         }
 
-        [Theory]
-        [InlineData("some {{ var1 }} teplated {{ var2 }} text", "some {0} teplated {1} text", new string[] { "var1", "var2" })]
-        [InlineData("some {{ if (expr) { stmt; } }} teplated {{ Guid.NewGuid().ToString() }} text", "some {0} teplated {1} text", new string[] { "if (expr) { stmt; }", "Guid.NewGuid().ToString()" })]
-        public void Parse_ShouldReturnFormatString_WhenTextHasMarks(string text, string templateText, string[] parametes)
+        [Fact]
+        public void Parse_ShouldReturnFormatString_WhenTextHasMarks()
         {
             // Arrange
+            string text = "some {{ var1 }} teplated {{ var2 }} text";
+            Fragment[] fragments = new Fragment[]
+            { 
+                new StringFragment("some "),
+                new ScriptFragment("var1"),
+                new StringFragment(" templated "),
+                new ScriptFragment("var2"),
+                new StringFragment(" text")
+            };
+
             TemplateParser parser = new TemplateParser();
 
             // Act
             Template template = parser.Parse(text);
 
             // Assert
-            Assert.Equal(templateText, template.FormatString);
-            Assert.Equal(parametes, template.Parameters);
+            Assert.Equal(fragments, template.Fragments);
         }
 
         [Theory]

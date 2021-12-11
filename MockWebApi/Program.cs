@@ -21,6 +21,11 @@ namespace MockWebApi
                 args = new string[] { };
             }
 
+            Log.Logger = new LoggerConfiguration()
+                .WriteTo.Console()
+                .Filter.ByExcluding(Matching.FromSource("Microsoft"))
+                .CreateLogger();
+
             return Host
                 .CreateDefaultBuilder(args)
                 .ConfigureLogging()

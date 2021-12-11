@@ -34,7 +34,7 @@ namespace MockWebApi
         {
             services.AddSingleton<IHostService, HostService>();
             services.AddSingleton<IHostConfiguration, HostConfiguration>();
-            //services.AddSingleton<IServiceConfiguration, ServiceConfiguration>(); // TODO: test if it works without this, then remove this
+            services.AddSingleton<IServiceConfiguration, ServiceConfiguration>();
             services.AddSingleton<IRequestHistory>(new RequestHistory());
 
             services.AddTransient<IConfigurationReader, ConfigurationReader>();
@@ -78,6 +78,7 @@ namespace MockWebApi
 
             app.UseRouting();
 
+            app.UseMiddleware<TimeMeasurementMiddleware>();
             app.UseMiddleware<StoreRequestDataMiddleware>();
             app.UseMiddleware<LoggingMiddleware>();
 
@@ -101,7 +102,7 @@ namespace MockWebApi
 
         private void WriteBanner(ILogger<Startup> logger)
         {
-            logger.LogInformation($"MockWebApi service version {GetVersion()} has been configured.\n");
+            logger.LogInformation($"MockWebApi service version {GetVersion()} has been started.\n");
         }
 
         private Version GetVersion()

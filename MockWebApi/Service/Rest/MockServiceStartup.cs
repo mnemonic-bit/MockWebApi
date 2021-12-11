@@ -24,7 +24,6 @@ namespace MockWebApi.Service.Rest
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton<IRequestHistory>(new RequestHistory());
@@ -42,48 +41,13 @@ namespace MockWebApi.Service.Rest
             services.AddTransient<ITemplateParser, TemplateParser>();
 
             services.AddDynamicRouting();
-
-            //TODO: add an implementation of this class below to provide
-            // Swagger-capabilities to the end-user for the dynamic methods
-            // this mock-service provides.
-            //Microsoft.AspNetCore.Mvc.ApiExplorer.IApiDescriptionGroupCollectionProvider
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<MockServiceStartup> logger)
         {
             app.UseMiddleware<StoreRequestDataMiddleware>();
             app.UseMiddleware<LoggingMiddleware>();
             app.UseMiddleware<MockedRestMiddleware>();
-
-            /*
-            app.UseDynamicRouting();
-
-            app.UseEndpoints(endpoints =>
-            {
-                //TODO: Use middleware for this instead.
-                endpoints.MapControllerRoute(
-                    name: "some-route-name",
-                    pattern: "{**slug}",
-                    defaults: new { controller = "MockWebApi", action = "MockResults" });
-            });
-            */
-
-            WriteBanner(logger);
-        }
-
-        private void WriteBanner(ILogger<MockServiceStartup> logger)
-        {
-            logger.LogInformation($"MockWebApi service version {GetVersion()} has been configured.\n");
-        }
-
-        private Version GetVersion()
-        {
-            Assembly thisAssembly = Assembly.GetAssembly(typeof(MockServiceStartup));
-
-            Version assemblyVersion = thisAssembly.GetName().Version;
-
-            return assemblyVersion;
         }
 
     }
