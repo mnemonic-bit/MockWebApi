@@ -797,6 +797,7 @@ namespace MockWebApi.Routing
 
                     MatchCandidate newMatchCandidate = new MatchCandidate(candidate);
                     newMatchCandidate.NextNode = candidate.NextNode;
+                    newMatchCandidate.PartCandidate = candidate.PartCandidate;
 
                     return newMatchCandidate;
                 })

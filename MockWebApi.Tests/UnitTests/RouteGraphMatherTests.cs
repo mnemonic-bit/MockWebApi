@@ -34,10 +34,9 @@ namespace MockWebApi.Tests.UnitTests
             //TODO:
         }
 
+        //TODO: should this feature be implemented?
         [Theory]
-        [InlineData("/{variable}/fixed/start", "/fixed/{variable}/start")]
-        [InlineData("/{variable1}/{variable2}/start", "/{variable}/fixed/start")]
-        [InlineData("/{variable1}/fixed/{variable2}", "/{variable}/fixed/start")]
+        [InlineData("/{variable1}/fixed/start", "/{variable2}/fixed/start")]
         public void AddRoute_ShouldThrowException_WhenOverlappingRoutesAreGiven(string pathTemplate1, string pathTemplate2)
         {
             // Arrange
@@ -104,7 +103,6 @@ namespace MockWebApi.Tests.UnitTests
             Assert.False(result);
             Assert.Null(info);
         }
-
 
         [Theory]
         [InlineData("/{variable}/fixed/start", "/some/fixed/start")]

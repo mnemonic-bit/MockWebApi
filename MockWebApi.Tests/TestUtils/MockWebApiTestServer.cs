@@ -16,7 +16,7 @@ namespace MockWebApi.Tests.TestUtils
         internal MockWebApiTestServer(IServiceConfiguration serviceConfiguration)
         {
             _serviceConfigurationProxy = new ServiceConfigurationProxy(serviceConfiguration);
-            _testServer = CreateTestServer();
+            _testServer = CreateTestServer(_serviceConfigurationProxy);
         }
 
         internal HttpClient CreateHttpClient()
@@ -29,13 +29,13 @@ namespace MockWebApi.Tests.TestUtils
             return _testServer.CreateHandler();
         }
 
-        private TestServer CreateTestServer()
+        private TestServer CreateTestServer(ServiceConfigurationProxy serviceConfiguration)
         {
             IWebHostBuilder hostBuilder = new WebHostBuilder()
                 .SetupMockWebApi()
                 .ConfigureServices(services =>
                 {
-                    services.AddSingleton<IServiceConfiguration>(_serviceConfigurationProxy);
+                    services.AddSingleton<IServiceConfiguration>(serviceConfiguration);
                 });
 
             TestServer testServer = new TestServer(hostBuilder);

@@ -1,7 +1,7 @@
 using MockWebApi.Routing;
 using Xunit;
 
-namespace MockWebApi.UnitTests.Tests
+namespace MockWebApi.Tests.UnitTests
 {
     public class RouteParserTests
     {

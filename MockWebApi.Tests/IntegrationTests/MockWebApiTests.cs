@@ -8,7 +8,7 @@ using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace MockWebApi.IntegrationTests.Tests
+namespace MockWebApi.Tests.IntegrationTests
 {
     public class MockWebApiTests
     {
@@ -75,6 +75,86 @@ namespace MockWebApi.IntegrationTests.Tests
             Assert.NotNull(httpResponseMessage);
             Assert.Equal(defaultEndpointConfiguration.Result.StatusCode, httpResponseMessage.StatusCode);
             Assert.Equal(defaultEndpointConfiguration.Result.Body, await httpResponseMessage.Content.ReadAsStringAsync());
+        }
+
+        [Fact]
+        public async Task MockWebApi_ShouldRemoveEndpointConfig_WhenLifecycleIsApplyOnce()
+        {
+            // Arrange
+            string serviceName = "TEST-SERVICE";
+            string testUriPath = "/brand/new/path";
+            string responseBody = "some body";
+            HttpStatusCode statusCode = HttpStatusCode.Created;
+
+            DefaultEndpointDescription defaultEndpointConfiguration = EndpointDescriptionFactory.CreateDefaultEndpointDescription();
+
+            EndpointDescription endpointConfiguration = EndpointDescriptionFactory.CreateEndpointDescription(
+                testUriPath,
+                statusCode,
+                responseBody);
+
+            endpointConfiguration.LifecyclePolicy = LifecyclePolicy.ApplyOnce;
+
+            IServiceConfiguration serviceConfiguration = ServiceConfigurationFactory.CreateBaseConfiguration(serviceName);
+            serviceConfiguration.DefaultEndpointDescription = defaultEndpointConfiguration;
+            serviceConfiguration.AddEndpointDescription(endpointConfiguration);
+
+            MockWebApiTestServer integrationTestServer = new MockWebApiTestServer(serviceConfiguration);
+            HttpClient httpClient = integrationTestServer.CreateHttpClient();
+            HttpTestClient httpTestClient = new HttpTestClient(httpClient);
+
+            // Act
+            HttpResponseMessage firstHttpResponseMessage = await httpTestClient.SendMessage(testUriPath);
+            HttpResponseMessage secondHttpResponseMessage = await httpTestClient.SendMessage(testUriPath);
+
+            // Assert
+            Assert.NotNull(firstHttpResponseMessage);
+            Assert.Equal(statusCode, firstHttpResponseMessage.StatusCode);
+            Assert.Equal(responseBody, await firstHttpResponseMessage.Content.ReadAsStringAsync());
+
+            Assert.NotNull(secondHttpResponseMessage);
+            Assert.Equal(defaultEndpointConfiguration.Result.StatusCode, secondHttpResponseMessage.StatusCode);
+            Assert.Equal(defaultEndpointConfiguration.Result.Body, await secondHttpResponseMessage.Content.ReadAsStringAsync());
+        }
+
+        [Fact]
+        public async Task MockWebApi_ShouldKeepEndpointConfig_WhenLifecycleIsRepeat()
+        {
+            // Arrange
+            string serviceName = "TEST-SERVICE";
+            string testUriPath = "/brand/new/path";
+            string responseBody = "some body";
+            HttpStatusCode statusCode = HttpStatusCode.Created;
+
+            DefaultEndpointDescription defaultEndpointConfiguration = EndpointDescriptionFactory.CreateDefaultEndpointDescription();
+
+            EndpointDescription endpointConfiguration = EndpointDescriptionFactory.CreateEndpointDescription(
+                testUriPath,
+                statusCode,
+                responseBody);
+
+            endpointConfiguration.LifecyclePolicy = LifecyclePolicy.Repeat;
+
+            IServiceConfiguration serviceConfiguration = ServiceConfigurationFactory.CreateBaseConfiguration(serviceName);
+            serviceConfiguration.DefaultEndpointDescription = defaultEndpointConfiguration;
+            serviceConfiguration.AddEndpointDescription(endpointConfiguration);
+
+            MockWebApiTestServer integrationTestServer = new MockWebApiTestServer(serviceConfiguration);
+            HttpClient httpClient = integrationTestServer.CreateHttpClient();
+            HttpTestClient httpTestClient = new HttpTestClient(httpClient);
+
+            // Act
+            HttpResponseMessage firstHttpResponseMessage = await httpTestClient.SendMessage(testUriPath);
+            HttpResponseMessage secondHttpResponseMessage = await httpTestClient.SendMessage(testUriPath);
+
+            // Assert
+            Assert.NotNull(firstHttpResponseMessage);
+            Assert.Equal(statusCode, firstHttpResponseMessage.StatusCode);
+            Assert.Equal(responseBody, await firstHttpResponseMessage.Content.ReadAsStringAsync());
+
+            Assert.NotNull(secondHttpResponseMessage);
+            Assert.Equal(statusCode, secondHttpResponseMessage.StatusCode);
+            Assert.Equal(responseBody, await secondHttpResponseMessage.Content.ReadAsStringAsync());
         }
 
         [Fact]
