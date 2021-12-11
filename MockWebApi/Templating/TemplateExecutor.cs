@@ -42,7 +42,7 @@ namespace MockWebApi.Templating
             return result?.ToString() ?? "";
         }
 
-        private Task<String> EvaluateFragment(ScriptEvaluator scriptEvaluator, StringFragment fragment)
+        private Task<string> EvaluateFragment(ScriptEvaluator scriptEvaluator, StringFragment fragment)
         {
             return Task.FromResult(fragment.Text);
         }

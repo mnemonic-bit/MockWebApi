@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using MockWebApi.Extension;
-
+using Serilog;
+using Serilog.Filters;
 namespace MockWebApi
 {
     public class Program
