@@ -1,8 +1,6 @@
 ﻿using MockWebApi.Configuration.Model;
 using MockWebApi.Extension;
-using Newtonsoft.Json;
 using System.IO;
-using YamlDotNet.Serialization;
 
 namespace MockWebApi.Configuration
 {

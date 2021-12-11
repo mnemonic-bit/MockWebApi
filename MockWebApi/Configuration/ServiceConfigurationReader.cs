@@ -1,7 +1,5 @@
 ﻿using MockWebApi.Configuration.Model;
 using MockWebApi.Data;
-using MockWebApi.Routing;
-using System.Linq;
 
 namespace MockWebApi.Configuration
 {

@@ -1,10 +1,5 @@
 ﻿using GraphQL.Types;
 using MockWebApi.Configuration.Model;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Threading.Tasks;
 
 namespace MockWebApi.GraphQL
 {
@@ -20,6 +15,6 @@ namespace MockWebApi.GraphQL
             Field<StringGraphType>(nameof(HttpResult.ContentType));
             //Field<DictionaryGraphType>(nameof(HttpResult.Cookies)); // Dictionary?
         }
-        
+
     }
 }

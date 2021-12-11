@@ -17,8 +17,6 @@ using MockWebApi.Templating;
 using System;
 using System.Reflection;
 
-using ServiceConfiguration = MockWebApi.Configuration.ServiceConfiguration;
-
 namespace MockWebApi
 {
     public class Startup

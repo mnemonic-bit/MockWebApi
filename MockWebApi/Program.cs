@@ -1,19 +1,13 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using MockWebApi.Extension;
-using MockWebApi.Service;
-using Serilog;
-using Serilog.Filters;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace MockWebApi
 {
     public class Program
     {
 
-        public static async Task Main(string[] args)
+        public static void Main(string[] args)
         {
             CreateHostBuilder(args)
                 .Build()
@@ -34,10 +28,7 @@ namespace MockWebApi
 
             return Host
                 .CreateDefaultBuilder(args)
-                .ConfigureLogging(logBuilder =>
-                {
-                    logBuilder.AddConsole();
-                })
+                .ConfigureLogging()
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder

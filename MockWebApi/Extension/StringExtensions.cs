@@ -1,5 +1,4 @@
 ﻿using System;
-using YamlDotNet.Serialization;
 
 namespace MockWebApi.Extension
 {

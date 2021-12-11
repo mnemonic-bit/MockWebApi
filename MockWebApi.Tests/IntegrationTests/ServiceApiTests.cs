@@ -1,6 +1,7 @@
 ﻿using MockWebApi.Configuration;
 using MockWebApi.Configuration.Model;
 using MockWebApi.Tests.TestUtils;
+using System;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -14,16 +15,18 @@ namespace MockWebApi.Tests.IntegrationTests
     {
 
         [Fact]
-        public async Task ConfigureRoute_ShouldReturnBody_WhenRouteIsConfigured()
+        public async Task HttpRequest_ShouldReturnSuccessfully_WhenRouteHasBeenConfigured()
         {
             // Arrange
             string serviceName = "TEST-SERVICE";
 
             IServiceConfiguration serviceConfiguration = ServiceConfigurationFactory.CreateBaseConfiguration(serviceName);
 
-            MockWebApiTestServer integrationTestServer = new MockWebApiTestServer(serviceConfiguration);
-            HttpClient httpClient = integrationTestServer.CreateHttpClient();
-            HttpTestClient httpTestClient = new HttpTestClient(httpClient);
+            ServiceApiTestServer serviceApiTestServer = new ServiceApiTestServer(serviceConfiguration);
+
+            HttpClient httpClient = serviceApiTestServer.CreateHttpClient();
+            MockWebApiClient webApiClient = new MockWebApiClient(httpClient);
+            HttpTestClient httpTestClient = new HttpTestClient();
 
             string testUriPath = "/brand/new/path";
             string expectedResponseBody = "some: body";
@@ -34,31 +37,34 @@ namespace MockWebApi.Tests.IntegrationTests
                 statusCode,
                 expectedResponseBody);
 
-            MockWebApiClient webApiClient = new MockWebApiClient(httpClient);
-            bool configureRouteResult = await webApiClient.ConfigureRoute(serviceName, endpointConfiguration);
+            bool mockeApiHasStarted = await webApiClient.StartNewMockWebApi(serviceName);
 
             // Act
-            HttpResponseMessage responseMessage = await httpTestClient.SendMessage(testUriPath, "Test message");
+            bool configureRouteResult = await webApiClient.ConfigureRoute(serviceName, endpointConfiguration);
+            HttpResponseMessage response = await httpTestClient.SendMessage(new Uri("http://localhost:5000"), testUriPath);
 
             // Assert
+            Assert.True(mockeApiHasStarted);
             Assert.True(configureRouteResult);
-            Assert.Equal(statusCode, responseMessage.StatusCode);
-
-            string responseBody = await responseMessage.Content.ReadAsStringAsync();
-            Assert.Equal(expectedResponseBody, responseBody);
+            Assert.True(response.IsSuccessStatusCode);
+            Assert.Equal(statusCode, response.StatusCode);
         }
 
         [Fact]
-        public async Task ConfigureRoute_ShouldReturnDefaultResponse_WhenRouteIsDeleted()
+        public async Task HttpRequest_ShouldReturnDefaultResponse_WhenRouteHasLifecycleOfApplyOnce()
         {
             // Arrange
             string serviceName = "TEST-SERVICE";
+            HttpStatusCode defaultStatusCode = HttpStatusCode.NotFound;
 
             IServiceConfiguration serviceConfiguration = ServiceConfigurationFactory.CreateBaseConfiguration(serviceName);
+            serviceConfiguration.DefaultEndpointDescription.Result.StatusCode = defaultStatusCode;
 
-            MockWebApiTestServer integrationTestServer = new MockWebApiTestServer(serviceConfiguration);
-            HttpClient httpClient = integrationTestServer.CreateHttpClient();
-            HttpTestClient httpTestClient = new HttpTestClient(httpClient);
+            ServiceApiTestServer serviceApiTestServer = new ServiceApiTestServer(serviceConfiguration);
+
+            HttpClient httpClient = serviceApiTestServer.CreateHttpClient();
+            MockWebApiClient webApiClient = new MockWebApiClient(httpClient);
+            HttpTestClient httpTestClient = new HttpTestClient();
 
             string testUriPath = "/brand/new/path";
             string expectedResponseBody = "some: body";
@@ -69,20 +75,61 @@ namespace MockWebApi.Tests.IntegrationTests
                 statusCode,
                 expectedResponseBody);
 
-            MockWebApiClient webApiClient = new MockWebApiClient(httpClient);
-            bool configureRouteResult = await webApiClient.ConfigureRoute(serviceName, endpointConfiguration);
-            bool deleteRouteResult = await webApiClient.DeleteRoute(serviceName, endpointConfiguration.Route);
+            endpointConfiguration.LifecyclePolicy = LifecyclePolicy.ApplyOnce;
+
+            bool mockeApiHasStarted = await webApiClient.StartNewMockWebApi(serviceName);
 
             // Act
-            HttpResponseMessage responseMessage = await httpTestClient.SendMessage(testUriPath, "Test message");
+            bool configureRouteResult = await webApiClient.ConfigureRoute(serviceName, endpointConfiguration);
+            HttpResponseMessage response1 = await httpTestClient.SendMessage(new Uri("http://localhost:5000"), testUriPath);
+            HttpResponseMessage response2 = await httpTestClient.SendMessage(new Uri("http://localhost:5000"), testUriPath);
 
             // Assert
+            Assert.True(mockeApiHasStarted);
+            Assert.True(configureRouteResult);
+            Assert.Equal(statusCode, response1.StatusCode);
+            Assert.Equal(defaultStatusCode, response2.StatusCode);
+        }
+
+        [Fact]
+        public async Task HttpRequest_ShouldReturnDefaultResponse_WhenRouteHasBeenConfiguredAndThenDeleted()
+        {
+            // Arrange
+            string serviceName = "TEST-SERVICE";
+
+            IServiceConfiguration serviceConfiguration = ServiceConfigurationFactory.CreateBaseConfiguration(serviceName);
+
+            ServiceApiTestServer serviceApiTestServer = new ServiceApiTestServer(serviceConfiguration);
+
+            HttpClient httpClient = serviceApiTestServer.CreateHttpClient();
+            MockWebApiClient webApiClient = new MockWebApiClient(httpClient);
+            HttpTestClient httpTestClient = new HttpTestClient();
+
+            string testUriPath = "/brand/new/path";
+            string expectedResponseBody = "some: body";
+            HttpStatusCode statusCode = HttpStatusCode.Created;
+
+            EndpointDescription endpointConfiguration = EndpointDescriptionFactory.CreateEndpointDescription(
+                testUriPath,
+                statusCode,
+                expectedResponseBody);
+
+            bool mockeApiHasStarted = await webApiClient.StartNewMockWebApi(serviceName);
+
+            // Act
+            bool configureRouteResult = await webApiClient.ConfigureRoute(serviceName, endpointConfiguration);
+            HttpResponseMessage configuredResponse = await httpTestClient.SendMessage(new Uri("http://localhost:5000"), testUriPath);
+            bool deleteRouteResult = await webApiClient.DeleteRoute(serviceName, testUriPath);
+            HttpResponseMessage deleteResponse = await httpTestClient.SendMessage(new Uri("http://localhost:5000"), testUriPath);
+
+            // Assert
+            Assert.True(mockeApiHasStarted);
             Assert.True(configureRouteResult);
             Assert.True(deleteRouteResult);
-            Assert.Equal(HttpStatusCode.OK, responseMessage.StatusCode);
-
-            string responseBody = await responseMessage.Content.ReadAsStringAsync();
-            Assert.Empty(responseBody);
+            Assert.True(configuredResponse.IsSuccessStatusCode);
+            Assert.Equal(statusCode, configuredResponse.StatusCode);
+            Assert.True(deleteResponse.IsSuccessStatusCode);
+            Assert.Equal(statusCode, deleteResponse.StatusCode);
         }
 
     }

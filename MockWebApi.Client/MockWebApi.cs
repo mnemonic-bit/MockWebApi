@@ -37,6 +37,29 @@ namespace MockWebApi.Client
         }
 
         /// <summary>
+        /// Starts a new mock API service. The service can be configured by
+        /// using the <code>serviceName</code>.
+        /// </summary>
+        /// <param name="serviceName"></param>
+        /// <returns></returns>
+        public async Task<bool> StartNewMockWebApi(string serviceName)
+        {
+            if (string.IsNullOrEmpty(serviceName))
+            {
+                return false;
+            }
+
+            Response<string> response = await _webApi.StartNewMockApi(serviceName, null);
+
+            if (!response.ResponseMessage.IsSuccessStatusCode)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// Uploads the configuration of the MockWebApi to a running instance.
         /// The server which receives this call will set up all routes and settings
         /// according to the given configuraiton structure.

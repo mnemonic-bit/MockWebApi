@@ -7,16 +7,16 @@ using System.Net.Http;
 
 namespace MockWebApi.Tests.TestUtils
 {
-    internal class MockWebApiTestServer
+    internal class ServiceApiTestServer
     {
 
         private readonly TestServer _testServer;
         private ServiceConfigurationProxy _serviceConfigurationProxy;
 
-        internal MockWebApiTestServer(IServiceConfiguration serviceConfiguration)
+        internal ServiceApiTestServer(IServiceConfiguration serviceConfiguration)
         {
             _serviceConfigurationProxy = new ServiceConfigurationProxy(serviceConfiguration);
-            _testServer = CreateTestServer(_serviceConfigurationProxy);
+            _testServer = CreateTestServer();
         }
 
         internal HttpClient CreateHttpClient()
@@ -29,13 +29,13 @@ namespace MockWebApi.Tests.TestUtils
             return _testServer.CreateHandler();
         }
 
-        private TestServer CreateTestServer(ServiceConfigurationProxy serviceConfiguration)
+        private TestServer CreateTestServer()
         {
             IWebHostBuilder hostBuilder = new WebHostBuilder()
-                .SetupMockWebApi()
+                .SetupMockWebApiService()
                 .ConfigureServices(services =>
                 {
-                    services.AddSingleton<IServiceConfiguration>(serviceConfiguration);
+                    services.AddSingleton<IServiceConfiguration>(_serviceConfigurationProxy);
                 });
 
             TestServer testServer = new TestServer(hostBuilder);
