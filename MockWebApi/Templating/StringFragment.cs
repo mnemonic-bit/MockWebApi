@@ -17,5 +17,20 @@ namespace MockWebApi.Templating
             _fragmentText = value;
         }
 
+        public override bool Equals(object obj)
+        {
+            if (obj is StringFragment stringFragment)
+            {
+                return _fragmentText?.Equals(stringFragment._fragmentText) ?? false;
+            }
+
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return _fragmentText?.GetHashCode() ?? base.GetHashCode();
+        }
+
     }
 }
