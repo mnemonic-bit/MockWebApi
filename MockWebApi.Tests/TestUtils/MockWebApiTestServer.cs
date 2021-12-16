@@ -11,7 +11,7 @@ namespace MockWebApi.Tests.TestUtils
     {
 
         private readonly TestServer _testServer;
-        private ServiceConfigurationProxy _serviceConfigurationProxy;
+        private readonly ServiceConfigurationProxy _serviceConfigurationProxy;
 
         internal MockWebApiTestServer(IServiceConfiguration serviceConfiguration)
         {

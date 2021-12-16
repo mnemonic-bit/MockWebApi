@@ -21,7 +21,7 @@ namespace MockWebApi.Service.Rest
         private Thread _serviceThread;
         private readonly CancellationTokenSource _cancellationTokenSource;
 
-        private ServiceConfigurationProxy _serviceConfigurationProxy;
+        private readonly ServiceConfigurationProxy _serviceConfigurationProxy;
 
         public ServiceState ServiceState
         {

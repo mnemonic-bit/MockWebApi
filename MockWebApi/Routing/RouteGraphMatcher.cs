@@ -925,12 +925,7 @@ namespace MockWebApi.Routing
 
             public RouteInfo(TInfo info)
             {
-                if (info == null)
-                {
-                    throw new ArgumentException($"Cannot set null as info-item.");
-                }
-
-                _info = info;
+                _info = info ?? throw new ArgumentException($"Cannot set null as info-item.");
             }
 
             public TInfo Info
@@ -949,14 +944,7 @@ namespace MockWebApi.Routing
 
             public override bool Equals(object obj)
             {
-                if (!(obj is RouteInfo))
-                {
-                    return false;
-                }
-
-                RouteInfo routeInfo = obj as RouteInfo;
-
-                if (routeInfo == null)
+                if (!(obj is RouteInfo routeInfo))
                 {
                     return false;
                 }

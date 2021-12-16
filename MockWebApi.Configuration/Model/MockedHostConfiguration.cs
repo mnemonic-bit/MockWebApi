@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
-
-namespace MockWebApi.Configuration
+﻿namespace MockWebApi.Configuration.Model
 {
-    public interface IHostConfiguration
+    /// <summary>
+    /// This class is used for reading and writing out the configuration
+    /// of the MockWebApi.
+    /// </summary>
+    public class MockedHostConfiguration
     {
 
         /// <summary>
@@ -17,11 +19,10 @@ namespace MockWebApi.Configuration
         /// </summary>
         public bool? LogServiceApiCalls { get; set; }
 
-        IEnumerable<IServiceConfiguration> Configurations { get; }
-
-        void AddConfiguration(string serviceName, IServiceConfiguration serviceConfiguration);
-
-        bool TryGetConfiguration(string serviceName, out IServiceConfiguration serviceConfiguration);
+        /// <summary>
+        /// An array of mocked-service configurations.
+        /// </summary>
+        public MockedServiceConfiguration[] Services { get; set; }
 
     }
 }

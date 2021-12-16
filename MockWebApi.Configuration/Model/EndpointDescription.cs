@@ -15,6 +15,12 @@ namespace MockWebApi.Configuration.Model
         /// </summary>
         public string Route { get; set; }
 
+        /// <summary>
+        /// Gets or sets the HTTP-method for this endpoint. If set null,
+        /// then all methods are allowed. The default value is null.
+        /// </summary>
+        public string HttpMethod { get; set; }
+
         public Dictionary<string, string> Parameters { get; set; }
 
         public string RequestBodyType { get; set; } // PLAIN_TEXT, YAML, JSON, XML; TODO: make this either a MIME type as string / class, or enum

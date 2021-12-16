@@ -9,7 +9,7 @@ namespace MockWebApi.Extension
         {
             if (string.IsNullOrEmpty(value))
             {
-                return default(T);
+                return default;
             }
 
             return (T)Convert.ChangeType(value, typeof(T));

@@ -9,8 +9,6 @@ using MockWebApi.Data;
 using MockWebApi.Extension;
 using MockWebApi.Middleware;
 using MockWebApi.Templating;
-using System;
-using System.Reflection;
 
 namespace MockWebApi.Service.Rest
 {
@@ -28,23 +26,21 @@ namespace MockWebApi.Service.Rest
         {
             services.AddSingleton<IRequestHistory>(new RequestHistory());
 
-            services.AddTransient<IConfigurationReader, ConfigurationReader>();
-            services.AddTransient<IConfigurationWriter, ConfigurationWriter>();
-
             services.AddTransient<IServiceConfigurationReader, ServiceConfigurationReader>();
             services.AddTransient<IServiceConfigurationWriter, ServiceConfigurationWriter>();
+
+            services.AddTransient<IConfigurationFileWriter, ConfigurationFileWriter>();
 
             services.AddTransient<IJwtService, JwtService>();
             services.AddTransient<IAuthorizationService, AuthorizationService>();
 
             services.AddTransient<ITemplateExecutor, TemplateExecutor>();
             services.AddTransient<ITemplateParser, TemplateParser>();
-
-            services.AddDynamicRouting();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<MockServiceStartup> logger)
         {
+            app.UseMiddleware<TimeMeasurementMiddleware>();
             app.UseMiddleware<StoreRequestDataMiddleware>();
             app.UseMiddleware<LoggingMiddleware>();
             app.UseMiddleware<MockedRestMiddleware>();

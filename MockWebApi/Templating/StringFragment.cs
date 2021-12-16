@@ -8,7 +8,7 @@ namespace MockWebApi.Templating
     public class StringFragment : Fragment
     {
 
-        private string _fragmentText;
+        private readonly string _fragmentText;
 
         public string Text { get { return _fragmentText; } }
 

@@ -23,6 +23,18 @@ namespace MockWebApi.Extension
             return string.Join("\n", splitLines);
         }
 
+        public static string GetFileExtension(this string fileName)
+        {
+            int indexOfTheDot = fileName.LastIndexOf('.');
+
+            if (indexOfTheDot < 0)
+            {
+                return null;
+            }
+
+            return fileName.Substring(indexOfTheDot, fileName.Length - indexOfTheDot - 1);
+        }
+
         public static T DeserializeYaml<T>(this string yamlText)
         {
             IDeserializer deserializer = new DeserializerBuilder()

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.Extensions.Logging;
 using MockWebApi.Configuration;
 using System.Threading.Tasks;
@@ -9,16 +10,13 @@ namespace MockWebApi.Middleware
     {
 
         private readonly RequestDelegate _nextDelegate;
-        private readonly IServiceConfiguration _serverConfig;
-        private readonly ILogger<StoreRequestDataMiddleware> _logger;
+        private readonly ILogger<TimeMeasurementMiddleware> _logger;
 
         public TimeMeasurementMiddleware(
             RequestDelegate next,
-            IServiceConfiguration serverConfig,
-            ILogger<StoreRequestDataMiddleware> logger)
+            ILogger<TimeMeasurementMiddleware> logger)
         {
             _nextDelegate = next;
-            _serverConfig = serverConfig;
             _logger = logger;
         }
 

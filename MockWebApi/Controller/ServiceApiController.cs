@@ -3,7 +3,6 @@ using GraphQL.NewtonsoftJson;
 using GraphQL.Types;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using MockWebApi.Auth;
 using MockWebApi.Configuration;
 using MockWebApi.Configuration.Extensions;
 using MockWebApi.Configuration.Model;
@@ -27,33 +26,29 @@ namespace MockWebApi.Controller
     {
 
         private readonly ILogger<ServiceApiController> _logger;
-        private readonly IHostConfiguration _hostConfiguration;
         private readonly IHostService _hostService;
         private readonly IRequestHistory _dataStore;
-        private readonly IJwtService _jwtService;
-        private readonly IServiceConfigurationWriter _configurationWriter;
+        private readonly IConfigurationFileWriter _configurationWriter;
 
         public ServiceApiController(
             ILogger<ServiceApiController> logger,
-            IHostConfiguration hostConfiguration,
             IHostService hostService,
-            IRequestHistory dataStore,
-            IJwtService jwtService,
+            //Just for testing
             //Microsoft.AspNetCore.Mvc.ApiExplorer.IApiDescriptionGroupCollectionProvider apiDescriptionGroupCollectionProvider,
-            IServiceConfigurationWriter configurationWriter)
+            IRequestHistory dataStore,
+            IConfigurationFileWriter configurationWriter)
         {
+            //string res = apiDescriptionGroupCollectionProvider.Serialize();
             _logger = logger;
-            _hostConfiguration = hostConfiguration;
             _hostService = hostService;
             _dataStore = dataStore;
-            _jwtService = jwtService;
             _configurationWriter = configurationWriter;
         }
 
         [HttpPost("{serviceName}/start")]
         public IActionResult StartNewMockApi([FromRoute] string serviceName, [FromQuery] string serviceUrl) //TODO: do not read this from the query, it won't be easy for the client to write this kind of query-string
         {
-            serviceUrl ??= "http://0.0.0.0:5000"; //TODO
+            serviceUrl ??= "http://0.0.0.0:5000"; //TODO: make configuratble
 
             IService service = StartMockApiService(serviceName, serviceUrl);
 
@@ -93,10 +88,10 @@ namespace MockWebApi.Controller
 
             IServiceConfiguration serviceConfiguration = service.ServiceConfiguration;
 
-            MockedWebApiServiceConfiguration config = new MockedWebApiServiceConfiguration()
+            MockedServiceConfiguration config = new MockedServiceConfiguration()
             {
                 ServiceName = serviceConfiguration.ServiceName,
-                Url = serviceConfiguration.Url,
+                BaseUrl = serviceConfiguration.Url,
                 DefaultEndpointDescription = serviceConfiguration.DefaultEndpointDescription,
                 JwtServiceOptions = serviceConfiguration.JwtServiceOptions,
                 EndpointDescriptions = serviceConfiguration.RouteMatcher.GetAllRoutes().ToArray()
@@ -112,9 +107,9 @@ namespace MockWebApi.Controller
         {
             string body = await HttpContext.Request.GetBody(Encoding.UTF8);
 
-            MockedWebApiServiceConfiguration config = body.DeserializeYaml<MockedWebApiServiceConfiguration>();
+            MockedServiceConfiguration config = body.DeserializeYaml<MockedServiceConfiguration>();
 
-            string serviceUrl = config.Url ?? "http://0.0.0.0:5000";
+            string serviceUrl = config.BaseUrl ?? "http://0.0.0.0:5000";
 
             if (!_hostService.TryGetService(serviceName, out IService service))
             {
@@ -195,8 +190,16 @@ namespace MockWebApi.Controller
         [HttpGet("{serviceName}/configure/route")]
         public IActionResult GetRoutes([FromRoute] string serviceName, [FromQuery] string outputFormat = "YAML")
         {
-            MockedWebApiServiceConfiguration serviceConfiguration = _configurationWriter.GetServiceConfiguration();
-            string endpointDescriptionsAsString = serviceConfiguration.EndpointDescriptions.Serialize(outputFormat);
+            if (!_hostService.TryGetService(serviceName, out IService service))
+            {
+                return BadRequest($"The service '{serviceName}' cannot be found.");
+            }
+
+            IServiceConfiguration serviceConfiguration = service.ServiceConfiguration;
+
+            IServiceConfigurationWriter serviceConfigurationWriter = new ServiceConfigurationWriter(_configurationWriter, serviceConfiguration);
+            MockedServiceConfiguration mockedWebApiServiceConfiguration = serviceConfigurationWriter.GetServiceConfiguration();
+            string endpointDescriptionsAsString = mockedWebApiServiceConfiguration.EndpointDescriptions.Serialize(outputFormat);
 
             return Ok(endpointDescriptionsAsString);
         }
@@ -281,6 +284,7 @@ namespace MockWebApi.Controller
         [HttpGet("jwt")]
         public IActionResult GetJwtTokenViaHttpGet([FromQuery] string userName)
         {
+            //TODO: make this work on a per-service basis
             if (string.IsNullOrEmpty(userName))
             {
                 return BadRequest("No user name was given in this request.");
@@ -291,7 +295,7 @@ namespace MockWebApi.Controller
                 Name = userName
             };
 
-            string token = _jwtService.CreateToken(user);
+            string token = "";// _jwtService.CreateToken(user);
 
             return Ok(token);
         }

@@ -57,9 +57,7 @@ namespace MockWebApi.Middleware
         {
             context.Items.TryGetValue(MiddlewareConstants.MockWebApiHttpRequestInfomation, out object sharedInformation);
 
-            RequestInformation requestInfos = sharedInformation as RequestInformation;
-
-            if (requestInfos != null)
+            if (sharedInformation is RequestInformation requestInfos)
             {
                 _logger.LogInformation($"Received HTTP request\n{requestInfos}");
             }
@@ -69,9 +67,7 @@ namespace MockWebApi.Middleware
         {
             context.Items.TryGetValue(MiddlewareConstants.MockWebApiHttpResponse, out object sharedResponse);
 
-            HttpResult response = sharedResponse as HttpResult;
-
-            if (response != null)
+            if (sharedResponse is HttpResult response)
             {
                 _logger.LogInformation($"Sending HTTP response\n{response}");
             }

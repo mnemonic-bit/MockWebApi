@@ -56,7 +56,7 @@ namespace MockWebApi.Middleware
             string requestUri = context.Request.PathWithParameters();
             bool requestUriDidMatch = TryGetHttpResult(requestUri, out EndpointDescription endpointDescription, out IDictionary<string, string> variables);
 
-            if (!CkeckAuthorization(context, endpointDescription))
+            if (!CheckRequest(context, requestInformation, endpointDescription))
             {
                 (endpointDescription, variables) = GetErrorResponseEndpointDescription();
             }
@@ -70,6 +70,22 @@ namespace MockWebApi.Middleware
         ////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////
 
+        private bool CheckRequest(HttpContext httpContext, RequestInformation requestInformation, EndpointDescription endpointDescription)
+        {
+            // Check the method used for this request.
+            if (endpointDescription.HttpMethod != null && !endpointDescription.HttpMethod.Equals(requestInformation.HttpVerb))
+            {
+                return false;
+            }
+
+            // Check the authorization of the request.
+            if (!CkeckAuthorization(httpContext, endpointDescription))
+            {
+                return false;
+            }
+
+            return true;
+        }
 
         private bool CkeckAuthorization(HttpContext httpContext, EndpointDescription endpointDescription)
         {

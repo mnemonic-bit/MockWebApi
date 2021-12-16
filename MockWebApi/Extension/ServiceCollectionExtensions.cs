@@ -1,6 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.Extensions.DependencyInjection;
+using MockWebApi.Auth;
+using MockWebApi.Configuration;
+using MockWebApi.Configuration.Model;
+using MockWebApi.Data;
 using MockWebApi.Routing;
+using MockWebApi.Service;
+using MockWebApi.Templating;
 using System.Linq;
 
 namespace MockWebApi.Extension
@@ -17,6 +23,20 @@ namespace MockWebApi.Extension
 
             services.Replace<IApiDescriptionGroupCollectionProvider, MockedApiDescriptionGroupCollectionProvider>();
             //services.AddSingleton(typeof(IRouteMatcher<EndpointDescription>), typeof(RouteGraphMatcher<EndpointDescription>));
+
+            return services;
+        }
+
+        public static IServiceCollection AddMockHostServices(this IServiceCollection services)
+        {
+            services.AddSingleton<IHostService, HostService>();
+            services.AddSingleton<IHostConfiguration, HostConfiguration>();
+            services.AddSingleton<IRequestHistory>(new RequestHistory());
+
+            services.AddTransient<IConfigurationFileWriter, ConfigurationFileWriter>();
+
+            services.AddTransient<IHostConfigurationReader, HostConfigurationReader>();
+            services.AddTransient<IHostConfigurationWriter, HostConfigurationWriter>();
 
             return services;
         }

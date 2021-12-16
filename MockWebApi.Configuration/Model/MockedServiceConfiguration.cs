@@ -4,7 +4,7 @@
     /// This class is used for reading and writing out the configuration
     /// of the MockWebApi.
     /// </summary>
-    public class MockedWebApiServiceConfiguration
+    public class MockedServiceConfiguration
     {
 
         /// <summary>
@@ -16,27 +16,16 @@
 
         /// <summary>
         /// The URL this service will bind to, which may include
-        /// the scheme, IP address, and port number.
+        /// the scheme, IP address, and port number. Any local paths will
+        /// not be considered in this URL.
         /// </summary>
-        public string Url { get; set; }
+        public string BaseUrl { get; set; }
 
         /// <summary>
         /// The default values for the mocked endpoint including the
         /// HTTP result which will be returned by default.
         /// </summary>
         public DefaultEndpointDescription DefaultEndpointDescription { get; set; }
-
-        /// <summary>
-        /// A flag which is used to set the server into tracking mode, i.e. all
-        /// calls to the service API will also be written to the request-history.
-        /// </summary>
-        public bool? TrackServiceApiCalls { get; set; }
-
-        /// <summary>
-        /// A flag which lets the service log each request to the service API to
-        /// the console, similar to what the mocked API does for mocked endpoints.
-        /// </summary>
-        public bool? LogServiceApiCalls { get; set; }
 
         /// <summary>
         /// Options describing basic parameters needed for JWT generation.

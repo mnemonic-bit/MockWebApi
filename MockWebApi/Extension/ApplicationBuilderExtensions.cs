@@ -24,22 +24,22 @@ namespace MockWebApi.Extension
 
         public static IApplicationBuilder LoadServiceConfiguration(this IApplicationBuilder app, string configFileName, bool required = true)
         {
-            IServiceConfigurationReader serviceConfigurationReader = app.ApplicationServices.GetService<IServiceConfigurationReader>();
+            IHostConfigurationReader hostConfigurationReader = app.ApplicationServices.GetService<IHostConfigurationReader>();
 
             if (!TryReadingFile(configFileName, out string configFileContents))
             {
                 if (!required)
                 {
-                    serviceConfigurationReader.ConfigureService(new MockedWebApiServiceConfiguration());
+                    hostConfigurationReader.ConfigureHost(new MockedHostConfiguration());
                 }
                 return required ? throw new FileNotFoundException($"Configuration file not found ('{configFileName}').") : app;
             }
 
-            IConfigurationReader configurationReader = app.ApplicationServices.GetService<IConfigurationReader>();
+            IHostConfigurationFileReader configurationReader = app.ApplicationServices.GetService<IHostConfigurationFileReader>();
 
-            MockedWebApiServiceConfiguration serviceConfiguration = configurationReader.ReadFromYaml(configFileContents);
+            MockedHostConfiguration hostConfiguration = configurationReader.ReadFromYaml(configFileContents);
 
-            serviceConfigurationReader.ConfigureService(serviceConfiguration);
+            hostConfigurationReader.ConfigureHost(hostConfiguration);
 
             return app;
         }

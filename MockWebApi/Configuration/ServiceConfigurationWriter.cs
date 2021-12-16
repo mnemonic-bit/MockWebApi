@@ -1,5 +1,4 @@
 ﻿using MockWebApi.Configuration.Model;
-using MockWebApi.Data;
 using System.Linq;
 
 namespace MockWebApi.Configuration
@@ -7,48 +6,30 @@ namespace MockWebApi.Configuration
     public class ServiceConfigurationWriter : IServiceConfigurationWriter
     {
 
-        private readonly IConfigurationWriter _configurationWriter;
+        private readonly IConfigurationFileWriter _configurationWriter;
         private readonly IServiceConfiguration _serviceConfiguration;
 
         public ServiceConfigurationWriter(
-            IConfigurationWriter configurationWriter,
+            IConfigurationFileWriter configurationWriter,
             IServiceConfiguration serviceConfiguration)
         {
             _configurationWriter = configurationWriter;
             _serviceConfiguration = serviceConfiguration;
         }
 
-        public string WriteConfiguration(MockedWebApiServiceConfiguration serviceConfiguration, string outputFormat = "YAML")
+        public string WriteConfiguration(MockedServiceConfiguration serviceConfiguration, string outputFormat = "YAML")
         {
-            switch (outputFormat.ToUpper())
-            {
-                case "JSON":
-                    {
-                        return _configurationWriter.WriteToJson(serviceConfiguration);
-                    }
-                case "CS":
-                    {
-                        return "This format is not implemented yet.";
-                    }
-                case "YAML":
-                default:
-                    {
-                        return _configurationWriter.WriteToYaml(serviceConfiguration);
-                    }
-            }
+            return _configurationWriter.WriteConfiguration(serviceConfiguration, outputFormat.ToUpper());
         }
 
-        public MockedWebApiServiceConfiguration GetServiceConfiguration()
+        public MockedServiceConfiguration GetServiceConfiguration()
         {
-            MockedWebApiServiceConfiguration serviceConfiguration = new MockedWebApiServiceConfiguration
+            MockedServiceConfiguration serviceConfiguration = new MockedServiceConfiguration
             {
-                //TODO: make the getters accept nullable types (e.g. 'bool?')
-                TrackServiceApiCalls = _serviceConfiguration.ConfigurationCollection.Get<bool>(ConfigurationCollection.Parameters.TrackServiceApiCalls),
-                LogServiceApiCalls = _serviceConfiguration.ConfigurationCollection.Get<bool>(ConfigurationCollection.Parameters.LogServiceApiCalls),
-                //TODO: implement converting default endpoint definition
-                //DefaultHttpStatusCode = _serviceConfiguration.Get<int>(ConfigurationCollection.Parameters.DefaultHttpStatusCode),
-                //DefaultContentType = _serviceConfiguration.Get<string>(ConfigurationCollection.Parameters.DefaultContentType),
-
+                ServiceName = _serviceConfiguration.ServiceName,
+                BaseUrl = _serviceConfiguration.Url,
+                DefaultEndpointDescription = _serviceConfiguration.DefaultEndpointDescription,
+                JwtServiceOptions = _serviceConfiguration.JwtServiceOptions,
                 EndpointDescriptions = _serviceConfiguration.RouteMatcher.GetAllRoutes().ToArray()
             };
 

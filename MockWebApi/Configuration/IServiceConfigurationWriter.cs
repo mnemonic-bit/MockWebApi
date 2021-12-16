@@ -5,11 +5,9 @@ namespace MockWebApi.Configuration
     public interface IServiceConfigurationWriter
     {
 
-        public string WriteConfiguration(MockedWebApiServiceConfiguration serviceConfiguration, string outputFormat = "YAML");
+        public string WriteConfiguration(MockedServiceConfiguration serviceConfiguration, string outputFormat = "YAML");
 
-        public MockedWebApiServiceConfiguration GetServiceConfiguration();
-
-        //TODO: add the route-matcher to this interface?
+        public MockedServiceConfiguration GetServiceConfiguration();
 
     }
 }

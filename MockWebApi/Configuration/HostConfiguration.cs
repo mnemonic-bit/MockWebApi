@@ -2,6 +2,9 @@
 
 namespace MockWebApi.Configuration
 {
+    /// <summary>
+    /// Stores the configuration of a complete mock-host.
+    /// </summary>
     public class HostConfiguration : IHostConfiguration
     {
 
@@ -11,6 +14,20 @@ namespace MockWebApi.Configuration
         {
             _serviceConfigurations = new Dictionary<string, IServiceConfiguration>();
         }
+
+        /// <summary>
+        /// A flag which is used to set the server into tracking mode, i.e. all
+        /// calls to the service API will also be written to the request-history.
+        /// </summary>
+        public bool? TrackServiceApiCalls { get; set; }
+
+        /// <summary>
+        /// A flag which lets the service log each request to the service API to
+        /// the console, similar to what the mocked API does for mocked endpoints.
+        /// </summary>
+        public bool? LogServiceApiCalls { get; set; }
+
+        public IEnumerable<IServiceConfiguration> Configurations => _serviceConfigurations.Values;
 
         public void AddConfiguration(string serviceName, IServiceConfiguration serviceConfiguration)
         {

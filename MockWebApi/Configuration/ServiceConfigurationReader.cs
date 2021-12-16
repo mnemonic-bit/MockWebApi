@@ -1,5 +1,4 @@
 ﻿using MockWebApi.Configuration.Model;
-using MockWebApi.Data;
 
 namespace MockWebApi.Configuration
 {
@@ -14,12 +13,11 @@ namespace MockWebApi.Configuration
             _serviceConfiguration = serviceConfiguration;
         }
 
-        public void ConfigureService(MockedWebApiServiceConfiguration configuration)
+        public void ConfigureService(MockedServiceConfiguration configuration)
         {
-            _serviceConfiguration.ConfigurationCollection.Set(ConfigurationCollection.Parameters.TrackServiceApiCalls, configuration?.TrackServiceApiCalls ?? false);
-            _serviceConfiguration.ConfigurationCollection.Set(ConfigurationCollection.Parameters.LogServiceApiCalls, configuration?.LogServiceApiCalls ?? false);
-            _serviceConfiguration.ConfigurationCollection.Set(ConfigurationCollection.Parameters.DefaultHttpStatusCode, configuration?.DefaultEndpointDescription?.Result?.StatusCode ?? System.Net.HttpStatusCode.OK);
-            _serviceConfiguration.ConfigurationCollection.Set(ConfigurationCollection.Parameters.DefaultContentType, configuration?.DefaultEndpointDescription?.Result?.ContentType ?? "text/plain");
+            _serviceConfiguration.ServiceName = configuration.ServiceName;
+            _serviceConfiguration.Url = configuration.BaseUrl;
+            _serviceConfiguration.DefaultEndpointDescription = configuration.DefaultEndpointDescription;
 
             if (configuration?.EndpointDescriptions == null)
             {

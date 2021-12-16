@@ -66,9 +66,9 @@ namespace MockWebApi.Client
         /// </summary>
         /// <param name="serviceConfiguration">The configuration that will be uploaded to the server.</param>
         /// <returns>Returns true of the server responded with OK.</returns>
-        public async Task<bool> ConfigureMockWebApi(MockedWebApiServiceConfiguration serviceConfiguration)
+        public async Task<bool> ConfigureMockWebApi(MockedServiceConfiguration serviceConfiguration)
         {
-            ConfigurationWriter configurationWriter = new ConfigurationWriter();
+            ConfigurationFileWriter configurationWriter = new ConfigurationFileWriter();
             string configurationAsYaml = configurationWriter.WriteConfiguration(serviceConfiguration);
 
             Response<string> response = await _webApi.UploadConfiguration(serviceConfiguration.ServiceName, configurationAsYaml);
@@ -88,13 +88,13 @@ namespace MockWebApi.Client
         /// <returns></returns>
         public Task<bool> ConfigureMockWebApi(string fileName)
         {
-            IConfigurationReader configrationReader = new ConfigurationReader();
-            MockedWebApiServiceConfiguration serviceConfiguration = configrationReader.ReadConfiguration(fileName);
+            IServiceConfigurationFileReader configrationReader = new ServiceConfigurationFileReader();
+            MockedServiceConfiguration serviceConfiguration = configrationReader.ReadConfiguration(fileName);
 
             return ConfigureMockWebApi(serviceConfiguration);
         }
 
-        public async Task<MockedWebApiServiceConfiguration> DownloadMockWebApiConfiguration(string serviceName, string format = "YAML")
+        public async Task<MockedServiceConfiguration> DownloadMockWebApiConfiguration(string serviceName, string format = "YAML")
         {
             Response<string> response = await _webApi.DownloadConfiguration(serviceName);
 
@@ -104,8 +104,8 @@ namespace MockWebApi.Client
             }
 
             string configurationAsString = response.StringContent;
-            ConfigurationReader configurationReader = new ConfigurationReader();
-            MockedWebApiServiceConfiguration configuration = configurationReader.ReadConfiguration(configurationAsString, format);
+            ServiceConfigurationFileReader configurationReader = new ServiceConfigurationFileReader();
+            MockedServiceConfiguration configuration = configurationReader.ReadConfiguration(configurationAsString, format);
 
             return configuration;
         }

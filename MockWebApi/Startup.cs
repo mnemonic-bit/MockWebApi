@@ -3,17 +3,11 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
-using MockWebApi.Auth;
-using MockWebApi.Configuration;
-using MockWebApi.Data;
 using MockWebApi.Extension;
 using MockWebApi.GraphQL;
 using MockWebApi.Middleware;
-using MockWebApi.Service;
-using MockWebApi.Templating;
 using System;
 using System.Reflection;
 
@@ -32,57 +26,42 @@ namespace MockWebApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSingleton<IHostService, HostService>();
-            services.AddSingleton<IHostConfiguration, HostConfiguration>();
-            services.AddSingleton<IServiceConfiguration, ServiceConfiguration>();
-            services.AddSingleton<IRequestHistory>(new RequestHistory());
-
-            services.AddTransient<IConfigurationReader, ConfigurationReader>();
-            services.AddTransient<IConfigurationWriter, ConfigurationWriter>();
-
-            services.AddTransient<IServiceConfigurationReader, ServiceConfigurationReader>();
-            services.AddTransient<IServiceConfigurationWriter, ServiceConfigurationWriter>();
-
-            services.AddTransient<IJwtService, JwtService>();
-            services.AddTransient<IAuthorizationService, AuthorizationService>();
-
-            services.AddTransient<ITemplateExecutor, TemplateExecutor>();
-            services.AddTransient<ITemplateParser, TemplateParser>();
+            // Service-API dependencies
+            services.AddMockHostServices();
 
             // GraphQL schema types...
             services.AddSingleton<RequestHistorySchema>();
 
+            services.AddGraphQL()
+                .AddGraphTypes(ServiceLifetime.Scoped)
+                .AddSystemTextJson();
+
+            // The service-controller
             services.AddControllers();
             services.AddDynamicRouting();
 
+            // Swagger
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "MockWebApi", Version = "v1" });
                 c.AddServer(new OpenApiServer() { Url = "http://0.0.0.0:5000" });
+                c.AddServer(new OpenApiServer() { Url = "http://0.0.0.0:6000" });
             });
-
-            services.AddGraphQL()
-                .AddGraphTypes(ServiceLifetime.Scoped)
-                .AddSystemTextJson();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger)
         {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-                app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "MockWebApi v1"));
-            }
+            app.UseSwagger();
+            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "MockWebApi v1"));
 
             app.UseRouting();
 
-            app.UseMiddleware<TimeMeasurementMiddleware>();
-            app.UseMiddleware<StoreRequestDataMiddleware>();
-            app.UseMiddleware<LoggingMiddleware>();
+            //app.UseMiddleware<TimeMeasurementMiddleware>();
+            //app.UseMiddleware<StoreRequestDataMiddleware>();
+            //app.UseMiddleware<LoggingMiddleware>();
 
-            app.UseDynamicRouting();
+            //app.UseDynamicRouting();
 
             app.UseAuthorization();
 
