@@ -9,8 +9,8 @@ namespace MockWebApi.Routing
     public class MockedApiDescriptionGroupCollectionProvider : IApiDescriptionGroupCollectionProvider
     {
 
-        private int _apiVersion;
-        private IHostConfiguration _hostConfiguration;
+        private readonly int _apiVersion;
+        private readonly IHostConfiguration _hostConfiguration;
 
         public ApiDescriptionGroupCollection ApiDescriptionGroups
         {

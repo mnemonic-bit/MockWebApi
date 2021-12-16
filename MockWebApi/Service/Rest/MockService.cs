@@ -43,10 +43,10 @@ namespace MockWebApi.Service.Rest
             }
         }
 
-        public MockService(IHostBuilder hostBuilder)
+        public MockService(IHostBuilder hostBuilder, IServiceConfiguration serviceConfiguration)
         {
             _hostBuilder = hostBuilder;
-            _serviceConfigurationProxy = new ServiceConfigurationProxy(new ServiceConfiguration());
+            _serviceConfigurationProxy = new ServiceConfigurationProxy(serviceConfiguration ?? new ServiceConfiguration());
             _cancellationTokenSource = new CancellationTokenSource();
         }
 

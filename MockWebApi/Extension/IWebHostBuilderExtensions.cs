@@ -21,7 +21,7 @@ namespace MockWebApi.Extension
         {
             webHostBuilder
                 .UseStartup<Startup>()
-                .UseUrls("http://0.0.0.0:6000")
+                .UseUrls("http://0.0.0.0:6000") // TODO: this should be done via the IServiceConfiguration
                 .UseSerilog();
 
             return webHostBuilder;

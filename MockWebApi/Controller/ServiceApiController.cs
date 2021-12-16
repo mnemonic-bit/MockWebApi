@@ -1,6 +1,12 @@
-﻿using GraphQL;
+﻿using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+using GraphQL;
 using GraphQL.NewtonsoftJson;
 using GraphQL.Types;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -14,10 +20,7 @@ using MockWebApi.GraphQL;
 using MockWebApi.Routing;
 using MockWebApi.Service;
 using MockWebApi.Service.Rest;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 using YamlDotNet.Serialization;
 
 namespace MockWebApi.Controller
@@ -48,17 +51,26 @@ namespace MockWebApi.Controller
         }
 
         [HttpPost("{serviceName}/start")]
-        public IActionResult StartNewMockApi([FromRoute] string serviceName, [FromQuery] string serviceUrl) //TODO: do not read this from the query, it won't be easy for the client to write this kind of query-string
+        public async Task<IActionResult> StartNewMockRestApi([FromRoute] string serviceName)
         {
-            serviceUrl ??= "http://0.0.0.0:5000"; //TODO: make configuratble
+            string body = await HttpContext.Request.GetBody(Encoding.UTF8);
 
-            IService service = StartMockApiService(serviceName, serviceUrl);
+            IServiceConfiguration serviceConfiguration = DeserializeServiceConfiguration(body, serviceName);
+
+            //TODO: check if there is already a binding for the base-URL of this new service.
+            
+            if (_hostService.TryGetService(serviceName, out IService _))
+            {
+                return BadRequest($"The service '{serviceName}' already exists.");
+            }
+
+            IService service = StartMockApiService(serviceConfiguration);
 
             return Ok($"A new mock web API '{service.ServiceConfiguration.ServiceName}' has been started successfully, listening on '{service.ServiceConfiguration.Url}'.");
         }
 
         [HttpPost("{serviceName}/stop")]
-        public IActionResult StopMockApi([FromRoute] string serviceName)
+        public IActionResult StopMockRestApi([FromRoute] string serviceName)
         {
             if (!_hostService.TryGetService(serviceName, out IService service))
             {
@@ -77,11 +89,11 @@ namespace MockWebApi.Controller
 
             _hostService.RemoveService(serviceName);
 
-            return Ok($"A new mock web API '{service.ServiceConfiguration.ServiceName}' has been stopped successfully.");
+            return Ok($"The service '{service.ServiceConfiguration.ServiceName}' has been stopped successfully.");
         }
 
         [HttpGet("{serviceName}/configure")]
-        public IActionResult GetConfiguration(string serviceName)
+        public IActionResult GetServiceConfiguration(string serviceName)
         {
             if (!_hostService.TryGetService(serviceName, out IService service))
             {
@@ -105,7 +117,7 @@ namespace MockWebApi.Controller
         }
 
         [HttpPost("{serviceName}/configure")]
-        public async Task<IActionResult> Configure(string serviceName)
+        public async Task<IActionResult> ConfigureService(string serviceName)
         {
             string body = await HttpContext.Request.GetBody(Encoding.UTF8);
 
@@ -115,7 +127,7 @@ namespace MockWebApi.Controller
 
             if (!_hostService.TryGetService(serviceName, out IService service))
             {
-                service = StartMockApiService(serviceName, serviceUrl);
+                service = StartMockApiService(service.ServiceConfiguration);
             }
 
             IServiceConfiguration serviceConfiguration = service.ServiceConfiguration;
@@ -141,7 +153,7 @@ namespace MockWebApi.Controller
         }
 
         [HttpDelete("{serviceName}/configure")]
-        public IActionResult ResetToDefault([FromRoute] string serviceName)
+        public IActionResult ResetServiceToDefault([FromRoute] string serviceName)
         {
             if (!_hostService.TryGetService(serviceName, out IService service))
             {
@@ -154,7 +166,7 @@ namespace MockWebApi.Controller
         }
 
         [HttpGet("{serviceName}/configure/default")]
-        public IActionResult GetDefault([FromRoute] string serviceName, [FromQuery] string outputFormat = "YAML")
+        public IActionResult GetDefaultServiceConfiguration([FromRoute] string serviceName, [FromQuery] string outputFormat = "YAML")
         {
             if (!_hostService.TryGetService(serviceName, out IService service))
             {
@@ -169,7 +181,7 @@ namespace MockWebApi.Controller
         }
 
         [HttpPost("{serviceName}/configure/default")]
-        public async Task<IActionResult> ConfigureDefault([FromRoute] string serviceName)
+        public async Task<IActionResult> ConfigureServiceDefault([FromRoute] string serviceName)
         {
             if (!_hostService.TryGetService(serviceName, out IService service))
             {
@@ -190,7 +202,7 @@ namespace MockWebApi.Controller
         }
 
         [HttpGet("{serviceName}/configure/route")]
-        public IActionResult GetRoutes([FromRoute] string serviceName, [FromQuery] string outputFormat = "YAML")
+        public IActionResult GetServiceRoutes([FromRoute] string serviceName, [FromQuery] string outputFormat = "YAML")
         {
             if (!_hostService.TryGetService(serviceName, out IService service))
             {
@@ -207,7 +219,7 @@ namespace MockWebApi.Controller
         }
 
         [HttpPost("{serviceName}/configure/route")]
-        public async Task<IActionResult> ConfigureRoute([FromRoute] string serviceName)
+        public async Task<IActionResult> ConfigureServiceRoute([FromRoute] string serviceName)
         {
             if (!_hostService.TryGetService(serviceName, out IService service))
             {
@@ -229,7 +241,7 @@ namespace MockWebApi.Controller
         }
 
         [HttpDelete("{serviceName}/configure/route")]
-        public async Task<IActionResult> DeleteRoute([FromRoute] string serviceName)
+        public async Task<IActionResult> DeleteServiceRoute([FromRoute] string serviceName)
         {
             if (!_hostService.TryGetService(serviceName, out IService service))
             {
@@ -323,19 +335,31 @@ namespace MockWebApi.Controller
             return Ok(json);
         }
 
-        public MockService StartMockApiService(string serviceName, string uri)
+        public MockService StartMockApiService(IServiceConfiguration serviceConfiguration)
         {
+            //TODO: IServiceConfiguration must be passed to the host-builder
             MockService mockService = new MockService(
-                MockHostBuilder.Create(uri));
-
-            mockService.ServiceConfiguration.ServiceName = serviceName;
-            mockService.ServiceConfiguration.Url = uri;
+                MockHostBuilder.Create(serviceConfiguration.Url),
+                serviceConfiguration);
 
             mockService.StartService();
 
-            _hostService.AddService(serviceName, mockService);
+            _hostService.AddService(serviceConfiguration.ServiceName, mockService);
 
             return mockService;
+        }
+
+        public IServiceConfiguration DeserializeServiceConfiguration(string config, string serviceName)
+        {
+            MockedServiceConfiguration mockedServiceConfiguration = config.DeserializeYaml<MockedServiceConfiguration>() ?? new MockedServiceConfiguration();
+            mockedServiceConfiguration.ServiceName = serviceName;
+            mockedServiceConfiguration.BaseUrl ??= "http://0.0.0.0:5000";
+
+            IServiceConfiguration serviceConfiguration = new ServiceConfiguration();
+            ServiceConfigurationReader serviceConfigurationReader = new ServiceConfigurationReader(serviceConfiguration);
+            serviceConfigurationReader.ConfigureService(mockedServiceConfiguration, false);
+
+            return serviceConfiguration;
         }
 
         private string GetAllInformation()
