@@ -3,6 +3,8 @@ using GraphQL.NewtonsoftJson;
 using GraphQL.Types;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+
+using MockWebApi.Auth;
 using MockWebApi.Configuration;
 using MockWebApi.Configuration.Extensions;
 using MockWebApi.Configuration.Model;
@@ -281,21 +283,29 @@ namespace MockWebApi.Controller
             return BadRequest($"Not implemented. Cannot delete request with ID '{id}'.");
         }
 
-        [HttpGet("jwt")]
-        public IActionResult GetJwtTokenViaHttpGet([FromQuery] string userName)
+        [HttpGet("{serviceName}/jwt")]
+        public IActionResult GetJwtTokenViaHttpGet([FromRoute] string serviceName, [FromQuery] string userName)
         {
-            //TODO: make this work on a per-service basis
+            if (!_hostService.TryGetService(serviceName, out IService service))
+            {
+                return BadRequest($"The service '{serviceName}' cannot be found.");
+            }
+
             if (string.IsNullOrEmpty(userName))
             {
                 return BadRequest("No user name was given in this request.");
             }
+
+            IServiceConfiguration serviceConfiguration = service.ServiceConfiguration;
 
             JwtCredentialUser user = new JwtCredentialUser()
             {
                 Name = userName
             };
 
-            string token = "";// _jwtService.CreateToken(user);
+            IJwtService jwtService = new JwtService(serviceConfiguration);
+
+            string token = jwtService.CreateToken(user);
 
             return Ok(token);
         }
