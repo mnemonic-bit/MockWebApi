@@ -20,6 +20,9 @@ using MockWebApi.GraphQL;
 using MockWebApi.Routing;
 using MockWebApi.Service;
 using MockWebApi.Service.Rest;
+using MockWebApi.Swagger;
+
+using Swashbuckle.AspNetCore.Swagger;
 
 using YamlDotNet.Serialization;
 
@@ -32,6 +35,7 @@ namespace MockWebApi.Controller
 
         private readonly ILogger<ServiceApiController> _logger;
         private readonly IHostService _hostService;
+        private readonly ISwaggerProviderFactory _swaggerProviderFactory;
         private readonly IRequestHistory _dataStore;
         private readonly IConfigurationFileWriter _configurationWriter;
 
@@ -39,17 +43,19 @@ namespace MockWebApi.Controller
             ILogger<ServiceApiController> logger,
             IHostService hostService,
             //Just for testing
-            //Microsoft.AspNetCore.Mvc.ApiExplorer.IApiDescriptionGroupCollectionProvider apiDescriptionGroupCollectionProvider,
+            Microsoft.AspNetCore.Mvc.ApiExplorer.IApiDescriptionGroupCollectionProvider apiDescriptionGroupCollectionProvider,
+            ISwaggerProviderFactory swaggerProviderFactory,
             IRequestHistory dataStore,
             IConfigurationFileWriter configurationWriter)
         {
-            //string res = apiDescriptionGroupCollectionProvider.Serialize();
             _logger = logger;
             _hostService = hostService;
+            _swaggerProviderFactory = swaggerProviderFactory;
             _dataStore = dataStore;
             _configurationWriter = configurationWriter;
         }
 
+        //[ApiExplorerSettings(GroupName = "GRP")]
         [HttpPost("{serviceName}/start")]
         public async Task<IActionResult> StartNewMockRestApi([FromRoute] string serviceName)
         {
@@ -322,6 +328,26 @@ namespace MockWebApi.Controller
             return Ok(token);
         }
 
+        [HttpGet("{serviceName}/swagger/{documentVersion}/{documentName}")]
+        public IActionResult GetSwaggerDocument(string serviceName, string documentVersion, string documentName)
+        {
+            if (!_hostService.TryGetService(serviceName, out IService service))
+            {
+                return BadRequest($"The service '{serviceName}' cannot be found.");
+            }
+
+            ISwaggerProvider swaggerProvider = _swaggerProviderFactory.GetSwaggerProvider(serviceName);
+
+            var swagger = swaggerProvider.GetSwagger(
+                    documentName: documentVersion,
+                    host: service.ServiceConfiguration.Url,
+                    basePath: "");
+
+            string swaggerJson = SerializeToYaml(swagger);
+
+            return Ok(swaggerJson);
+        }
+
         [HttpGet("graphql")]
         public async Task<IActionResult> ExecuteGraphQlQuery([FromQuery] string queryString)
         {
@@ -335,9 +361,8 @@ namespace MockWebApi.Controller
             return Ok(json);
         }
 
-        public MockService StartMockApiService(IServiceConfiguration serviceConfiguration)
+        private MockService StartMockApiService(IServiceConfiguration serviceConfiguration)
         {
-            //TODO: IServiceConfiguration must be passed to the host-builder
             MockService mockService = new MockService(
                 MockHostBuilder.Create(serviceConfiguration.Url),
                 serviceConfiguration);
@@ -349,7 +374,7 @@ namespace MockWebApi.Controller
             return mockService;
         }
 
-        public IServiceConfiguration DeserializeServiceConfiguration(string config, string serviceName)
+        private IServiceConfiguration DeserializeServiceConfiguration(string config, string serviceName)
         {
             MockedServiceConfiguration mockedServiceConfiguration = config.DeserializeYaml<MockedServiceConfiguration>() ?? new MockedServiceConfiguration();
             mockedServiceConfiguration.ServiceName = serviceName;

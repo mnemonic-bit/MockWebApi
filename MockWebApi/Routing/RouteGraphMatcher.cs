@@ -89,7 +89,7 @@ namespace MockWebApi.Routing
 
                 if (!TryFindRoute(parsedRoute, out MatchCandidate candidate))
                 {
-                    info = default(TInfo);
+                    info = default;
                     return false;
                 }
 
@@ -137,7 +137,7 @@ namespace MockWebApi.Routing
 
         private bool TryFindRoute(Route route, out MatchCandidate candidate)
         {
-            candidate = default(MatchCandidate);
+            candidate = default;
 
             ICollection<MatchCandidate> initialCandidates = new HashSet<MatchCandidate>
             {
@@ -223,7 +223,7 @@ namespace MockWebApi.Routing
 
         private bool TryFindLiteralPartRoute(RouteGraphNode nextNode, Route.LiteralPart literalPart, bool isLastNode, out ICollection<MatchCandidate> nextCandidates)
         {
-            nextCandidates = default(ICollection<MatchCandidate>);
+            nextCandidates = default;
 
             if (!nextNode.Literals.TryGetValue(literalPart, out LiteralPartCandidates literalPartCandidates))
             {
@@ -247,7 +247,7 @@ namespace MockWebApi.Routing
             if (!isLastNode)
             {
                 MatchCandidate singleMatchCandidate = new MatchCandidate();
-                singleMatchCandidate.Info = default(TInfo);
+                singleMatchCandidate.Info = default;
                 singleMatchCandidate.NextNode = literalPartCandidates.NextNode;
                 singleMatchCandidate.PartCandidate = literalPartCandidates;
 
@@ -259,7 +259,7 @@ namespace MockWebApi.Routing
 
         private bool TryFindVariablePartRoute(RouteGraphNode nextNode, Route.VariablePart variablePart, bool isLastNode, out ICollection<MatchCandidate> nextCandidates)
         {
-            nextCandidates = default(ICollection<MatchCandidate>);
+            nextCandidates = default;
 
             nextCandidates = nextNode
                 .Variables
@@ -282,7 +282,7 @@ namespace MockWebApi.Routing
                     if (!isLastNode)
                     {
                         MatchCandidate singleMatchCandidate = new MatchCandidate();
-                        singleMatchCandidate.Info = default(TInfo);
+                        singleMatchCandidate.Info = default;
                         singleMatchCandidate.NextNode = variablePart.NextNode;
                         singleMatchCandidate.PartCandidate = variablePart;
 

@@ -1,17 +1,15 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Extensions;
+﻿using System;
+using System.Threading.Tasks;
+
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+
 using MockWebApi.Configuration;
 using MockWebApi.Configuration.Model;
 using MockWebApi.Data;
 using MockWebApi.Extension;
 using MockWebApi.Model;
 using MockWebApi.Routing;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MockWebApi.Middleware
 {
@@ -39,51 +37,38 @@ namespace MockWebApi.Middleware
         {
             HttpRequest request = context.Request;
 
-            RequestInformation requestInfos = await CreateRequestInformation(request);
-            context.Items.Add(MiddlewareConstants.MockWebApiHttpRequestInfomation, requestInfos);
+            RequestInformation requestInfos = await request.CreateRequestInformation();
 
-            bool skipStoringTheRequest = RequestShouldNotBeStored(request);
-
-            await _nextDelegate(context);
-
-            if (skipStoringTheRequest)
+            try
             {
-                return;
-            }
+                context.Items.Add(MiddlewareConstants.MockWebApiHttpRequestInfomation, requestInfos);
 
-            HttpResult httpResult = GetHttpResultFromContext(context);
-            StoreRequestAndResponse(requestInfos, httpResult);
+                bool skipStoringTheRequest = RequestShouldNotBeStored(request);
+
+                await _nextDelegate(context);
+
+                if (skipStoringTheRequest)
+                {
+                    return;
+                }
+
+                HttpResult httpResult = GetHttpResultFromContext(context);
+
+                StoreRequestAndResponse(requestInfos, httpResult);
+            }
+            catch (Exception ex)
+            {
+                StoreException(requestInfos, ex);
+            }
         }
 
         private bool RequestShouldNotBeStored(HttpRequest request)
         {
             bool trackServiceApiCalls = _serverConfig.ConfigurationCollection.Get<bool>(ConfigurationCollection.Parameters.TrackServiceApiCalls);
-            bool startsWithServiceApi = request.Path.StartsWithSegments("/service-api");
+            bool startsWithServiceApi = request.Path.StartsWithSegments("/rest-api");
             bool routeOptOut = _serverConfig.RouteMatcher.TryMatch(request.PathWithParameters(), out RouteMatch<EndpointDescription> routeMatch) && !routeMatch.RouteInformation.PersistRequestInformation;
 
             return startsWithServiceApi && !trackServiceApiCalls || routeOptOut;
-        }
-
-        private async Task<RequestInformation> CreateRequestInformation(HttpRequest request)
-        {
-            RequestInformation requestInfos = new RequestInformation()
-            {
-                Path = request.Path,
-                Uri = request.GetDisplayUrl(),
-                Scheme = request.Scheme,
-                HttpVerb = request.Method,
-                ContentType = request.ContentType,
-                Cookies = new Dictionary<string, string>(request.Cookies),
-                Date = DateTime.Now,
-                Parameters = request.Query.ToDictionary(),
-                HttpHeaders = request.Headers.ToDictionary()
-            };
-
-            string requestBody = await request.GetBody(Encoding.UTF8);
-            requestBody = requestBody.Replace("\r\n", "\n");
-            requestInfos.Body = requestBody;
-
-            return requestInfos;
         }
 
         private HttpResult GetHttpResultFromContext(HttpContext context)
@@ -104,6 +89,17 @@ namespace MockWebApi.Middleware
             {
                 Request = request,
                 Response = response
+            };
+
+            _dataStore.Store(reuqestHistoryItem);
+        }
+
+        private void StoreException(RequestInformation request, Exception exception)
+        {
+            RequestHistoryItem reuqestHistoryItem = new RequestHistoryItem()
+            {
+                Request = request,
+                Exception = exception
             };
 
             _dataStore.Store(reuqestHistoryItem);

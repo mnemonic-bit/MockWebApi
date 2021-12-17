@@ -6,6 +6,7 @@ using MockWebApi.Configuration.Model;
 using MockWebApi.Data;
 using MockWebApi.Routing;
 using MockWebApi.Service;
+using MockWebApi.Swagger;
 using MockWebApi.Templating;
 using System.Linq;
 
@@ -21,7 +22,7 @@ namespace MockWebApi.Extension
                 return null;
             }
 
-            services.Replace<IApiDescriptionGroupCollectionProvider, MockedApiDescriptionGroupCollectionProvider>();
+            //services.Replace<IApiDescriptionGroupCollectionProvider, MockedApiDescriptionGroupCollectionProvider>();
             //services.AddSingleton(typeof(IRouteMatcher<EndpointDescription>), typeof(RouteGraphMatcher<EndpointDescription>));
 
             return services;
@@ -31,6 +32,7 @@ namespace MockWebApi.Extension
         {
             services.AddSingleton<IHostService, HostService>();
             services.AddSingleton<IHostConfiguration, HostConfiguration>();
+            services.AddSingleton<ISwaggerProviderFactory, SwaggerProviderFactory>();
             services.AddSingleton<IRequestHistory>(new RequestHistory());
 
             services.AddTransient<IConfigurationFileWriter, ConfigurationFileWriter>();

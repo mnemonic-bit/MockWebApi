@@ -1,6 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc.ApiExplorer;
+﻿using Microsoft.AspNetCore.Mvc.Abstractions;
+using Microsoft.AspNetCore.Mvc.ActionConstraints;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
+using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Mvc.Routing;
+
 using MockWebApi.Configuration;
 using MockWebApi.Configuration.Model;
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -61,7 +68,7 @@ namespace MockWebApi.Routing
 
             items = serviceConfiguration.RouteMatcher
                 .GetAllRoutes()
-                .Select(route => CreateApiDescription(serviceName, route))
+                .Select(endpointDescription => CreateApiDescription(serviceName, endpointDescription))
                 .ToList()
                 .AsReadOnly();
 
@@ -74,13 +81,34 @@ namespace MockWebApi.Routing
         {
             ApiDescription apiDescription = new ApiDescription();
 
-            apiDescription.GroupName = serviceName;
-            apiDescription.HttpMethod = "GET"; // TODO
-            apiDescription.RelativePath = endpointDescription.Route;
-            //TODO: add more information
-
+            apiDescription.ActionDescriptor = CreateActionDescriptor(endpointDescription);
+            apiDescription.GroupName = null;// serviceName;
+            apiDescription.HttpMethod = "GET";// endpointDescription.HttpMethod;
+            apiDescription.RelativePath = endpointDescription.Route.TrimStart('/');
+            
             return apiDescription;
         }
 
+        private ActionDescriptor CreateActionDescriptor(EndpointDescription endpointDescription)
+        {
+            ActionDescriptor actionDescriptor = new ActionDescriptor()
+            {
+                ActionConstraints = new List<IActionConstraintMetadata>(),
+                AttributeRouteInfo = new AttributeRouteInfo() { Template = endpointDescription.Route },
+                BoundProperties = new List<ParameterDescriptor>(),
+                DisplayName = endpointDescription.ToString(),
+                EndpointMetadata = new List<object>(),
+                FilterDescriptors = new List<FilterDescriptor>(),
+                Parameters = new List<ParameterDescriptor>(),
+                Properties = new Dictionary<object, object>(),
+                RouteValues = new Dictionary<string, string>()
+                {
+                    { "action", "the-action-name" },
+                    { "controller", "the-controller-name" } // This will be the header for the group of API methods
+                }
+            };
+
+            return actionDescriptor;
+        }
     }
 }

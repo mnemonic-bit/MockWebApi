@@ -40,5 +40,10 @@ namespace MockWebApi.Configuration.Model
         /// </summary>
         public bool LogRequestInformation { get; set; } = true;
 
+        public override string ToString()
+        {
+            return $"{Route}";
+        }
+
     }
 }
