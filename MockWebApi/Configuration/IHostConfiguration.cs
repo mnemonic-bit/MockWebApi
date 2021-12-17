@@ -21,6 +21,8 @@ namespace MockWebApi.Configuration
 
         void AddConfiguration(string serviceName, IServiceConfiguration serviceConfiguration);
 
+        bool RemoveConfiguration(string serviceName);
+
         bool TryGetConfiguration(string serviceName, out IServiceConfiguration serviceConfiguration);
 
     }

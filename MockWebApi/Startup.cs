@@ -39,6 +39,7 @@ namespace MockWebApi
                 .AddSystemTextJson();
 
             // The service-controller
+            //services.AddMvc();
             services.AddControllers();
             services.AddDynamicRouting();
 
@@ -46,20 +47,23 @@ namespace MockWebApi
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "MockWebApi", Version = "v1" });
-                c.AddServer(new OpenApiServer() { Url = "http://0.0.0.0:5000" });
-                c.AddServer(new OpenApiServer() { Url = "http://0.0.0.0:6000" });
+                //c.AddServer(new OpenApiServer() { Url = "http://localhost:5000" });
+                c.AddServer(new OpenApiServer() { Url = "http://localhost:6000" });
             });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger)
         {
+            app.UseMiddleware<ExceptionLoggerMiddleware>();
+
             app.UseSwagger();
+            //app.UseSwagger(c => c.RouteTemplate = "/swagger/v1/swagger.json" );
             app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "MockWebApi v1"));
 
             app.UseRouting();
 
-            //app.UseMiddleware<TimeMeasurementMiddleware>();
+            app.UseMiddleware<TimeMeasurementMiddleware>();
             //app.UseMiddleware<StoreRequestDataMiddleware>();
             //app.UseMiddleware<LoggingMiddleware>();
 

@@ -1,4 +1,6 @@
-﻿using MockWebApi.Configuration.Model;
+﻿using System;
+
+using MockWebApi.Configuration.Model;
 
 namespace MockWebApi.Configuration
 {
@@ -13,11 +15,20 @@ namespace MockWebApi.Configuration
             _serviceConfiguration = serviceConfiguration;
         }
 
-        public void ConfigureService(MockedServiceConfiguration configuration)
+        public void ConfigureService(MockedServiceConfiguration configuration, bool overwriteExisting = true)
         {
-            _serviceConfiguration.ServiceName = configuration.ServiceName;
-            _serviceConfiguration.Url = configuration.BaseUrl;
-            _serviceConfiguration.DefaultEndpointDescription = configuration.DefaultEndpointDescription;
+            if (overwriteExisting)
+            {
+                _serviceConfiguration.ServiceName = configuration.ServiceName;
+                _serviceConfiguration.Url = configuration.BaseUrl;
+                _serviceConfiguration.DefaultEndpointDescription = configuration.DefaultEndpointDescription;
+            }
+            else
+            {
+                _serviceConfiguration.ServiceName ??= configuration.ServiceName;
+                _serviceConfiguration.Url ??= configuration.BaseUrl;
+                _serviceConfiguration.DefaultEndpointDescription ??= configuration.DefaultEndpointDescription;
+            }
 
             if (configuration?.EndpointDescriptions == null)
             {

@@ -1,8 +1,7 @@
-﻿using System;
+﻿using MockWebApi.Extension;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-
-using MockWebApi.Extension;
 
 namespace MockWebApi.Routing
 {
@@ -90,7 +89,7 @@ namespace MockWebApi.Routing
 
                 if (!TryFindRoute(parsedRoute, out MatchCandidate candidate))
                 {
-                    info = default(TInfo);
+                    info = default;
                     return false;
                 }
 
@@ -109,19 +108,19 @@ namespace MockWebApi.Routing
                 return Enumerable.Empty<TInfo>();
             }
 
-            IEnumerable<TInfo> literalCandidates = graphNode.Literals
+            var literalCandidates = graphNode.Literals
                 .SelectMany(literal => literal.Value.Infos)
                 .Select(info => info.Info);
 
-            IEnumerable<TInfo> variableCandidates = graphNode.Variables
+            var variableCandidates = graphNode.Variables
                 .SelectMany(variable => variable.Infos)
                 .Select(info => info.Info);
 
-            IEnumerable<TInfo> recursiveCandidates = graphNode.Literals
+            var recursiveCandidates = graphNode.Literals
                 .Select(literal => literal.Value)
                 .SelectMany(graphNode => EnumerateAllCandidates(graphNode.NextNode));
 
-            IEnumerable<TInfo> recursiveVariableCandidates = graphNode.Variables
+            var recursiveVariableCandidates = graphNode.Variables
                 .Select(variable => variable.NextNode)
                 .SelectMany(graphNode => EnumerateAllCandidates(graphNode));
 
@@ -138,7 +137,7 @@ namespace MockWebApi.Routing
 
         private bool TryFindRoute(Route route, out MatchCandidate candidate)
         {
-            candidate = default(MatchCandidate);
+            candidate = default;
 
             ICollection<MatchCandidate> initialCandidates = new HashSet<MatchCandidate>
             {
@@ -224,7 +223,7 @@ namespace MockWebApi.Routing
 
         private bool TryFindLiteralPartRoute(RouteGraphNode nextNode, Route.LiteralPart literalPart, bool isLastNode, out ICollection<MatchCandidate> nextCandidates)
         {
-            nextCandidates = default(ICollection<MatchCandidate>);
+            nextCandidates = default;
 
             if (!nextNode.Literals.TryGetValue(literalPart, out LiteralPartCandidates literalPartCandidates))
             {
@@ -235,10 +234,8 @@ namespace MockWebApi.Routing
                 .Infos
                 .Select(info =>
                 {
-                    MatchCandidate candidate = new MatchCandidate
-                    {
-                        Info = info.Info
-                    };
+                    MatchCandidate candidate = new MatchCandidate();
+                    candidate.Info = info.Info;
                     candidate.Parameters.AddAll(info.Parameters);
                     candidate.NextNode = literalPartCandidates.NextNode;
                     candidate.PartCandidate = literalPartCandidates;
@@ -249,12 +246,10 @@ namespace MockWebApi.Routing
 
             if (!isLastNode)
             {
-                MatchCandidate singleMatchCandidate = new MatchCandidate
-                {
-                    Info = default(TInfo),
-                    NextNode = literalPartCandidates.NextNode,
-                    PartCandidate = literalPartCandidates
-                };
+                MatchCandidate singleMatchCandidate = new MatchCandidate();
+                singleMatchCandidate.Info = default;
+                singleMatchCandidate.NextNode = literalPartCandidates.NextNode;
+                singleMatchCandidate.PartCandidate = literalPartCandidates;
 
                 nextCandidates.Add(singleMatchCandidate);
             }
@@ -264,7 +259,7 @@ namespace MockWebApi.Routing
 
         private bool TryFindVariablePartRoute(RouteGraphNode nextNode, Route.VariablePart variablePart, bool isLastNode, out ICollection<MatchCandidate> nextCandidates)
         {
-            nextCandidates = default(ICollection<MatchCandidate>);
+            nextCandidates = default;
 
             nextCandidates = nextNode
                 .Variables
@@ -274,10 +269,8 @@ namespace MockWebApi.Routing
                         .Infos
                         .Select(info =>
                         {
-                            MatchCandidate candidate = new MatchCandidate
-                            {
-                                Info = info.Info
-                            };
+                            MatchCandidate candidate = new MatchCandidate();
+                            candidate.Info = info.Info;
                             candidate.Parameters.AddAll(info.Parameters);
                             candidate.NextNode = variablePart.NextNode;
                             candidate.PartCandidate = variablePart;
@@ -288,12 +281,10 @@ namespace MockWebApi.Routing
 
                     if (!isLastNode)
                     {
-                        MatchCandidate singleMatchCandidate = new MatchCandidate
-                        {
-                            Info = default(TInfo),
-                            NextNode = variablePart.NextNode,
-                            PartCandidate = variablePart
-                        };
+                        MatchCandidate singleMatchCandidate = new MatchCandidate();
+                        singleMatchCandidate.Info = default;
+                        singleMatchCandidate.NextNode = variablePart.NextNode;
+                        singleMatchCandidate.PartCandidate = variablePart;
 
                         newCandidates.Add(singleMatchCandidate);
                     }
@@ -739,20 +730,16 @@ namespace MockWebApi.Routing
                         })
                         .ToHashSet();
 
-                    MatchCandidate matchCandidate = new MatchCandidate
-                    {
-                        NextNode = literalPartCandidates.NextNode
-                    };
+                    MatchCandidate matchCandidate = new MatchCandidate();
+                    matchCandidate.NextNode = literalPartCandidates.NextNode;
                     matchCandidates.Add(matchCandidate);
 
                     return true;
                 }
                 else if (!isLastNode)
                 {
-                    MatchCandidate matchCandidate = new MatchCandidate
-                    {
-                        NextNode = literalPartCandidates.NextNode
-                    };
+                    MatchCandidate matchCandidate = new MatchCandidate();
+                    matchCandidate.NextNode = literalPartCandidates.NextNode;
                     matchCandidates.Add(matchCandidate);
 
                     return true;
@@ -764,14 +751,12 @@ namespace MockWebApi.Routing
                 .SelectMany(variable =>
                 {
                     // This are all matches that end in this node
-                    List<MatchCandidate> matchCandidates = variable
+                    var matchCandidates = variable
                         .Infos
                         .Select(info =>
                         {
-                            MatchCandidate matchCandidate = new MatchCandidate
-                            {
-                                Info = info.Info // TODO: refactor this?
-                            };
+                            MatchCandidate matchCandidate = new MatchCandidate();
+                            matchCandidate.Info = info.Info; // TODO: refactor this?
                             matchCandidate.Variables.Add(GetVariableName(variable.Variable), literalPart.ToString());
 
                             return matchCandidate;
@@ -779,10 +764,8 @@ namespace MockWebApi.Routing
                         .ToList(); // TODO: why does this not work without ToList() and matchCandidates.Append(singleMatchCandidate) at the end
 
                     // This is for all matches that go beyond this node
-                    MatchCandidate singleMatchCandidate = new MatchCandidate
-                    {
-                        NextNode = variable.NextNode
-                    };
+                    MatchCandidate singleMatchCandidate = new MatchCandidate();
+                    singleMatchCandidate.NextNode = variable.NextNode;
                     singleMatchCandidate.Variables.Add(GetVariableName(variable.Variable), literalPart.ToString());
 
                     matchCandidates.Add(singleMatchCandidate);
@@ -812,11 +795,9 @@ namespace MockWebApi.Routing
 
                     candidate.Variables.AddAll(variablesFromParameters);
 
-                    MatchCandidate newMatchCandidate = new MatchCandidate(candidate)
-                    {
-                        NextNode = candidate.NextNode,
-                        PartCandidate = candidate.PartCandidate
-                    };
+                    MatchCandidate newMatchCandidate = new MatchCandidate(candidate);
+                    newMatchCandidate.NextNode = candidate.NextNode;
+                    newMatchCandidate.PartCandidate = candidate.PartCandidate;
 
                     return newMatchCandidate;
                 })
@@ -909,7 +890,13 @@ namespace MockWebApi.Routing
             /// links to child-nodes.
             /// </summary>
             /// <returns></returns>
-            internal bool IsEmpty => Literals.Count == 0 && Variables.Count == 0;
+            internal bool IsEmpty
+            {
+                get
+                {
+                    return Literals.Count == 0 && Variables.Count == 0;
+                }
+            }
 
             /// <summary>
             /// This is the reference to the parent node in this route graph.
@@ -943,8 +930,14 @@ namespace MockWebApi.Routing
 
             public TInfo Info
             {
-                get => _info;
-                internal set => _info = value ?? throw new ArgumentException($"Cannot set null as info-item.");
+                get
+                {
+                    return _info;
+                }
+                internal set
+                {
+                    _info = value ?? throw new ArgumentException($"Cannot set null as info-item.");
+                }
             }
 
             public IDictionary<string, string> Parameters { get; } = new Dictionary<string, string>(); // TODO: fix this, this might not belong to a route information item.
@@ -1015,7 +1008,13 @@ namespace MockWebApi.Routing
             /// Marks this match candidate as being for a specific
             /// route, i.e. one that has no variables in it along the path.
             /// </summary>
-            public bool IsSpecific => Variables.Count == 0;
+            public bool IsSpecific
+            {
+                get
+                {
+                    return Variables.Count == 0;
+                }
+            }
 
             public RouteGraphNode NextNode { get; set; }
 

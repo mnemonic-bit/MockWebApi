@@ -33,10 +33,10 @@ namespace MockWebApi.Service.Rest
             set => _serviceConfigurationProxy.BaseConfiguration = value;
         }
 
-        public MockService(IHostBuilder hostBuilder)
+        public MockService(IHostBuilder hostBuilder, IServiceConfiguration serviceConfiguration)
         {
             _hostBuilder = hostBuilder;
-            _serviceConfigurationProxy = new ServiceConfigurationProxy(new ServiceConfiguration());
+            _serviceConfigurationProxy = new ServiceConfigurationProxy(serviceConfiguration ?? new ServiceConfiguration());
             _cancellationTokenSource = new CancellationTokenSource();
         }
 
