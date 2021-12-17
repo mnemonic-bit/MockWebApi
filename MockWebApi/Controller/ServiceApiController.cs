@@ -1,8 +1,15 @@
-﻿using GraphQL;
+﻿using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+using GraphQL;
 using GraphQL.NewtonsoftJson;
 using GraphQL.Types;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+
 using MockWebApi.Configuration;
 using MockWebApi.Configuration.Extensions;
 using MockWebApi.Configuration.Model;
@@ -12,10 +19,7 @@ using MockWebApi.GraphQL;
 using MockWebApi.Routing;
 using MockWebApi.Service;
 using MockWebApi.Service.Rest;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 using YamlDotNet.Serialization;
 
 namespace MockWebApi.Controller

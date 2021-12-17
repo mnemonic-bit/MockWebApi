@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Hosting;
+﻿using System.Net.Http;
+
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+
 using MockWebApi.Configuration;
 using MockWebApi.Extension;
-using System.Net.Http;
 
 namespace MockWebApi.Tests.TestUtils
 {
@@ -11,7 +13,7 @@ namespace MockWebApi.Tests.TestUtils
     {
 
         private readonly TestServer _testServer;
-        private ServiceConfigurationProxy _serviceConfigurationProxy;
+        private readonly ServiceConfigurationProxy _serviceConfigurationProxy;
 
         internal ServiceApiTestServer(IServiceConfiguration serviceConfiguration)
         {

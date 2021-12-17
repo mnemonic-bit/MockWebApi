@@ -1,6 +1,4 @@
 ﻿using MockWebApi.Configuration.Model;
-using MockWebApi.Data;
-using System.Linq;
 
 namespace MockWebApi.Configuration
 {

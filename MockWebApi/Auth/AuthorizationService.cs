@@ -1,7 +1,8 @@
-﻿using MockWebApi.Configuration.Model;
-using MockWebApi.Extension;
-using System;
+﻿using System;
 using System.Linq;
+
+using MockWebApi.Configuration.Model;
+using MockWebApi.Extension;
 
 namespace MockWebApi.Auth
 {

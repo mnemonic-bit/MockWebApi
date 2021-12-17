@@ -1,10 +1,12 @@
-﻿using MockWebApi.Configuration;
-using MockWebApi.Configuration.Model;
-using MockWebApi.Tests.TestUtils;
-using System;
+﻿using System;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+
+using MockWebApi.Configuration;
+using MockWebApi.Configuration.Model;
+using MockWebApi.Tests.TestUtils;
+
 using Xunit;
 
 using MockWebApiClient = MockWebApi.Client.MockWebApi;

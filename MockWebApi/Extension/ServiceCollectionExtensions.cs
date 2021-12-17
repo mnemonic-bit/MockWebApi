@@ -1,13 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc.ApiExplorer;
+﻿using System.Linq;
+
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.Extensions.DependencyInjection;
-using MockWebApi.Auth;
+
 using MockWebApi.Configuration;
-using MockWebApi.Configuration.Model;
 using MockWebApi.Data;
 using MockWebApi.Routing;
 using MockWebApi.Service;
-using MockWebApi.Templating;
-using System.Linq;
 
 namespace MockWebApi.Extension
 {

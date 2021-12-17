@@ -1,6 +1,7 @@
-﻿using MockWebApi.Configuration.Model;
+﻿using System.IO;
+
+using MockWebApi.Configuration.Model;
 using MockWebApi.Extension;
-using System.IO;
 
 namespace MockWebApi.Configuration
 {

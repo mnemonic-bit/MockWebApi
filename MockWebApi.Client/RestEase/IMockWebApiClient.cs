@@ -1,6 +1,8 @@
-﻿using MockWebApi.Configuration.Model;
+﻿using System.Threading.Tasks;
+
+using MockWebApi.Configuration.Model;
+
 using RestEase;
-using System.Threading.Tasks;
 
 namespace MockWebApi.Client.RestEase
 {

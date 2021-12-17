@@ -10,7 +10,7 @@ namespace MockWebApi.Templating
 
         private readonly string _scriptText;
 
-        public string ScriptText { get { return _scriptText; } }
+        public string ScriptText => _scriptText;
 
         public ScriptFragment(string scriptText)
         {

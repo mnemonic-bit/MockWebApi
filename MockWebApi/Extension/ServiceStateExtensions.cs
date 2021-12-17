@@ -1,5 +1,6 @@
-﻿using MockWebApi.Service;
-using System.Threading;
+﻿using System.Threading;
+
+using MockWebApi.Service;
 
 namespace MockWebApi.Extension
 {

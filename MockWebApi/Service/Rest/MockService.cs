@@ -1,10 +1,12 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using MockWebApi.Configuration;
-using MockWebApi.Extension;
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+
+using MockWebApi.Configuration;
+using MockWebApi.Extension;
 
 namespace MockWebApi.Service.Rest
 {
@@ -23,24 +25,12 @@ namespace MockWebApi.Service.Rest
 
         private readonly ServiceConfigurationProxy _serviceConfigurationProxy;
 
-        public ServiceState ServiceState
-        {
-            get
-            {
-                return _serviceThread?.ThreadState.GetServiceState() ?? ServiceState.NotStarted;
-            }
-        }
+        public ServiceState ServiceState => _serviceThread?.ThreadState.GetServiceState() ?? ServiceState.NotStarted;
 
         public IServiceConfiguration ServiceConfiguration
         {
-            get
-            {
-                return _serviceConfigurationProxy.BaseConfiguration;
-            }
-            set
-            {
-                _serviceConfigurationProxy.BaseConfiguration = value;
-            }
+            get => _serviceConfigurationProxy.BaseConfiguration;
+            set => _serviceConfigurationProxy.BaseConfiguration = value;
         }
 
         public MockService(IHostBuilder hostBuilder)
@@ -52,8 +42,10 @@ namespace MockWebApi.Service.Rest
 
         public void StartService()
         {
-            _serviceThread = new Thread(() => ThreadStart(_cancellationTokenSource.Token));
-            _serviceThread.IsBackground = true; // mocked interfaces can always be shut down with no warning
+            _serviceThread = new Thread(() => ThreadStart(_cancellationTokenSource.Token))
+            {
+                IsBackground = true // mocked interfaces can always be shut down with no warning
+            };
             _serviceThread.Start();
         }
 

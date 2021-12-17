@@ -1,5 +1,13 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Text;
+using System.Threading.Tasks;
+
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+
 using MockWebApi.Auth;
 using MockWebApi.Configuration;
 using MockWebApi.Configuration.Model;
@@ -8,12 +16,6 @@ using MockWebApi.Extension;
 using MockWebApi.Model;
 using MockWebApi.Routing;
 using MockWebApi.Templating;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MockWebApi.Middleware
 {

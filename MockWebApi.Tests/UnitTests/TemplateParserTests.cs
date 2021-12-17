@@ -1,4 +1,5 @@
 ﻿using MockWebApi.Templating;
+
 using Xunit;
 
 namespace MockWebApi.Tests.UnitTests

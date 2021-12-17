@@ -1,5 +1,7 @@
-﻿using Newtonsoft.Json;
-using System.IO;
+﻿using System.IO;
+
+using Newtonsoft.Json;
+
 using YamlDotNet.Serialization;
 
 namespace MockWebApi.Configuration.Extensions

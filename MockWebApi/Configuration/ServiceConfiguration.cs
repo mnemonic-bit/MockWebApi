@@ -1,9 +1,10 @@
-﻿using MockWebApi.Configuration.Model;
+﻿using System;
+using System.Net;
+
+using MockWebApi.Configuration.Model;
 using MockWebApi.Data;
 using MockWebApi.Extension;
 using MockWebApi.Routing;
-using System;
-using System.Net;
 
 namespace MockWebApi.Configuration
 {

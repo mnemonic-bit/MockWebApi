@@ -1,8 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc.ApiExplorer;
+﻿using System.Threading.Tasks;
+
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using MockWebApi.Configuration;
-using System.Threading.Tasks;
 
 namespace MockWebApi.Middleware
 {

@@ -1,12 +1,15 @@
-﻿using MockWebApi.Client.Model;
-using MockWebApi.Client.RestEase;
-using MockWebApi.Configuration;
-using MockWebApi.Configuration.Model;
-using RestEase;
-using System;
+﻿using System;
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
+
+using MockWebApi.Client.Model;
+using MockWebApi.Client.RestEase;
+using MockWebApi.Configuration;
+using MockWebApi.Configuration.Model;
+
+using RestEase;
+
 using YamlDotNet.Serialization;
 
 namespace MockWebApi.Client

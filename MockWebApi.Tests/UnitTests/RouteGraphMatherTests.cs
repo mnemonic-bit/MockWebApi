@@ -1,8 +1,10 @@
-﻿using MockWebApi.Configuration.Model;
+﻿using System;
+using System.Linq;
+
+using MockWebApi.Configuration.Model;
 using MockWebApi.Routing;
 using MockWebApi.Tests.TestUtils;
-using System;
-using System.Linq;
+
 using Xunit;
 
 namespace MockWebApi.Tests.UnitTests
@@ -166,7 +168,7 @@ namespace MockWebApi.Tests.UnitTests
             }
 
             // Act
-            var routes = graphMatcher
+            string[] routes = graphMatcher
                 .GetAllRoutes()
                 .Select(info => info.Route)
                 .ToArray();

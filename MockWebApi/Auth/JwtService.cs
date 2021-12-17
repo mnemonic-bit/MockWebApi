@@ -1,12 +1,15 @@
-﻿using Microsoft.IdentityModel.JsonWebTokens;
-using Microsoft.IdentityModel.Tokens;
-using MockWebApi.Configuration;
-using MockWebApi.Configuration.Model;
-using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
+
+using Microsoft.IdentityModel.JsonWebTokens;
+using Microsoft.IdentityModel.Tokens;
+
+using MockWebApi.Configuration;
+using MockWebApi.Configuration.Model;
+
+using Newtonsoft.Json;
 
 using JwtSecurityToken = System.IdentityModel.Tokens.Jwt.JwtSecurityToken;
 using JwtSecurityTokenHandler = System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler;

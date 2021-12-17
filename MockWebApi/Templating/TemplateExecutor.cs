@@ -21,7 +21,7 @@ namespace MockWebApi.Templating
             string scriptInitCode = GenerateInitScript(variables);
             ScriptEvaluator scriptEvaluator = new ScriptEvaluator(scriptInitCode);
 
-            var calcualtedFragments = await Task.WhenAll(template
+            string[] calcualtedFragments = await Task.WhenAll(template
                 .Fragments
                 .Select(fragment => EvaluateFragment(scriptEvaluator, fragment)));
 

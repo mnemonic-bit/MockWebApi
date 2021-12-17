@@ -1,6 +1,7 @@
-﻿using MockWebApi.Configuration;
+﻿using System;
+
+using MockWebApi.Configuration;
 using MockWebApi.Configuration.Model;
-using System;
 
 namespace MockWebApi.Tests.TestUtils
 {

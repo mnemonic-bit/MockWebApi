@@ -1,11 +1,13 @@
-using MockWebApi.Auth;
-using MockWebApi.Configuration;
-using MockWebApi.Configuration.Model;
-using MockWebApi.Tests.TestUtils;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+
+using MockWebApi.Auth;
+using MockWebApi.Configuration;
+using MockWebApi.Configuration.Model;
+using MockWebApi.Tests.TestUtils;
+
 using Xunit;
 
 namespace MockWebApi.Tests.IntegrationTests

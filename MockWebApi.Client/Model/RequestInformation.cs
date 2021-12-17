@@ -1,6 +1,8 @@
-﻿using MockWebApi.Extension;
-using System;
+﻿using System;
 using System.Collections.Generic;
+
+using MockWebApi.Extension;
+
 using YamlDotNet.Core;
 using YamlDotNet.Serialization;
 

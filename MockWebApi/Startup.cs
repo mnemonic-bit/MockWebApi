@@ -1,15 +1,17 @@
+using System;
+using System.Reflection;
+
 using GraphQL.Server;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+
 using MockWebApi.Extension;
 using MockWebApi.GraphQL;
-using MockWebApi.Middleware;
-using System;
-using System.Reflection;
 
 namespace MockWebApi
 {

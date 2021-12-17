@@ -1,5 +1,6 @@
-﻿using MockWebApi.Configuration.Model;
-using System;
+﻿using System;
+
+using MockWebApi.Configuration.Model;
 
 namespace MockWebApi.Configuration
 {
@@ -29,7 +30,7 @@ namespace MockWebApi.Configuration
                 return;
             }
 
-            foreach(var service in configuration.Services)
+            foreach (MockedServiceConfiguration service in configuration.Services)
             {
                 IServiceConfiguration serviceConfiguration = new ServiceConfiguration();
                 IServiceConfigurationReader serviceConfigurationReader = new ServiceConfigurationReader(serviceConfiguration);

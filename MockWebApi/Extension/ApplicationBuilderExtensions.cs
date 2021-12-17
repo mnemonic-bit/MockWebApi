@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System.IO;
+
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+
 using MockWebApi.Configuration;
 using MockWebApi.Configuration.Model;
 using MockWebApi.Middleware;
-using System.IO;
 
 namespace MockWebApi.Extension
 {

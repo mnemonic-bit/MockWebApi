@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System.Net;
+
+using Microsoft.AspNetCore.Http;
+
 using MockWebApi.Configuration.Model;
-using System.Net;
 
 namespace MockWebApi.Extension
 {
@@ -9,12 +11,13 @@ namespace MockWebApi.Extension
 
         public static HttpResult ToHttpResult(this HttpResponse httpResponse)
         {
-            HttpResult result = new HttpResult();
+            HttpResult result = new HttpResult
+            {
+                StatusCode = (HttpStatusCode)httpResponse.StatusCode,
+                ContentType = httpResponse.ContentType,
 
-            result.StatusCode = (HttpStatusCode)httpResponse.StatusCode;
-            result.ContentType = httpResponse.ContentType;
-
-            result.Headers = httpResponse.Headers.ToDictionary();
+                Headers = httpResponse.Headers.ToDictionary()
+            };
 
             //result.Cookies = httpResponse.Cookies.ToDictionary(); // does not work
 

@@ -3,10 +3,10 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using MockWebApi.Auth;
 using MockWebApi.Configuration;
 using MockWebApi.Data;
-using MockWebApi.Extension;
 using MockWebApi.Middleware;
 using MockWebApi.Templating;
 

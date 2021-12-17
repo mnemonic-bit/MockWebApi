@@ -1,5 +1,6 @@
-﻿using GraphQL.Types;
-using System.Net;
+﻿using System.Net;
+
+using GraphQL.Types;
 
 namespace MockWebApi.GraphQL
 {

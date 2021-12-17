@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
-using System.Text;
+﻿using System.Text;
 using System.Threading.Tasks;
+
+using Microsoft.AspNetCore.Http;
 
 namespace MockWebApi.Extension
 {

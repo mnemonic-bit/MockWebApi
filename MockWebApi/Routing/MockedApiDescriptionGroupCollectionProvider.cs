@@ -1,16 +1,18 @@
-﻿using Microsoft.AspNetCore.Mvc.ApiExplorer;
+﻿using System.Collections.Generic;
+using System.Linq;
+
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
+
 using MockWebApi.Configuration;
 using MockWebApi.Configuration.Model;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace MockWebApi.Routing
 {
     public class MockedApiDescriptionGroupCollectionProvider : IApiDescriptionGroupCollectionProvider
     {
 
-        private int _apiVersion;
-        private IHostConfiguration _hostConfiguration;
+        private readonly int _apiVersion;
+        private readonly IHostConfiguration _hostConfiguration;
 
         public ApiDescriptionGroupCollection ApiDescriptionGroups
         {
@@ -72,11 +74,12 @@ namespace MockWebApi.Routing
 
         private ApiDescription CreateApiDescription(string serviceName, EndpointDescription endpointDescription)
         {
-            ApiDescription apiDescription = new ApiDescription();
-
-            apiDescription.GroupName = serviceName;
-            apiDescription.HttpMethod = "GET"; // TODO
-            apiDescription.RelativePath = endpointDescription.Route;
+            ApiDescription apiDescription = new ApiDescription
+            {
+                GroupName = serviceName,
+                HttpMethod = "GET", // TODO
+                RelativePath = endpointDescription.Route
+            };
             //TODO: add more information
 
             return apiDescription;

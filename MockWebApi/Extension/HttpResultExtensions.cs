@@ -1,6 +1,7 @@
-﻿using MockWebApi.Configuration.Model;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Net;
+
+using MockWebApi.Configuration.Model;
 
 namespace MockWebApi.Extension
 {

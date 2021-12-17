@@ -1,4 +1,5 @@
 ﻿using Microsoft.IdentityModel.Tokens;
+
 using MockWebApi.Configuration.Model;
 
 namespace MockWebApi.Auth

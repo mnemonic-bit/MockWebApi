@@ -1,4 +1,5 @@
 ﻿using GraphQL.Types;
+
 using MockWebApi.Model;
 
 namespace MockWebApi.GraphQL
