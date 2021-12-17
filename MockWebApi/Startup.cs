@@ -12,6 +12,7 @@ using Microsoft.OpenApi.Models;
 
 using MockWebApi.Extension;
 using MockWebApi.GraphQL;
+using MockWebApi.Middleware;
 
 namespace MockWebApi
 {
