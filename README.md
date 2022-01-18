@@ -77,7 +77,7 @@ ReturnCookies: true
 
 The `Route` field is used for matching the request to the mocked service. In this
 example, we use the sub-path `/defined/route`, which will match the URL
-`http://localhost:5000/configure/route`
+`http://localhost:5000/defined/route`
 
 #### Configuring a Default Response
 

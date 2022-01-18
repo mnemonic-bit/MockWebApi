@@ -10,6 +10,10 @@ using Xunit;
 
 namespace MockWebApi.Tests.IntegrationTests
 {
+    /// <summary>
+    /// This tests use a instant-mock-server which is build up during
+    /// each test.
+    /// </summary>
     public class MockWebApiTests
     {
 
@@ -30,7 +34,7 @@ namespace MockWebApi.Tests.IntegrationTests
             IServiceConfiguration serviceConfiguration = ServiceConfigurationFactory.CreateBaseConfiguration(serviceName);
             serviceConfiguration.AddEndpointDescription(endpointConfiguration);
 
-            MockWebApiTestServer integrationTestServer = new MockWebApiTestServer(serviceConfiguration);
+            using MockWebApiTestServer integrationTestServer = new MockWebApiTestServer(serviceConfiguration);
             HttpClient httpClient = integrationTestServer.CreateHttpClient();
             HttpTestClient httpTestClient = new HttpTestClient(httpClient);
 
@@ -64,7 +68,7 @@ namespace MockWebApi.Tests.IntegrationTests
             serviceConfiguration.DefaultEndpointDescription = defaultEndpointConfiguration;
             serviceConfiguration.AddEndpointDescription(endpointConfiguration);
 
-            MockWebApiTestServer integrationTestServer = new MockWebApiTestServer(serviceConfiguration);
+            using MockWebApiTestServer integrationTestServer = new MockWebApiTestServer(serviceConfiguration);
             HttpClient httpClient = integrationTestServer.CreateHttpClient();
             HttpTestClient httpTestClient = new HttpTestClient(httpClient);
 
@@ -99,7 +103,7 @@ namespace MockWebApi.Tests.IntegrationTests
             serviceConfiguration.DefaultEndpointDescription = defaultEndpointConfiguration;
             serviceConfiguration.AddEndpointDescription(endpointConfiguration);
 
-            MockWebApiTestServer integrationTestServer = new MockWebApiTestServer(serviceConfiguration);
+            using MockWebApiTestServer integrationTestServer = new MockWebApiTestServer(serviceConfiguration);
             HttpClient httpClient = integrationTestServer.CreateHttpClient();
             HttpTestClient httpTestClient = new HttpTestClient(httpClient);
 
@@ -139,7 +143,7 @@ namespace MockWebApi.Tests.IntegrationTests
             serviceConfiguration.DefaultEndpointDescription = defaultEndpointConfiguration;
             serviceConfiguration.AddEndpointDescription(endpointConfiguration);
 
-            MockWebApiTestServer integrationTestServer = new MockWebApiTestServer(serviceConfiguration);
+            using MockWebApiTestServer integrationTestServer = new MockWebApiTestServer(serviceConfiguration);
             HttpClient httpClient = integrationTestServer.CreateHttpClient();
             HttpTestClient httpTestClient = new HttpTestClient(httpClient);
 
@@ -196,7 +200,7 @@ namespace MockWebApi.Tests.IntegrationTests
             string jwtToken = jwtService.CreateToken(jwtCredentialUser);
             AuthenticationHeaderValue authenticationHeaderValue = new AuthenticationHeaderValue("Bearer", jwtToken);
 
-            MockWebApiTestServer integrationTestServer = new MockWebApiTestServer(serviceConfiguration);
+            using MockWebApiTestServer integrationTestServer = new MockWebApiTestServer(serviceConfiguration);
             HttpClient httpClient = integrationTestServer.CreateHttpClient();
             HttpTestClient httpTestClient = new HttpTestClient(httpClient);
 
@@ -249,7 +253,7 @@ namespace MockWebApi.Tests.IntegrationTests
             string jwtToken = jwtService.CreateToken(jwtCredentialUser);
             AuthenticationHeaderValue authenticationHeaderValue = new AuthenticationHeaderValue("Bearer", jwtToken);
 
-            MockWebApiTestServer integrationTestServer = new MockWebApiTestServer(serviceConfiguration);
+            using MockWebApiTestServer integrationTestServer = new MockWebApiTestServer(serviceConfiguration);
             HttpClient httpClient = integrationTestServer.CreateHttpClient();
             HttpTestClient httpTestClient = new HttpTestClient(httpClient);
 

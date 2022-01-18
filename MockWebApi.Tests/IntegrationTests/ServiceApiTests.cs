@@ -22,7 +22,7 @@ namespace MockWebApi.Tests.IntegrationTests
 
             IServiceConfiguration serviceConfiguration = ServiceConfigurationFactory.CreateBaseConfiguration(serviceName);
 
-            ServiceApiTestServer serviceApiTestServer = new ServiceApiTestServer(serviceConfiguration);
+            using ServiceApiTestServer serviceApiTestServer = new ServiceApiTestServer(serviceConfiguration);
 
             HttpClient httpClient = serviceApiTestServer.CreateHttpClient();
             MockWebApiClient webApiClient = new MockWebApiClient(httpClient);
@@ -37,17 +37,21 @@ namespace MockWebApi.Tests.IntegrationTests
                 statusCode,
                 expectedResponseBody);
 
-            bool mockeApiHasStarted = await webApiClient.StartNewMockWebApi(serviceName);
+            MockedServiceConfiguration config = ServiceConfigurationFactory.CreateMockedServiceConfiguration();
+
+            bool mockeApiHasStarted = await webApiClient.StartNewMockWebApi(serviceName, config);
 
             // Act
             bool configureRouteResult = await webApiClient.ConfigureRoute(serviceName, endpointConfiguration);
             HttpResponseMessage response = await httpTestClient.SendMessage(new Uri("http://localhost:5000"), testUriPath);
+            string responseContent = await response.Content.ReadAsStringAsync();
 
             // Assert
             Assert.True(mockeApiHasStarted);
             Assert.True(configureRouteResult);
             Assert.True(response.IsSuccessStatusCode);
             Assert.Equal(statusCode, response.StatusCode);
+            Assert.Equal(expectedResponseBody, responseContent);
         }
 
         [Fact]
@@ -60,7 +64,7 @@ namespace MockWebApi.Tests.IntegrationTests
             IServiceConfiguration serviceConfiguration = ServiceConfigurationFactory.CreateBaseConfiguration(serviceName);
             serviceConfiguration.DefaultEndpointDescription.Result.StatusCode = defaultStatusCode;
 
-            ServiceApiTestServer serviceApiTestServer = new ServiceApiTestServer(serviceConfiguration);
+            using ServiceApiTestServer serviceApiTestServer = new ServiceApiTestServer(serviceConfiguration);
 
             HttpClient httpClient = serviceApiTestServer.CreateHttpClient();
             MockWebApiClient webApiClient = new MockWebApiClient(httpClient);
@@ -77,7 +81,10 @@ namespace MockWebApi.Tests.IntegrationTests
 
             endpointConfiguration.LifecyclePolicy = LifecyclePolicy.ApplyOnce;
 
-            bool mockeApiHasStarted = await webApiClient.StartNewMockWebApi(serviceName);
+            MockedServiceConfiguration config = ServiceConfigurationFactory.CreateMockedServiceConfiguration();
+            config.DefaultEndpointDescription.Result.StatusCode = defaultStatusCode;
+
+            bool mockeApiHasStarted = await webApiClient.StartNewMockWebApi(serviceName, config);
 
             // Act
             bool configureRouteResult = await webApiClient.ConfigureRoute(serviceName, endpointConfiguration);
@@ -96,10 +103,11 @@ namespace MockWebApi.Tests.IntegrationTests
         {
             // Arrange
             string serviceName = "TEST-SERVICE";
+            HttpStatusCode defaultStatusCode = HttpStatusCode.NotFound;
 
             IServiceConfiguration serviceConfiguration = ServiceConfigurationFactory.CreateBaseConfiguration(serviceName);
 
-            ServiceApiTestServer serviceApiTestServer = new ServiceApiTestServer(serviceConfiguration);
+            using ServiceApiTestServer serviceApiTestServer = new ServiceApiTestServer(serviceConfiguration);
 
             HttpClient httpClient = serviceApiTestServer.CreateHttpClient();
             MockWebApiClient webApiClient = new MockWebApiClient(httpClient);
@@ -114,7 +122,12 @@ namespace MockWebApi.Tests.IntegrationTests
                 statusCode,
                 expectedResponseBody);
 
-            bool mockeApiHasStarted = await webApiClient.StartNewMockWebApi(serviceName);
+            endpointConfiguration.LifecyclePolicy = LifecyclePolicy.Repeat;
+
+            MockedServiceConfiguration config = ServiceConfigurationFactory.CreateMockedServiceConfiguration();
+            config.DefaultEndpointDescription.Result.StatusCode = defaultStatusCode;
+
+            bool mockeApiHasStarted = await webApiClient.StartNewMockWebApi(serviceName, config);
 
             // Act
             bool configureRouteResult = await webApiClient.ConfigureRoute(serviceName, endpointConfiguration);
@@ -128,8 +141,7 @@ namespace MockWebApi.Tests.IntegrationTests
             Assert.True(deleteRouteResult);
             Assert.True(configuredResponse.IsSuccessStatusCode);
             Assert.Equal(statusCode, configuredResponse.StatusCode);
-            Assert.True(deleteResponse.IsSuccessStatusCode);
-            Assert.Equal(statusCode, deleteResponse.StatusCode);
+            Assert.Equal(defaultStatusCode, deleteResponse.StatusCode);
         }
 
     }

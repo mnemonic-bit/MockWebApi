@@ -3,11 +3,13 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using MockWebApi.Configuration;
 using MockWebApi.Extension;
+
+using System;
 using System.Net.Http;
 
 namespace MockWebApi.Tests.TestUtils
 {
-    internal class MockWebApiTestServer
+    internal class MockWebApiTestServer : IDisposable
     {
 
         private readonly TestServer _testServer;
@@ -17,6 +19,14 @@ namespace MockWebApi.Tests.TestUtils
         {
             _serviceConfigurationProxy = new ServiceConfigurationProxy(serviceConfiguration);
             _testServer = CreateTestServer(_serviceConfigurationProxy);
+        }
+
+        public void Dispose()
+        {
+            if (_testServer != null)
+            {
+                _testServer.Dispose();
+            }
         }
 
         internal HttpClient CreateHttpClient()

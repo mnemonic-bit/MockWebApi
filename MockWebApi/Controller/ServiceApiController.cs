@@ -29,7 +29,7 @@ using YamlDotNet.Serialization;
 namespace MockWebApi.Controller
 {
     [ApiController]
-    [Route("rest-api")]
+    [Route("api")]
     public class ServiceApiController : ControllerBase
     {
 
@@ -127,35 +127,36 @@ namespace MockWebApi.Controller
         {
             string body = await HttpContext.Request.GetBody(Encoding.UTF8);
 
-            MockedServiceConfiguration config = body.DeserializeYaml<MockedServiceConfiguration>();
+            IServiceConfiguration config = DeserializeServiceConfiguration(body, serviceName);
 
-            string serviceUrl = config.BaseUrl ?? "http://0.0.0.0:5000";
+            string serviceUrl = config.Url ?? "http://0.0.0.0:5000";
 
             if (!_hostService.TryGetService(serviceName, out IService service))
             {
-                service = StartMockApiService(service.ServiceConfiguration);
+                service = StartMockApiService(config);
+                return Ok($"A new mock web API '{service.ServiceConfiguration.ServiceName}' has been started successfully, listening on '{service.ServiceConfiguration.Url}'.");
             }
 
-            IServiceConfiguration serviceConfiguration = service.ServiceConfiguration;
+            IServiceConfiguration oldServiceConfiguration = service.ServiceConfiguration;
 
             // First set all null fields of the uploaded config to the values
             // which are currently used on this server if they were not provided.
             // This helps in not overwriting existing configuartion values with
             // null-values.
-            config.JwtServiceOptions ??= serviceConfiguration.JwtServiceOptions;
-            config.DefaultEndpointDescription ??= serviceConfiguration.DefaultEndpointDescription;
+            config.JwtServiceOptions ??= oldServiceConfiguration.JwtServiceOptions;
+            config.DefaultEndpointDescription ??= oldServiceConfiguration.DefaultEndpointDescription;
 
             // Then overwrite all config values of the server with what
             // the merge of both configs now is.
-            serviceConfiguration.DefaultEndpointDescription = config.DefaultEndpointDescription;
-            serviceConfiguration.JwtServiceOptions = config.JwtServiceOptions;
+            oldServiceConfiguration.DefaultEndpointDescription = config.DefaultEndpointDescription;
+            oldServiceConfiguration.JwtServiceOptions = config.JwtServiceOptions;
 
-            foreach (EndpointDescription endpointDescription in (config.EndpointDescriptions ?? new EndpointDescription[] { }))
+            foreach (EndpointDescription endpointDescription in (config.RouteMatcher.GetAllRoutes().ToArray() ?? new EndpointDescription[] { }))
             {
-                serviceConfiguration.RouteMatcher.AddRoute(endpointDescription.Route, endpointDescription);
+                oldServiceConfiguration.RouteMatcher.AddRoute(endpointDescription.Route, endpointDescription);
             }
 
-            return Ok();
+            return Ok($"The mock web API '{service.ServiceConfiguration.ServiceName}' listening on '{service.ServiceConfiguration.Url}' has been reconfigured.");
         }
 
         [HttpDelete("{serviceName}/configure")]
@@ -382,7 +383,7 @@ namespace MockWebApi.Controller
 
             IServiceConfiguration serviceConfiguration = new ServiceConfiguration();
             ServiceConfigurationReader serviceConfigurationReader = new ServiceConfigurationReader(serviceConfiguration);
-            serviceConfigurationReader.ConfigureService(mockedServiceConfiguration, false);
+            serviceConfigurationReader.ConfigureService(mockedServiceConfiguration, true);
 
             return serviceConfiguration;
         }
