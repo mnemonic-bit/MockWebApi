@@ -42,14 +42,17 @@ namespace MockWebApi.Client
         /// </summary>
         /// <param name="serviceName"></param>
         /// <returns></returns>
-        public async Task<bool> StartNewMockWebApi(string serviceName)
+        public async Task<bool> StartNewMockWebApi(string serviceName, MockedServiceConfiguration config)
         {
             if (string.IsNullOrEmpty(serviceName))
             {
                 return false;
             }
 
-            Response<string> response = await _webApi.StartNewMockApi(serviceName, null);
+            IConfigurationFileWriter configrationWriter = new ConfigurationFileWriter();
+            string serviceConfiguration = config == null ? "" : configrationWriter.WriteToYaml(config);
+
+            Response<string> response = await _webApi.StartNewMockApi(serviceName, null, serviceConfiguration);
 
             if (!response.ResponseMessage.IsSuccessStatusCode)
             {

@@ -4,12 +4,12 @@ using System.Threading.Tasks;
 
 namespace MockWebApi.Client.RestEase
 {
-    [BasePath("rest-api")]
+    [BasePath("api")]
     public interface IMockWebApiClient
     {
 
         [Post("{serviceName}/start")]
-        Task<Response<string>> StartNewMockApi([Path] string serviceName, [Query] string serviceUrl);
+        Task<Response<string>> StartNewMockApi([Path] string serviceName, [Query] string serviceUrl, [Body] string configuration = null);
 
         [Post("{serviceName}/stop")]
         Task<Response<string>> StopMockApi([Path] string serviceName);

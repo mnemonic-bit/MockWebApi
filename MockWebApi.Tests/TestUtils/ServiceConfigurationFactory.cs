@@ -7,9 +7,9 @@ namespace MockWebApi.Tests.TestUtils
     internal static class ServiceConfigurationFactory
     {
 
-        public static IServiceConfiguration CreateBaseConfiguration()
+        public static void AddEndpointDescription(this IServiceConfiguration serviceConfiguration, EndpointDescription endpointDescription)
         {
-            return CreateBaseConfiguration("TEST-SERVICE");
+            serviceConfiguration.RouteMatcher.AddRoute(endpointDescription.Route, endpointDescription);
         }
 
         public static IServiceConfiguration CreateBaseConfiguration(string serviceName)
@@ -30,9 +30,28 @@ namespace MockWebApi.Tests.TestUtils
             return serviceConfiguration;
         }
 
-        public static void AddEndpointDescription(this IServiceConfiguration serviceConfiguration, EndpointDescription endpointDescription)
+        public static MockedServiceConfiguration CreateMockedServiceConfiguration()
         {
-            serviceConfiguration.RouteMatcher.AddRoute(endpointDescription.Route, endpointDescription);
+            MockedServiceConfiguration config = new MockedServiceConfiguration();
+
+            config.ServiceName = "TEST-SERVICE";
+            config.BaseUrl = "http://0.0.0.0:5000";
+
+            DefaultEndpointDescription defaultEndpointDescription = new DefaultEndpointDescription()
+            {
+                CheckAuthorization = false,
+                Result = new HttpResult()
+                {
+                    Body = "",
+                    ContentType = "text/plain",
+                    StatusCode = System.Net.HttpStatusCode.OK
+                },
+                ReturnCookies = false
+            };
+
+            config.DefaultEndpointDescription = defaultEndpointDescription;
+
+            return config;
         }
 
     }
