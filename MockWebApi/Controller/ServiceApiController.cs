@@ -151,6 +151,7 @@ namespace MockWebApi.Controller
             oldServiceConfiguration.DefaultEndpointDescription = config.DefaultEndpointDescription;
             oldServiceConfiguration.JwtServiceOptions = config.JwtServiceOptions;
 
+            oldServiceConfiguration.RouteMatcher.RemoveAll();
             foreach (EndpointDescription endpointDescription in (config.RouteMatcher.GetAllRoutes().ToArray() ?? new EndpointDescription[] { }))
             {
                 oldServiceConfiguration.RouteMatcher.AddRoute(endpointDescription.Route, endpointDescription);

@@ -42,7 +42,7 @@ namespace MockWebApi.Client
         /// </summary>
         /// <param name="serviceName"></param>
         /// <returns></returns>
-        public async Task<bool> StartNewMockWebApi(string serviceName, MockedServiceConfiguration config)
+        public async Task<bool> StartNewMockWebApi(string serviceName, MockedServiceConfiguration config = null)
         {
             if (string.IsNullOrEmpty(serviceName))
             {
