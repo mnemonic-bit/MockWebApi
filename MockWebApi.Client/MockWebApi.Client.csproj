@@ -2,9 +2,15 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <Version>0.13.1</Version>
+    <Version>0.13.3</Version>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
 	<PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageId>MockWebApi.Client</PackageId>
+    <Authors>Marco Ruether</Authors>
+    <Company>mnemonic BIT GmbH</Company>
+    <Description>A client library to configure and control the MockWebApi server.</Description>
+    <IsPackable>true</IsPackable>
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MockWebApi.Configuration\MockWebApi.Configuration.csproj" />
+    <ProjectReference Include="..\MockWebApi.Configuration\MockWebApi.Configuration.csproj" IncludeAssets="all" Pack="true" />
   </ItemGroup>
 	
 </Project>

@@ -2,10 +2,22 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <Version>0.13.4</Version>
+    <Version>0.13.6</Version>
     <StartupObject>MockWebApi.Program</StartupObject>
+    <PackageId>MockWebApi</PackageId>
+    <Authors>Marco Ruether</Authors>
+    <Company>mnemonic BIT GmbH</Company>
+    <Description>A server to mock web interfaces.</Description>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include=".\README.md" Pack="true" PackagePath="." />
+  </ItemGroup>
+  
   <ItemGroup>
     <PackageReference Include="GraphQL" Version="4.6.1" />
     <PackageReference Include="GraphQL-Parser" Version="7.2.0" />
