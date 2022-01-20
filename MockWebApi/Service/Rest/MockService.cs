@@ -73,7 +73,9 @@ namespace MockWebApi.Service.Rest
             }
             catch (OperationCanceledException)
             {
-
+            }
+            catch (AggregateException)
+            {
             }
         }
 

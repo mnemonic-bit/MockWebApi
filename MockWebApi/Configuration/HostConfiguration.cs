@@ -8,7 +8,7 @@ namespace MockWebApi.Configuration
     public class HostConfiguration : IHostConfiguration
     {
 
-        private readonly IDictionary<string, IServiceConfiguration> _serviceConfigurations;
+        internal const string DEFAULT_HOST_IP_AND_PORT = "http://0.0.0.0:6000";
 
         public HostConfiguration()
         {
@@ -43,6 +43,8 @@ namespace MockWebApi.Configuration
         {
             return _serviceConfigurations.TryGetValue(serviceName, out serviceConfiguration);
         }
+
+        private readonly IDictionary<string, IServiceConfiguration> _serviceConfigurations;
 
     }
 }

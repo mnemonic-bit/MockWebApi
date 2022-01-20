@@ -13,7 +13,9 @@ namespace MockWebApi.Service.Rest
     public class MockHostBuilder
     {
 
-        public static IHostBuilder Create(string baseUrls = "http://0.0.0.0:5000", string environment = "Development")
+        public const string DEFAULT_MOCK_BASE_URL = "http://0.0.0.0:5000";
+
+        public static IHostBuilder Create(string baseUrls = DEFAULT_MOCK_BASE_URL, string environment = "Development")
         {
             string[] args = new string[] { };
 

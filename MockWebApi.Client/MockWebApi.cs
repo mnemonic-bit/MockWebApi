@@ -62,6 +62,23 @@ namespace MockWebApi.Client
             return true;
         }
 
+        public async Task<bool> StopMockWebApi(string serviceName)
+        {
+            if (string.IsNullOrEmpty(serviceName))
+            {
+                return false;
+            }
+
+            Response<string> response = await _webApi.StopMockApi(serviceName);
+
+            if (!response.ResponseMessage.IsSuccessStatusCode)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
         /// <summary>
         /// Uploads the configuration of the MockWebApi to a running instance.
         /// The server which receives this call will set up all routes and settings

@@ -1,5 +1,6 @@
 ﻿using MockWebApi.Configuration;
 using MockWebApi.Configuration.Model;
+using MockWebApi.Service.Rest;
 using System;
 
 namespace MockWebApi.Tests.TestUtils
@@ -17,7 +18,7 @@ namespace MockWebApi.Tests.TestUtils
             IServiceConfiguration serviceConfiguration = new ServiceConfiguration()
             {
                 ServiceName = serviceName,
-                Url = "http://localhost:5000",
+                Url = MockHostBuilder.DEFAULT_MOCK_BASE_URL,
                 JwtServiceOptions = new JwtServiceOptions()
                 {
                     Issuer = "INTEGRATION-TEST",
@@ -35,7 +36,7 @@ namespace MockWebApi.Tests.TestUtils
             MockedServiceConfiguration config = new MockedServiceConfiguration();
 
             config.ServiceName = "TEST-SERVICE";
-            config.BaseUrl = "http://0.0.0.0:5000";
+            config.BaseUrl = MockHostBuilder.DEFAULT_MOCK_BASE_URL;
 
             DefaultEndpointDescription defaultEndpointDescription = new DefaultEndpointDescription()
             {

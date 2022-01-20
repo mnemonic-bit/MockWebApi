@@ -1,6 +1,5 @@
-﻿using System.Collections.Generic;
-
-using MockWebApi.Configuration;
+﻿using MockWebApi.Configuration;
+using System.Collections.Generic;
 
 namespace MockWebApi.Service
 {
@@ -13,14 +12,19 @@ namespace MockWebApi.Service
     public class HostService : IHostService
     {
 
-        private readonly IHostConfiguration _hostConfiguration;
-        private readonly IDictionary<string, IService> _services;
-
         public HostService(
             IHostConfiguration hostConfiguration)
         {
             _services = new Dictionary<string, IService>();
             _hostConfiguration = hostConfiguration;
+        }
+
+        public IEnumerable<string> ServiceNames
+        {
+            get
+            {
+                return _services.Keys;
+            }
         }
 
         public void AddService(string serviceName, IService service)
@@ -35,10 +39,25 @@ namespace MockWebApi.Service
             return _services.Remove(serviceName);
         }
 
+        public bool RemoveServices()
+        {
+            bool result = true;
+
+            foreach (var serviceName in _services.Keys)
+            {
+                result &= RemoveService(serviceName);
+            }
+
+            return result;
+        }
+
         public bool TryGetService(string serviceName, out IService service)
         {
             return _services.TryGetValue(serviceName, out service);
         }
+
+        private readonly IHostConfiguration _hostConfiguration;
+        private readonly IDictionary<string, IService> _services;
 
     }
 }

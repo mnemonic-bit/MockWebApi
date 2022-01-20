@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using MockWebApi.Auth;
 using MockWebApi.Configuration;
 using MockWebApi.Configuration.Model;
@@ -30,6 +31,12 @@ namespace MockWebApi.Extension
 
         public static IServiceCollection AddMockHostServices(this IServiceCollection services)
         {
+            if (services == null)
+            {
+                return null;
+            }
+
+            services.AddSingleton<IHostedService, LifetimeEventsHostedService>();
             services.AddSingleton<IHostService, HostService>();
             services.AddSingleton<IHostConfiguration, HostConfiguration>();
             services.AddSingleton<ISwaggerProviderFactory, SwaggerProviderFactory>();

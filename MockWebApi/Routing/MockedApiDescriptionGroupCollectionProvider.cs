@@ -1,15 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc.Abstractions;
+﻿using System.Collections.Generic;
+using System.Linq;
+using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.ActionConstraints;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.Routing;
-
 using MockWebApi.Configuration;
 using MockWebApi.Configuration.Model;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace MockWebApi.Routing
 {
@@ -85,7 +82,7 @@ namespace MockWebApi.Routing
             apiDescription.GroupName = null;// serviceName;
             apiDescription.HttpMethod = "GET";// endpointDescription.HttpMethod;
             apiDescription.RelativePath = endpointDescription.Route.TrimStart('/');
-            
+
             return apiDescription;
         }
 

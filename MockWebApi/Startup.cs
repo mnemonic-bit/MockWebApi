@@ -5,6 +5,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+
+using MockWebApi.Configuration;
 using MockWebApi.Extension;
 using MockWebApi.GraphQL;
 using MockWebApi.Middleware;
@@ -45,8 +47,8 @@ namespace MockWebApi
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "MockWebApi", Version = "v1" });
-                //c.AddServer(new OpenApiServer() { Url = "http://localhost:5000" });
-                c.AddServer(new OpenApiServer() { Url = "http://localhost:6000" });
+                //c.AddServer(new OpenApiServer() { Url = MockHostBuilder.DEFAULT_MOCK_BASE_URL });
+                c.AddServer(new OpenApiServer() { Url = HostConfiguration.DEFAULT_HOST_IP_AND_PORT });
             });
         }
 
@@ -79,22 +81,6 @@ namespace MockWebApi
                 endpoints.MapGraphQL<RequestHistorySchema>("graphql");
                 endpoints.MapGraphQLPlayground("playground");
             });
-
-            WriteBanner(logger);
-        }
-
-        private void WriteBanner(ILogger<Startup> logger)
-        {
-            logger.LogInformation($"MockWebApi service version {GetVersion()} has been started.\n");
-        }
-
-        private Version GetVersion()
-        {
-            Assembly thisAssembly = Assembly.GetAssembly(typeof(Startup));
-
-            Version assemblyVersion = thisAssembly.GetName().Version;
-
-            return assemblyVersion;
         }
 
     }

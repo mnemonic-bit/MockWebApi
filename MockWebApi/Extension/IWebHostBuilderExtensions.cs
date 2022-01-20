@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Hosting;
+
+using MockWebApi.Configuration;
 using MockWebApi.Service.Rest;
-using MockWebApi.Service;
+
 using Serilog;
 
 namespace MockWebApi.Extension
@@ -21,7 +23,7 @@ namespace MockWebApi.Extension
         {
             webHostBuilder
                 .UseStartup<Startup>()
-                .UseUrls("http://0.0.0.0:6000") //TODO: configure this from outside config-sources
+                .UseUrls(HostConfiguration.DEFAULT_HOST_IP_AND_PORT) //TODO: configure this from outside config-sources
                 .UseSerilog();
 
             return webHostBuilder;

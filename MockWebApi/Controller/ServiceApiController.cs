@@ -2,14 +2,11 @@
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
 using GraphQL;
 using GraphQL.NewtonsoftJson;
 using GraphQL.Types;
-
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-
 using MockWebApi.Auth;
 using MockWebApi.Configuration;
 using MockWebApi.Configuration.Extensions;
@@ -21,9 +18,7 @@ using MockWebApi.Routing;
 using MockWebApi.Service;
 using MockWebApi.Service.Rest;
 using MockWebApi.Swagger;
-
 using Swashbuckle.AspNetCore.Swagger;
-
 using YamlDotNet.Serialization;
 
 namespace MockWebApi.Controller
@@ -64,7 +59,7 @@ namespace MockWebApi.Controller
             IServiceConfiguration serviceConfiguration = DeserializeServiceConfiguration(body, serviceName);
 
             //TODO: check if there is already a binding for the base-URL of this new service.
-            
+
             if (_hostService.TryGetService(serviceName, out IService _))
             {
                 return BadRequest($"The service '{serviceName}' already exists.");
@@ -129,7 +124,7 @@ namespace MockWebApi.Controller
 
             IServiceConfiguration config = DeserializeServiceConfiguration(body, serviceName);
 
-            string serviceUrl = config.Url ?? "http://0.0.0.0:5000";
+            string serviceUrl = config.Url ?? MockHostBuilder.DEFAULT_MOCK_BASE_URL;
 
             if (!_hostService.TryGetService(serviceName, out IService service))
             {
@@ -380,7 +375,7 @@ namespace MockWebApi.Controller
         {
             MockedServiceConfiguration mockedServiceConfiguration = config.DeserializeYaml<MockedServiceConfiguration>() ?? new MockedServiceConfiguration();
             mockedServiceConfiguration.ServiceName = serviceName;
-            mockedServiceConfiguration.BaseUrl ??= "http://0.0.0.0:5000";
+            mockedServiceConfiguration.BaseUrl ??= MockHostBuilder.DEFAULT_MOCK_BASE_URL;
 
             IServiceConfiguration serviceConfiguration = new ServiceConfiguration();
             ServiceConfigurationReader serviceConfigurationReader = new ServiceConfigurationReader(serviceConfiguration);
