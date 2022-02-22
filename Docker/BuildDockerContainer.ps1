@@ -7,10 +7,12 @@ $ProjectFileName = ".\$ProjectName\$ProjectName.csproj"
 
 function GetProjectVersion($ProjectFileName)
 {
+    Write-Host "file name '$($ProjectFileName)'"
+
     $ProjectFileXml = ""
     $ProjectFileXml = [Xml] (Get-Content "$ProjectFileName")
     $PackageVersion = ""
-    $PackageVersion = ($ProjectFileXml.Project.PropertyGroup.Version).trim()
+    $PackageVersion = ($ProjectFileXml.Project.PropertyGroup[0].Version).trim()
 
     $PackageVersion
 }
