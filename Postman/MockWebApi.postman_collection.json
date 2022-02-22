@@ -1,0 +1,494 @@
+{
+	"info": {
+		"_postman_id": "c6f57199-6d66-41b4-8f14-0c9f446f22f0",
+		"name": "MockWebApi",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Mock Web API",
+			"item": [
+				{
+					"name": "Start",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "ServiceName: test-api\r\nBaseUrl: http://0.0.0.0:4000\r\nDefaultEndpointDescription:\r\n  CheckAuthorization: false\r\n  AllowedUsers: []\r\n  Result:\r\n    StatusCode: 200\r\n    Body:\r\n    ContentType: text/plain\r\n  ReturnCookies: false"
+						},
+						"url": {
+							"raw": "http://localhost:6000/api/demo-service/start",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "6000",
+							"path": [
+								"api",
+								"demo-service",
+								"start"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Stop",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:6000/api/demo-service/stop",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "6000",
+							"path": [
+								"api",
+								"demo-service",
+								"stop"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Configure Service",
+			"item": [
+				{
+					"name": "Get Service Config",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:6000/api/demo-service/configure",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "6000",
+							"path": [
+								"api",
+								"demo-service",
+								"configure"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Set Service Config",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "ServiceName: demo-service\r\nBaseUrl: http://0.0.0.0:4000\r\nDefaultEndpointDescription:\r\n  CheckAuthorization: false\r\n  AllowedUsers: []\r\n  Result:\r\n    Headers: \r\n    StatusCode: OK\r\n    IsMockedResult: false\r\n    Body: \r\n    ContentType: \r\n    Cookies: \r\n  ReturnCookies: true\r\nJwtServiceOptions:\r\n  Issuer: ISSUER\r\n  Audience: AUDIENCE\r\n  Expiration: 01:00:00\r\n  SigningKey: This is the default key set by the mock web api on startup and whenever you reset the service to default settings\r\nEndpointDescriptions:\r\n- Route: /defined/route\r\n  HttpMethod: \r\n  Parameters: \r\n  RequestBodyType: text/plain\r\n  LifecyclePolicy: Repeat\r\n  PersistRequestInformation: false\r\n  LogRequestInformation: true\r\n  CheckAuthorization: false\r\n  AllowedUsers:\r\n  - juser\r\n  - albert\r\n  Result:\r\n    Headers: \r\n    StatusCode: Created\r\n    IsMockedResult: false\r\n    Body: >-\r\n      {\r\n          \"id\": \"12309832\",\r\n          \"fieldName\": \"this can be anything\"\r\n      }\r\n    ContentType: text/JSON\r\n    Cookies: \r\n  ReturnCookies: true\r\n- Route: /one-time/route\r\n  HttpMethod: \r\n  Parameters: \r\n  RequestBodyType: text/plain\r\n  LifecyclePolicy: ApplyOnce\r\n  PersistRequestInformation: false\r\n  LogRequestInformation: true\r\n  CheckAuthorization: false\r\n  AllowedUsers:\r\n  - juser\r\n  - albert\r\n  Result:\r\n    Headers: \r\n    StatusCode: Accepted\r\n    IsMockedResult: false\r\n    Body: >-\r\n      {\r\n          \"just\": \"once\"\r\n      }\r\n    ContentType: text/JSON\r\n    Cookies: \r\n  ReturnCookies: true\r\n"
+						},
+						"url": {
+							"raw": "http://localhost:6000/api/demo-service/configure",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "6000",
+							"path": [
+								"api",
+								"demo-service",
+								"configure"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Reset Service Config",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:6000/api/demo-service/configure",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "6000",
+							"path": [
+								"api",
+								"demo-service",
+								"configure"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TrackServiceApiCalls",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:6000/api/demo-service/configure?TrackServiceApiCalls=false",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "6000",
+							"path": [
+								"api",
+								"demo-service",
+								"configure"
+							],
+							"query": [
+								{
+									"key": "TrackServiceApiCalls",
+									"value": "false"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get DefaultResponse",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "http://localhost:6000/api/demo-service/configure/default",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "6000",
+							"path": [
+								"api",
+								"demo-service",
+								"configure",
+								"default"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Set DefaultResponse",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "CheckAuthorization: false\r\nAllowedUsers:\r\n- juser\r\n- albert\r\nResult:\r\n  Headers: \r\n  StatusCode: 202\r\n  IsMockedResult: false\r\n  Body: this is the default-resonse\r\n  ContentType: plain/text\r\n  Cookies: \r\nReturnCookies: true"
+						},
+						"url": {
+							"raw": "http://localhost:6000/api/demo-service/configure/default",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "6000",
+							"path": [
+								"api",
+								"demo-service",
+								"configure",
+								"default"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add Route /defined/route",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "Route: /defined/route\r\nLifecyclePolicy: Repeat\r\nRequestBodyType: text/plain\r\nCheckAuthorization: false\r\nAllowedUsers:\r\n- juser\r\n- albert\r\nResult:\r\n  Headers: \r\n  StatusCode: 201\r\n  IsMockedResult: false\r\n  Body: |-\r\n    {\r\n        \"id\": \"12309832\",\r\n        \"fieldName\": \"this can be anything\"\r\n    }\r\n  ContentType: text/JSON\r\n  Cookies: \r\nReturnCookies: true"
+						},
+						"url": {
+							"raw": "http://localhost:6000/api/demo-service/configure/route",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "6000",
+							"path": [
+								"api",
+								"demo-service",
+								"configure",
+								"route"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add Route /one-time/route",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "Route: /one-time/route\r\nLifecyclePolicy: ApplyOnce\r\nRequestBodyType: text/plain\r\nCheckAuthorization: false\r\nAllowedUsers:\r\n- juser\r\n- albert\r\nResult:\r\n  Headers: \r\n  StatusCode: 202\r\n  IsMockedResult: false\r\n  Body: |-\r\n    {\r\n        \"just\": \"once\"\r\n    }\r\n  ContentType: text/JSON\r\n  Cookies: \r\nReturnCookies: true"
+						},
+						"url": {
+							"raw": "http://localhost:6000/api/demo-service/configure/route",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "6000",
+							"path": [
+								"api",
+								"demo-service",
+								"configure",
+								"route"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Requests",
+			"item": [
+				{
+					"name": "/brand/new/path",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "sdf",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "http://localhost:4000/brand/new/path",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"brand",
+								"new",
+								"path"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/defined/route",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "sdf",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "http://localhost:4000/defined/route",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"defined",
+								"route"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/one-time/route",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "sdf",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "http://localhost:4000/one-time/route",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"one-time",
+								"route"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/some/path",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:4000/some/path",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "4000",
+							"path": [
+								"some",
+								"path"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Swagger",
+			"item": [
+				{
+					"name": "Swagger Index Html",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:6000/swagger/index.html",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "6000",
+							"path": [
+								"swagger",
+								"index.html"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Swagger Index Html Copy",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:6000/api/test-api/swagger/index.html",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "6000",
+							"path": [
+								"api",
+								"test-api",
+								"swagger",
+								"index.html"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Swagger Json",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:6000/swagger/v1/swagger.json",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "6000",
+							"path": [
+								"swagger",
+								"v1",
+								"swagger.json"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Swagger Json For Service",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:6000/api/test-api/swagger/v1/swagger.json",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "6000",
+							"path": [
+								"api",
+								"test-api",
+								"swagger",
+								"v1",
+								"swagger.json"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
