@@ -6,7 +6,6 @@ using Microsoft.Extensions.Logging;
 using MockWebApi.Auth;
 using MockWebApi.Configuration;
 using MockWebApi.Data;
-using MockWebApi.Extension;
 using MockWebApi.Middleware;
 using MockWebApi.Templating;
 
@@ -43,7 +42,7 @@ namespace MockWebApi.Service.Rest
             app.UseMiddleware<TimeMeasurementMiddleware>();
             app.UseMiddleware<StoreRequestDataMiddleware>();
             app.UseMiddleware<LoggingMiddleware>();
-            app.UseMiddleware<MockedRestMiddleware>();
+            app.UseMiddleware<MockedRestServiceMiddleware>();
         }
 
     }

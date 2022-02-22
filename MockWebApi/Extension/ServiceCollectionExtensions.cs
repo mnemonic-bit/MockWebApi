@@ -1,15 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc.ApiExplorer;
+﻿using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using MockWebApi.Auth;
 using MockWebApi.Configuration;
-using MockWebApi.Configuration.Model;
 using MockWebApi.Data;
-using MockWebApi.Routing;
 using MockWebApi.Service;
 using MockWebApi.Swagger;
-using MockWebApi.Templating;
-using System.Linq;
 
 namespace MockWebApi.Extension
 {
@@ -31,6 +26,8 @@ namespace MockWebApi.Extension
             services.AddSingleton<IHostConfiguration, HostConfiguration>();
             services.AddSingleton<ISwaggerProviderFactory, SwaggerProviderFactory>();
             services.AddSingleton<IRequestHistory>(new RequestHistory());
+
+            services.AddTransient<ISwaggerUiService, SwaggerUiService>();
 
             services.AddTransient<IConfigurationFileWriter, ConfigurationFileWriter>();
 

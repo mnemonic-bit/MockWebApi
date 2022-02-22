@@ -1,12 +1,17 @@
-﻿using System.IO;
+﻿using System;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using GraphQL;
 using GraphQL.NewtonsoftJson;
 using GraphQL.Types;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi.Writers;
 using MockWebApi.Auth;
 using MockWebApi.Configuration;
 using MockWebApi.Configuration.Extensions;
@@ -31,6 +36,7 @@ namespace MockWebApi.Controller
         private readonly ILogger<ServiceApiController> _logger;
         private readonly IHostService _hostService;
         private readonly ISwaggerProviderFactory _swaggerProviderFactory;
+        private readonly ISwaggerUiService _swaggerUiService;
         private readonly IRequestHistory _dataStore;
         private readonly IConfigurationFileWriter _configurationWriter;
 
@@ -40,12 +46,14 @@ namespace MockWebApi.Controller
             //Just for testing
             Microsoft.AspNetCore.Mvc.ApiExplorer.IApiDescriptionGroupCollectionProvider apiDescriptionGroupCollectionProvider,
             ISwaggerProviderFactory swaggerProviderFactory,
+            ISwaggerUiService swaggerUiService,
             IRequestHistory dataStore,
             IConfigurationFileWriter configurationWriter)
         {
             _logger = logger;
             _hostService = hostService;
             _swaggerProviderFactory = swaggerProviderFactory;
+            _swaggerUiService = swaggerUiService;
             _dataStore = dataStore;
             _configurationWriter = configurationWriter;
         }
@@ -67,7 +75,7 @@ namespace MockWebApi.Controller
 
             IService service = StartMockApiService(serviceConfiguration);
 
-            return Ok($"A new mock web API '{service.ServiceConfiguration.ServiceName}' has been started successfully, listening on '{service.ServiceConfiguration.Url}'.");
+            return Ok($"A new mock web API '{service.ServiceConfiguration.ServiceName}' has been started successfully at {DateTime.Now}, listening on '{service.ServiceConfiguration.Url}'.");
         }
 
         [HttpPost("{serviceName}/stop")]
@@ -90,7 +98,7 @@ namespace MockWebApi.Controller
 
             _hostService.RemoveService(serviceName);
 
-            return Ok($"The service '{service.ServiceConfiguration.ServiceName}' has been stopped successfully.");
+            return Ok($"The service '{service.ServiceConfiguration.ServiceName}' has been stopped successfully at {DateTime.Now}.");
         }
 
         [HttpGet("{serviceName}/configure")]
@@ -326,11 +334,11 @@ namespace MockWebApi.Controller
         }
 
         [HttpGet("{serviceName}/swagger/{documentVersion}/{documentName}")]
-        public IActionResult GetSwaggerDocument(string serviceName, string documentVersion, string documentName)
+        public async Task GetSwaggerDocument(string serviceName, string documentVersion, string documentName)
         {
-            if (!_hostService.TryGetService(serviceName, out IService? service) || service == null)
+            if (!_hostService.TryGetService(serviceName, out IService service))
             {
-                return BadRequest($"The service '{serviceName}' cannot be found.");
+                return;// BadRequest($"The service '{serviceName}' cannot be found.");
             }
 
             ISwaggerProvider swaggerProvider = _swaggerProviderFactory.GetSwaggerProvider(serviceName);
@@ -340,9 +348,32 @@ namespace MockWebApi.Controller
                     host: service.ServiceConfiguration.Url,
                     basePath: "");
 
-            string swaggerJson = SerializeToYaml(swagger);
+            await RespondWithSwagger(HttpContext.Request.Path.Value, HttpContext.Response, swagger);
+        }
 
-            return Ok(swaggerJson);
+        [HttpGet("/swagger/{documentVersion}/{documentName}")]
+        public async Task GetSwaggerDocument(string documentVersion, string documentName)
+        {
+            ISwaggerProvider swaggerProvider = _swaggerProviderFactory.GetSwaggerProvider();
+
+            var swagger = swaggerProvider.GetSwagger(
+                    documentName: documentVersion,
+                    host: "http://localhost:6000",
+                    basePath: "");
+
+            await RespondWithSwagger(HttpContext.Request.Path.Value, HttpContext.Response, swagger);
+        }
+
+        //_swaggerUiService
+        [HttpGet("{serviceName}/swagger/index.html")]
+        public async Task GetSwaggerDocument(string serviceName)
+        {
+            if (!_hostService.TryGetService(serviceName, out IService service))
+            {
+                return;// BadRequest($"The service '{serviceName}' cannot be found.");
+            }
+
+            await _swaggerUiService.InvokeSwaggerMiddleware(HttpContext, service.ServiceConfiguration);
         }
 
         [HttpGet("graphql")]
@@ -424,6 +455,44 @@ namespace MockWebApi.Controller
             string config = await Request.GetBody(Encoding.UTF8);
             config = config.Replace("\r\n", "\n");
             return config;
+        }
+
+        private async Task RespondWithSwagger(string requestPath, HttpResponse response, OpenApiDocument swagger)
+        {
+            if (Path.GetExtension(requestPath).ToUpper() == ".YAML")
+            {
+                await RespondWithSwaggerYaml(response, swagger);
+            }
+            else
+            {
+                await RespondWithSwaggerJson(response, swagger);
+            }
+        }
+
+        private async Task RespondWithSwaggerJson(HttpResponse response, OpenApiDocument swagger)
+        {
+            response.StatusCode = 200;
+            response.ContentType = "application/json;charset=utf-8";
+
+            using var textWriter = new StringWriter(CultureInfo.InvariantCulture);
+
+            var jsonWriter = new OpenApiJsonWriter(textWriter);
+            swagger.SerializeAsV3(jsonWriter);
+
+            await response.WriteAsync(textWriter.ToString(), new UTF8Encoding(false));
+        }
+
+        private async Task RespondWithSwaggerYaml(HttpResponse response, OpenApiDocument swagger)
+        {
+            response.StatusCode = 200;
+            response.ContentType = "text/yaml;charset=utf-8";
+
+            using var textWriter = new StringWriter(CultureInfo.InvariantCulture);
+
+            var yamlWriter = new OpenApiYamlWriter(textWriter);
+            swagger.SerializeAsV3(yamlWriter);
+
+            await response.WriteAsync(textWriter.ToString(), new UTF8Encoding(false));
         }
 
     }

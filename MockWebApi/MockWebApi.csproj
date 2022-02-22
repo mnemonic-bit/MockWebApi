@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-    <Version>0.14.1</Version>
+    <Version>0.15.0</Version>
     <StartupObject>MockWebApi.Program</StartupObject>
     <Authors>Marco Ruether</Authors>
     <Company>mnemonic BIT GmbH</Company>

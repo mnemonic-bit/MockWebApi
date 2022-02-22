@@ -1,20 +1,19 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using MockWebApi.Auth;
-using MockWebApi.Configuration;
-using MockWebApi.Configuration.Model;
-using MockWebApi.Data;
-using MockWebApi.Extension;
-using MockWebApi.Model;
-using MockWebApi.Routing;
-using MockWebApi.Templating;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using MockWebApi.Auth;
+using MockWebApi.Configuration;
+using MockWebApi.Configuration.Model;
+using MockWebApi.Extension;
+using MockWebApi.Model;
+using MockWebApi.Routing;
+using MockWebApi.Templating;
 
 namespace MockWebApi.Middleware
 {
@@ -23,7 +22,7 @@ namespace MockWebApi.Middleware
     /// a tailored repsonse for a request. This is a terminal middleware,
     /// i.e. no other RequestDelegate will be called.
     /// </summary>
-    public class MockedRestMiddleware
+    public class MockedRestServiceMiddleware
     {
 
         private readonly RequestDelegate _nextDelegate;
@@ -32,7 +31,7 @@ namespace MockWebApi.Middleware
         private readonly ITemplateExecutor _templateExecutor;
         private readonly ILogger<StoreRequestDataMiddleware> _logger;
 
-        public MockedRestMiddleware(
+        public MockedRestServiceMiddleware(
             RequestDelegate next,
             IServiceConfiguration serverConfiguration,
             IAuthorizationService authorizationService,
@@ -71,7 +70,7 @@ namespace MockWebApi.Middleware
         ////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////
 
-        
+
         private bool CheckRequest(HttpContext httpContext, [NotNullWhen(true)] RequestInformation? requestInformation, EndpointDescription endpointDescription)
         {
             if (requestInformation == null)

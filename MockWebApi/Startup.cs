@@ -55,7 +55,6 @@ namespace MockWebApi
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "MockWebApi", Version = "v1" });
-                //c.AddServer(new OpenApiServer() { Url = MockHostBuilder.DEFAULT_MOCK_BASE_URL });
                 c.AddServer(new OpenApiServer() { Url = HostConfiguration.DEFAULT_HOST_IP_AND_PORT });
             });
         }
@@ -65,7 +64,7 @@ namespace MockWebApi
         {
             app.UseMiddleware<ExceptionLoggerMiddleware>();
 
-            app.UseSwagger();
+            //app.UseSwagger();
             //app.UseSwagger(c => c.RouteTemplate = "/swagger/v1/swagger.json" );
             app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "MockWebApi v1"));
 
