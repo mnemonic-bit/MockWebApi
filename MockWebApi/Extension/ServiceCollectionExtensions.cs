@@ -18,11 +18,6 @@ namespace MockWebApi.Extension
 
         public static IServiceCollection AddDynamicRouting(this IServiceCollection services)
         {
-            if (services == null)
-            {
-                return null;
-            }
-
             //services.Replace<IApiDescriptionGroupCollectionProvider, MockedApiDescriptionGroupCollectionProvider>();
             //services.AddSingleton(typeof(IRouteMatcher<EndpointDescription>), typeof(RouteGraphMatcher<EndpointDescription>));
 
@@ -31,11 +26,6 @@ namespace MockWebApi.Extension
 
         public static IServiceCollection AddMockHostServices(this IServiceCollection services)
         {
-            if (services == null)
-            {
-                return null;
-            }
-
             services.AddSingleton<IHostedService, LifetimeEventsHostedService>();
             services.AddSingleton<IHostService, HostService>();
             services.AddSingleton<IHostConfiguration, HostConfiguration>();
@@ -55,7 +45,7 @@ namespace MockWebApi.Extension
             ServiceLifetime? serviceLifetime = null)
             where TImplementation : TService
         {
-            ServiceDescriptor serviceDescriptor = services.FirstOrDefault(d => d.ServiceType == typeof(TService));
+            ServiceDescriptor? serviceDescriptor = services.FirstOrDefault(d => d.ServiceType == typeof(TService));
 
             if (serviceDescriptor != null)
             {

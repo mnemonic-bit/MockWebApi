@@ -16,7 +16,7 @@ namespace MockWebApi.Model
 
         public void Append(string key, string value)
         {
-            throw new NotImplementedException();
+            _cookieJar[key] = value;
         }
 
         public void Append(string key, string value, CookieOptions options)
@@ -26,7 +26,7 @@ namespace MockWebApi.Model
 
         public void Delete(string key)
         {
-            throw new NotImplementedException();
+            _cookieJar.Remove(key);
         }
 
         public void Delete(string key, CookieOptions options)
@@ -34,7 +34,7 @@ namespace MockWebApi.Model
             throw new NotImplementedException();
         }
 
-        public bool TryGetValue(string key, out string value)
+        public bool TryGetValue(string key, out string? value)
         {
             return _cookieJar.TryGetValue(key, out value);
         }

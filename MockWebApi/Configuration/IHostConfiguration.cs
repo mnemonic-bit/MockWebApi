@@ -23,7 +23,7 @@ namespace MockWebApi.Configuration
 
         bool RemoveConfiguration(string serviceName);
 
-        bool TryGetConfiguration(string serviceName, out IServiceConfiguration serviceConfiguration);
+        bool TryGetConfiguration(string serviceName, out IServiceConfiguration? serviceConfiguration);
 
     }
 }

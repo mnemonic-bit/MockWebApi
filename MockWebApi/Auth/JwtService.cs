@@ -91,19 +91,19 @@ namespace MockWebApi.Auth
                 ClockSkew = TimeSpan.Zero
             };
 
-            if (!TryValidateToken(token, validationParameters, out ClaimsPrincipal claimsPrincipal, out SecurityToken securityToken))
+            if (!TryValidateToken(token, validationParameters, out ClaimsPrincipal? claimsPrincipal, out SecurityToken? securityToken))
             {
                 return false;
             }
 
-            return allowedUsers.Where(user => user.Name.Equals(claimsPrincipal.Identity.Name)).Any();
+            return allowedUsers.Where(user => user.Name.Equals(claimsPrincipal?.Identity?.Name)).Any();
 
             // Examples of how to use the ClaimsPrincipal:
             //bool hasEmailClaim = claimsPrincipal.HasClaim(c => c.Type == ClaimTypes.Email);
             //var emailClaim = claimsPrincipal.Claims.Where(c => c.Type == ClaimTypes.Email).First().Value;
         }
 
-        private bool TryValidateToken(string token, TokenValidationParameters validationParameters, out ClaimsPrincipal claimsPrincipal, out SecurityToken validatedToken)
+        private bool TryValidateToken(string token, TokenValidationParameters validationParameters, out ClaimsPrincipal? claimsPrincipal, out SecurityToken? validatedToken)
         {
             claimsPrincipal = default;
             validatedToken = default;

@@ -27,7 +27,7 @@ namespace MockWebApi.Routing
             return _routes.ContainsKey(routeTemplate);
         }
 
-        public bool TryFindRoute(string path, out TInfo info)
+        public bool TryFindRoute(string path, out TInfo? info)
         {
             return _routes.TryGetValue(path, out info);
         }
@@ -47,11 +47,11 @@ namespace MockWebApi.Routing
             _routes.Clear();
         }
 
-        public bool TryMatch(string path, out RouteMatch<TInfo> routeMatch)
+        public bool TryMatch(string path, out RouteMatch<TInfo>? routeMatch)
         {
             routeMatch = default;
 
-            if (!TryFindRoute(path, out TInfo info))
+            if (!TryFindRoute(path, out TInfo? info) || info == null)
             {
                 return false;
             }

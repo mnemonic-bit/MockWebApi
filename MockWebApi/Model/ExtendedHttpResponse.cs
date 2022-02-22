@@ -7,9 +7,9 @@ namespace MockWebApi.Model
 {
     internal class ExtendedHttpResponse : HttpResponse
     {
-        public override Stream Body { get; set; }
-        public override long? ContentLength { get; set; }
-        public override string ContentType { get; set; }
+        public override Stream Body { get; set; } = Stream.Null;
+        public override long? ContentLength { get; set; } = 0;
+        public override string ContentType { get; set; } = "text/plain";
 
         public override IResponseCookies Cookies => throw new NotImplementedException();
 

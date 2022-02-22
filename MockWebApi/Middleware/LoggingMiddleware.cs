@@ -5,6 +5,7 @@ using MockWebApi.Configuration.Model;
 using MockWebApi.Data;
 using MockWebApi.Model;
 using MockWebApi.Routing;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 
 namespace MockWebApi.Middleware
@@ -47,15 +48,15 @@ namespace MockWebApi.Middleware
         {
             bool logServiceApiCalls = _serverConfig.ConfigurationCollection.Get<bool>(ConfigurationCollection.Parameters.LogServiceApiCalls);
             bool startsWithServiceApi = request.Path.StartsWithSegments("/service-api");
-            bool customRouteExists = _serverConfig.RouteMatcher.TryMatch(request.Path, out RouteMatch<EndpointDescription> routeMatch);
-            bool routeLogRule = customRouteExists && routeMatch.RouteInformation.LogRequestInformation || !customRouteExists;
+            bool customRouteExists = _serverConfig.RouteMatcher.TryMatch(request.Path, out RouteMatch<EndpointDescription>? routeMatch) && routeMatch != null;
+            bool routeLogRule = customRouteExists && routeMatch!.RouteInformation.LogRequestInformation || !customRouteExists;
 
             return startsWithServiceApi && logServiceApiCalls || !startsWithServiceApi && routeLogRule;
         }
 
         private void LogRequestInformatoin(HttpContext context)
         {
-            context.Items.TryGetValue(MiddlewareConstants.MockWebApiHttpRequestInfomation, out object sharedInformation);
+            context.Items.TryGetValue(MiddlewareConstants.MockWebApiHttpRequestInfomation, out object? sharedInformation);
 
             if (sharedInformation is RequestInformation requestInfos)
             {
@@ -65,7 +66,7 @@ namespace MockWebApi.Middleware
 
         private void LogResponseInformatoin(HttpContext context)
         {
-            context.Items.TryGetValue(MiddlewareConstants.MockWebApiHttpResponse, out object sharedResponse);
+            context.Items.TryGetValue(MiddlewareConstants.MockWebApiHttpResponse, out object? sharedResponse);
 
             if (sharedResponse is HttpResult response)
             {

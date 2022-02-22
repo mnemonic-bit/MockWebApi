@@ -17,7 +17,7 @@ namespace MockWebApi.Model
         {
             _connection = context.Connection;
             _features = context.Features;
-            Items = new Dictionary<object, object>(context.Items);
+            Items = new Dictionary<object, object?>(context.Items);
             _request = context.Request;
             RequestAborted = context.RequestAborted;
             RequestServices = context.RequestServices;
@@ -39,14 +39,14 @@ namespace MockWebApi.Model
 
         private IFeatureCollection _features;
 
-        public override IFeatureCollection Features { get; }
+        public override IFeatureCollection Features { get { return _features; } }
 
         public void SetFeatures(IFeatureCollection features)
         {
             _features = features;
         }
 
-        public override IDictionary<object, object> Items { get; set; }
+        public override IDictionary<object, object?> Items { get; set; }
 
         private HttpRequest _request;
         public override HttpRequest Request => _request;

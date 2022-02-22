@@ -14,10 +14,19 @@ namespace MockWebApi.Data
             _config = new Dictionary<string, string>();
         }
 
-        public string this[string index]
+        public string? this[string index]
         {
-            get => _config[index];
-            set => _config[index] = value;
+            get
+            {
+                return _config[index];
+            }
+            set
+            {
+                if (value != null)
+                {
+                    _config[index] = value;
+                }
+            }
         }
 
         public bool Contains(string key)
@@ -25,7 +34,7 @@ namespace MockWebApi.Data
             return _config.ContainsKey(key);
         }
 
-        public T Get<T>(string key)
+        public T? Get<T>(string key)
         {
             if (!Contains(key))
             {
@@ -48,7 +57,7 @@ namespace MockWebApi.Data
                 return;
             }
 
-            _config[key] = value.ToString();
+            this[key] = value.ToString();
         }
 
         public override string ToString()

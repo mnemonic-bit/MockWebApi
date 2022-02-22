@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using MockWebApi.Configuration;
 using MockWebApi.Configuration.Model;
 using MockWebApi.Middleware;
+using System;
 using System.IO;
 
 namespace MockWebApi.Extension
@@ -12,11 +13,6 @@ namespace MockWebApi.Extension
 
         public static IApplicationBuilder UseDynamicRouting(this IApplicationBuilder app)
         {
-            if (app == null)
-            {
-                return null;
-            }
-
             app.UseMiddleware<DynamicRoutingMiddleware>();
 
             return app;
@@ -24,9 +20,14 @@ namespace MockWebApi.Extension
 
         public static IApplicationBuilder LoadServiceConfiguration(this IApplicationBuilder app, string configFileName, bool required = true)
         {
-            IHostConfigurationReader hostConfigurationReader = app.ApplicationServices.GetService<IHostConfigurationReader>();
+            IHostConfigurationReader? hostConfigurationReader = app.ApplicationServices.GetService<IHostConfigurationReader>();
 
-            if (!TryReadingFile(configFileName, out string configFileContents))
+            if (hostConfigurationReader == null)
+            {
+                throw new Exception(); //TODO: 
+            }
+
+            if (!TryReadingFile(configFileName, out string? configFileContents) || configFileContents == null)
             {
                 if (!required)
                 {
@@ -35,7 +36,7 @@ namespace MockWebApi.Extension
                 return required ? throw new FileNotFoundException($"Configuration file not found ('{configFileName}').") : app;
             }
 
-            IHostConfigurationFileReader configurationReader = app.ApplicationServices.GetService<IHostConfigurationFileReader>();
+            IHostConfigurationFileReader configurationReader = app.ApplicationServices.GetService<IHostConfigurationFileReader>()!;
 
             MockedHostConfiguration hostConfiguration = configurationReader.ReadFromYaml(configFileContents);
 
@@ -44,7 +45,7 @@ namespace MockWebApi.Extension
             return app;
         }
 
-        private static bool TryReadingFile(string fileName, out string contents)
+        private static bool TryReadingFile(string fileName, out string? contents)
         {
             contents = null;
 

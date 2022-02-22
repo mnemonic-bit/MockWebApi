@@ -1,11 +1,12 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MockWebApi.Extension
 {
     public static class CollectionExtensions
     {
 
-        public static ICollection<TElem> AddAll<TElem>(this ICollection<TElem> collection, IEnumerable<TElem> enumerable)
+        public static ICollection<TElem>? AddAll<TElem>(this ICollection<TElem>? collection, IEnumerable<TElem> enumerable)
         {
             if (collection == null)
             {
@@ -25,7 +26,7 @@ namespace MockWebApi.Extension
             return collection;
         }
 
-        public static bool IsNullOrEmpty<TElem>(this ICollection<TElem> collection)
+        public static bool IsNullOrEmpty<TElem>([NotNullWhen(false)] this ICollection<TElem>? collection)
         {
             return collection == null || collection.Count == 0;
         }

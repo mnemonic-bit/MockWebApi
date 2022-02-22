@@ -3,6 +3,7 @@ using MockWebApi.Data;
 using MockWebApi.Extension;
 using MockWebApi.Routing;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 
 namespace MockWebApi.Configuration
@@ -15,9 +16,9 @@ namespace MockWebApi.Configuration
     public class ServiceConfiguration : IServiceConfiguration
     {
 
-        public string ServiceName { get; set; }
+        public string ServiceName { get; private set; }
 
-        public string Url { get; set; }
+        public string Url { get; private set; }
 
         public DefaultEndpointDescription DefaultEndpointDescription { get; set; }
 
@@ -29,8 +30,10 @@ namespace MockWebApi.Configuration
 
         public IRouteMatcher<EndpointDescription> RouteMatcher { get; private set; }
 
-        public ServiceConfiguration()
+        public ServiceConfiguration(string serviceName, string url)
         {
+            ServiceName = serviceName;
+            Url = url;
             ResetToDefault();
         }
 
@@ -50,6 +53,11 @@ namespace MockWebApi.Configuration
             return true;
         }
 
+        [MemberNotNull(nameof(ConfigurationCollection))]
+        [MemberNotNull(nameof(RouteMatcher))]
+        [MemberNotNull(nameof(DefaultEndpointDescription))]
+        [MemberNotNull(nameof(ErrorResponseEndpointDescription))]
+        [MemberNotNull(nameof(JwtServiceOptions))]
         public void ResetToDefault()
         {
             ConfigurationCollection = new ConfigurationCollection();
@@ -68,7 +76,8 @@ namespace MockWebApi.Configuration
                 ReturnCookies = true,
                 Result = new HttpResult()
                 {
-                    StatusCode = HttpStatusCode.OK
+                    StatusCode = HttpStatusCode.OK,
+                    ContentType = "text/plain"
                 }
             };
 

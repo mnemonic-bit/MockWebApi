@@ -15,10 +15,8 @@ namespace MockWebApi.Tests.TestUtils
 
         public static IServiceConfiguration CreateBaseConfiguration(string serviceName)
         {
-            IServiceConfiguration serviceConfiguration = new ServiceConfiguration()
+            IServiceConfiguration serviceConfiguration = new ServiceConfiguration(serviceName, MockHostBuilder.DEFAULT_MOCK_BASE_URL)
             {
-                ServiceName = serviceName,
-                Url = MockHostBuilder.DEFAULT_MOCK_BASE_URL,
                 JwtServiceOptions = new JwtServiceOptions()
                 {
                     Issuer = "INTEGRATION-TEST",

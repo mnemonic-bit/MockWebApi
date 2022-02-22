@@ -52,7 +52,7 @@ namespace MockWebApi.Middleware
                     return;
                 }
 
-                HttpResult httpResult = GetHttpResultFromContext(context);
+                HttpResult? httpResult = GetHttpResultFromContext(context) ?? new HttpResult(); //TODO: change this, because an empty result does not hint at "found no response"
 
                 StoreRequestAndResponse(requestInfos, httpResult);
             }
@@ -66,41 +66,33 @@ namespace MockWebApi.Middleware
         {
             bool trackServiceApiCalls = _serverConfig.ConfigurationCollection.Get<bool>(ConfigurationCollection.Parameters.TrackServiceApiCalls);
             bool startsWithServiceApi = request.Path.StartsWithSegments("/rest-api");
-            bool routeOptOut = _serverConfig.RouteMatcher.TryMatch(request.PathWithParameters(), out RouteMatch<EndpointDescription> routeMatch) && !routeMatch.RouteInformation.PersistRequestInformation;
+            bool routeOptOut = _serverConfig.RouteMatcher.TryMatch(request.PathWithParameters(), out RouteMatch<EndpointDescription>? routeMatch) && (!routeMatch?.RouteInformation.PersistRequestInformation ?? false);
 
             return startsWithServiceApi && !trackServiceApiCalls || routeOptOut;
         }
 
-        private HttpResult GetHttpResultFromContext(HttpContext context)
+        private HttpResult? GetHttpResultFromContext(HttpContext context)
         {
-            if (!context.Items.TryGetValue(MiddlewareConstants.MockWebApiHttpResponse, out object response))
+            if (!context.Items.TryGetValue(MiddlewareConstants.MockWebApiHttpResponse, out object? response) || response == null)
             {
                 return null;
             }
 
-            HttpResult httpResult = response as HttpResult;
+            HttpResult? httpResult = response as HttpResult;
 
             return httpResult;
         }
 
         private void StoreRequestAndResponse(RequestInformation request, HttpResult response)
         {
-            RequestHistoryItem reuqestHistoryItem = new RequestHistoryItem()
-            {
-                Request = request,
-                Response = response
-            };
+            RequestHistoryItem reuqestHistoryItem = new RequestHistoryItem(request, response);
 
             _dataStore.Store(reuqestHistoryItem);
         }
 
         private void StoreException(RequestInformation request, Exception exception)
         {
-            RequestHistoryItem reuqestHistoryItem = new RequestHistoryItem()
-            {
-                Request = request,
-                Exception = exception
-            };
+            RequestHistoryItem reuqestHistoryItem = new RequestHistoryItem(request, exception);
 
             _dataStore.Store(reuqestHistoryItem);
         }

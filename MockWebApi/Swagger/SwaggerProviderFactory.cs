@@ -25,7 +25,7 @@ namespace MockWebApi.Swagger
             _hostConfiguration = hostConfiguration;
         }
 
-        public ISwaggerProvider GetSwaggerProvider(string serviceName = null)
+        public ISwaggerProvider GetSwaggerProvider(string? serviceName = null)
         {
             IApiDescriptionGroupCollectionProvider apiDescriptionProvider;
 

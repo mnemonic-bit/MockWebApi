@@ -10,6 +10,7 @@ using MockWebApi.Routing;
 using MockWebApi.Templating;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -51,7 +52,7 @@ namespace MockWebApi.Middleware
             // can use it to stop a long-running request.
             //CancellationToken cancellationToken = HttpContext.RequestAborted;
 
-            RequestInformation requestInformation = GetRequestInformation(context);
+            RequestInformation? requestInformation = GetRequestInformation(context);
 
             string requestUri = context.Request.PathWithParameters();
             bool requestUriDidMatch = TryGetHttpResult(requestUri, out EndpointDescription endpointDescription, out IDictionary<string, string> variables);
@@ -61,7 +62,7 @@ namespace MockWebApi.Middleware
                 (endpointDescription, variables) = GetErrorResponseEndpointDescription();
             }
 
-            requestInformation.PathMatchedTemplate = requestUriDidMatch;
+            requestInformation!.PathMatchedTemplate = requestUriDidMatch;
 
             await MockResponse(context, endpointDescription, variables);
         }
@@ -70,8 +71,14 @@ namespace MockWebApi.Middleware
         ////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////
 
-        private bool CheckRequest(HttpContext httpContext, RequestInformation requestInformation, EndpointDescription endpointDescription)
+        
+        private bool CheckRequest(HttpContext httpContext, [NotNullWhen(true)] RequestInformation? requestInformation, EndpointDescription endpointDescription)
         {
+            if (requestInformation == null)
+            {
+                return false;
+            }
+
             // Check the method used for this request.
             if (endpointDescription.HttpMethod != null && !endpointDescription.HttpMethod.Equals(requestInformation.HttpVerb))
             {
@@ -111,7 +118,7 @@ namespace MockWebApi.Middleware
 
         private bool TryGetHttpResult(string uri, out EndpointDescription endpointDescription, out IDictionary<string, string> variables)
         {
-            if (_serviceConfiguration.RouteMatcher.TryMatch(uri, out RouteMatch<EndpointDescription> routeMatch))
+            if (_serviceConfiguration.RouteMatcher.TryMatch(uri, out RouteMatch<EndpointDescription>? routeMatch) && routeMatch != null)
             {
                 //TODO: clone the found routing information to make it tamper-proof
                 // and guard the config done by the user against changes made
@@ -161,15 +168,15 @@ namespace MockWebApi.Middleware
             await FillResponse(context, endpointDescription, response);
         }
 
-        private async Task FillResponse(HttpContext context, EndpointDescription endpointDescription, HttpResult response)
+        private async Task FillResponse(HttpContext context, EndpointDescription endpointDescription, HttpResult? response)
         {
             if (response == null)
             {
                 return;
             }
 
-            context.Response.StatusCode = (int?)response?.StatusCode ?? _serviceConfiguration.ConfigurationCollection.Get<int>(ConfigurationCollection.Parameters.DefaultHttpStatusCode);
-            context.Response.ContentType = response.ContentType ?? _serviceConfiguration.ConfigurationCollection.Get<string>(ConfigurationCollection.Parameters.DefaultContentType);
+            context.Response.StatusCode = (int)response.StatusCode; // ?? _serviceConfiguration.DefaultEndpointDescription.Result.StatusCode; // _serviceConfiguration.ConfigurationCollection.Get<int>(ConfigurationCollection.Parameters.DefaultHttpStatusCode);
+            context.Response.ContentType = response.ContentType ?? _serviceConfiguration.DefaultEndpointDescription.Result.ContentType; // _serviceConfiguration.ConfigurationCollection.Get<string>(ConfigurationCollection.Parameters.DefaultContentType) ?? throw new Exception($"The system is not configured corectly, expected to find a default content type.");
 
             response.Headers = context.Response.Headers.ToDictionary();
 
@@ -204,10 +211,10 @@ namespace MockWebApi.Middleware
             }
         }
 
-        private RequestInformation GetRequestInformation(HttpContext context)
+        private RequestInformation? GetRequestInformation(HttpContext context)
         {
-            context.Items.TryGetValue(MiddlewareConstants.MockWebApiHttpRequestInfomation, out object contextItem);
-            RequestInformation requestInformation = contextItem as RequestInformation;
+            context.Items.TryGetValue(MiddlewareConstants.MockWebApiHttpRequestInfomation, out object? contextItem);
+            RequestInformation? requestInformation = contextItem as RequestInformation;
             return requestInformation;
         }
 
@@ -218,7 +225,7 @@ namespace MockWebApi.Middleware
             result.Body = await ExecuteTemplate(result.Body, variables);
             result.ContentType = await ExecuteTemplate(result.ContentType, variables);
 
-            string httpStatusCodeString = await ExecuteTemplate($"{ (int)(result.StatusCode) }", variables);
+            string? httpStatusCodeString = await ExecuteTemplate($"{ (int)(result.StatusCode) }", variables);
             HttpStatusCode? newHttpStatusCode = ConvertToHttpStatusCode(httpStatusCodeString);
             if (newHttpStatusCode.HasValue)
             {
@@ -228,7 +235,7 @@ namespace MockWebApi.Middleware
             return result;
         }
 
-        private async Task<string> ExecuteTemplate(string templateText, IDictionary<string, string> variables)
+        private async Task<string?> ExecuteTemplate(string templateText, IDictionary<string, string> variables)
         {
             if (string.IsNullOrEmpty(templateText))
             {
@@ -238,8 +245,13 @@ namespace MockWebApi.Middleware
             return await _templateExecutor.Execute(templateText, variables);
         }
 
-        private HttpStatusCode? ConvertToHttpStatusCode(string value)
+        private HttpStatusCode? ConvertToHttpStatusCode(string? value)
         {
+            if (string.IsNullOrEmpty(value))
+            {
+                return null;
+            }
+
             if (!int.TryParse(value, out int numericalValue))
             {
                 return null;

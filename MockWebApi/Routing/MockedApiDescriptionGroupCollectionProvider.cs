@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.ActionConstraints;
@@ -36,6 +37,11 @@ namespace MockWebApi.Routing
 
         public void Add(ApiDescriptionGroup apiDescriptionGroup)
         {
+            if (apiDescriptionGroup.GroupName == null)
+            {
+                throw new ArgumentNullException(nameof(apiDescriptionGroup), $"Internal error");
+            }
+
             _apiDescriptionGroups.Add(apiDescriptionGroup.GroupName, apiDescriptionGroup);
         }
 
@@ -44,7 +50,7 @@ namespace MockWebApi.Routing
             _apiDescriptionGroups.Remove(groupName);
         }
 
-        public bool TryGet(string groupName, out ApiDescriptionGroup apiDescriptionGroup)
+        public bool TryGet(string groupName, out ApiDescriptionGroup? apiDescriptionGroup)
         {
             return _apiDescriptionGroups.TryGetValue(groupName, out apiDescriptionGroup);
         }
@@ -97,8 +103,8 @@ namespace MockWebApi.Routing
                 EndpointMetadata = new List<object>(),
                 FilterDescriptors = new List<FilterDescriptor>(),
                 Parameters = new List<ParameterDescriptor>(),
-                Properties = new Dictionary<object, object>(),
-                RouteValues = new Dictionary<string, string>()
+                Properties = new Dictionary<object, object?>(),
+                RouteValues = new Dictionary<string, string?>()
                 {
                     { "action", "the-action-name" },
                     { "controller", "the-controller-name" } // This will be the header for the group of API methods

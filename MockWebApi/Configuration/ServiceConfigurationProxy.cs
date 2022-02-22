@@ -9,9 +9,9 @@ namespace MockWebApi.Configuration
 
         public IServiceConfiguration BaseConfiguration { get; set; }
 
-        public string ServiceName { get => BaseConfiguration.ServiceName; set => BaseConfiguration.ServiceName = value; }
+        public string ServiceName { get => BaseConfiguration.ServiceName; }
 
-        public string Url { get => BaseConfiguration.Url; set => BaseConfiguration.Url = value; }
+        public string Url { get => BaseConfiguration.Url; }
 
         public DefaultEndpointDescription DefaultEndpointDescription { get => BaseConfiguration.DefaultEndpointDescription; set => BaseConfiguration.DefaultEndpointDescription = value; }
 
@@ -25,6 +25,7 @@ namespace MockWebApi.Configuration
 
         public ServiceConfigurationProxy(IServiceConfiguration configuration)
         {
+
             BaseConfiguration = configuration;
         }
 

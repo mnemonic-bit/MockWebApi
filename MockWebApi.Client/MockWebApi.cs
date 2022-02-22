@@ -42,7 +42,7 @@ namespace MockWebApi.Client
         /// </summary>
         /// <param name="serviceName"></param>
         /// <returns></returns>
-        public async Task<bool> StartNewMockWebApi(string serviceName, MockedServiceConfiguration config = null)
+        public async Task<bool> StartNewMockWebApi(string serviceName, MockedServiceConfiguration? config = null)
         {
             if (string.IsNullOrEmpty(serviceName))
             {
@@ -114,7 +114,7 @@ namespace MockWebApi.Client
             return ConfigureMockWebApi(serviceConfiguration);
         }
 
-        public async Task<MockedServiceConfiguration> DownloadMockWebApiConfiguration(string serviceName, string format = "YAML")
+        public async Task<MockedServiceConfiguration?> DownloadMockWebApiConfiguration(string serviceName, string format = "YAML")
         {
             Response<string> response = await _webApi.DownloadConfiguration(serviceName);
 
@@ -123,7 +123,7 @@ namespace MockWebApi.Client
                 return null;
             }
 
-            string configurationAsString = response.StringContent;
+            string? configurationAsString = response.StringContent;
             ServiceConfigurationFileReader configurationReader = new ServiceConfigurationFileReader();
             MockedServiceConfiguration configuration = configurationReader.ReadConfiguration(configurationAsString, format);
 
@@ -136,10 +136,16 @@ namespace MockWebApi.Client
 
             if (!response.ResponseMessage.IsSuccessStatusCode)
             {
-                return null;
+                return new EndpointDescription[0];
             }
 
-            string responseBody = response.StringContent;
+            string? responseBody = response.StringContent;
+
+            if (string.IsNullOrEmpty(responseBody))
+            {
+                return new EndpointDescription[0];
+            }
+
             EndpointDescription[] endpointConfigurations = DeserializeYaml<EndpointDescription[]>(responseBody);
 
             return endpointConfigurations;
@@ -186,26 +192,33 @@ namespace MockWebApi.Client
 
             if (!response.ResponseMessage.IsSuccessStatusCode)
             {
-                return null;
+                return new RequestInformation[0];
             }
 
-            string responseBody = response.StringContent;
+            string? responseBody = response.StringContent;
+
+            if (responseBody == null)
+            {
+                return new RequestInformation[0];
+            }
+
             RequestInformation[] requestInformation = DeserializeYaml<RequestInformation[]>(responseBody);
             return requestInformation;
         }
 
-        public async Task<string> GetJwtToken(string serviceName, JwtCredentialUser user)
+        public async Task<string?> GetJwtToken(string serviceName, JwtCredentialUser user)
         {
             Response<string> response = await _webApi.GetJwtToken(serviceName, user);
             if (!response.ResponseMessage.IsSuccessStatusCode)
             {
                 return null;
             }
-            string token = response.StringContent;
+            string? token = response.StringContent;
             return token;
         }
 
         private string SerializeToYaml<TObject>(TObject value)
+            where TObject : class
         {
             StringWriter stringWriter = new StringWriter();
             Serializer serializer = new Serializer();

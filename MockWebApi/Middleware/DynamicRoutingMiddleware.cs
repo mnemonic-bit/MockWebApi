@@ -35,7 +35,7 @@ namespace MockWebApi.Middleware
 
             string fullRequestPath = $"{request.Path}{request.QueryString}";
 
-            if (_serverConfig.RouteMatcher.TryMatch(fullRequestPath, out RouteMatch<EndpointDescription> routeMatch))
+            if (_serverConfig.RouteMatcher.TryMatch(fullRequestPath, out RouteMatch<EndpointDescription>? routeMatch) && routeMatch != null)
             {
                 InvokeHandler(routeMatch);
             }

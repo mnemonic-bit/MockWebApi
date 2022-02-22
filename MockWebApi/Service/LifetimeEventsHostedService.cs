@@ -46,12 +46,15 @@ namespace MockWebApi.Service
         {
             foreach(var serviceName in _hostService.ServiceNames)
             {
-                if(!_hostService.TryGetService(serviceName, out var service))
+                //TODO: work on this, because in multi-threaded environments
+                // we might get in the situation where the service cannot
+                // be found any longer, which will be valid.
+                if(!_hostService.TryGetService(serviceName, out IService? service))
                 {
                     throw new Exception(); //TODO: change this to a more concrete exception
                 }
 
-                service.StopService();
+                service?.StopService();
                 _hostService.RemoveService(serviceName);
             }
         }
@@ -67,9 +70,9 @@ namespace MockWebApi.Service
 
         private Version GetVersion()
         {
-            Assembly thisAssembly = Assembly.GetAssembly(typeof(Startup));
-            Version assemblyVersion = thisAssembly.GetName().Version;
-            return assemblyVersion;
+            Assembly? thisAssembly = Assembly.GetAssembly(typeof(Startup));
+            Version? assemblyVersion = thisAssembly?.GetName()?.Version;
+            return assemblyVersion ?? new Version();
         }
 
     }

@@ -9,28 +9,28 @@ namespace MockWebApi.Model
     public class RequestInformation
     {
 
-        public string Path { get; set; }
+        public string? Path { get; set; }
 
-        public string Uri { get; set; }
+        public string? Uri { get; set; }
 
-        public bool PathMatchedTemplate { get; set; }
+        public bool? PathMatchedTemplate { get; set; }
 
-        public string Scheme { get; set; }
+        public string? Scheme { get; set; }
 
-        public string HttpVerb { get; set; }
+        public string? HttpVerb { get; set; }
 
-        public DateTime Date { get; set; }
+        public DateTime? Date { get; set; }
 
-        public Dictionary<string, string> Parameters { get; set; }
+        public Dictionary<string, string>? Parameters { get; set; }
 
-        public Dictionary<string, string> Cookies { get; set; }
+        public Dictionary<string, string>? Cookies { get; set; }
 
-        public Dictionary<string, string> HttpHeaders { get; set; }
+        public Dictionary<string, string>? HttpHeaders { get; set; }
 
-        public string ContentType { get; set; }
+        public string? ContentType { get; set; }
 
         [YamlMember(ScalarStyle = ScalarStyle.Literal)]
-        public string Body { get; set; }
+        public string? Body { get; set; }
 
         public override string ToString()
         {

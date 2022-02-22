@@ -9,7 +9,7 @@ namespace MockWebApi.Client.RestEase
     {
 
         [Post("{serviceName}/start")]
-        Task<Response<string>> StartNewMockApi([Path] string serviceName, [Query] string serviceUrl, [Body] string configuration = null);
+        Task<Response<string>> StartNewMockApi([Path] string serviceName, [Query] string? serviceUrl, [Body] string? configuration = null);
 
         [Post("{serviceName}/stop")]
         Task<Response<string>> StopMockApi([Path] string serviceName);

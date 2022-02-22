@@ -9,8 +9,8 @@ namespace MockWebApi.Templating
     {
 
         public ScriptEvaluator(
-            string scriptInitCode = null,
-            string lineInitCode = null)
+            string? scriptInitCode = null,
+            string? lineInitCode = null)
         {
             _options = ScriptOptions.Default
                 .AddImports("System")
@@ -30,7 +30,7 @@ namespace MockWebApi.Templating
         //private readonly object _globals;
 
         private Script _script;
-        private ScriptState _scriptState;
+        private ScriptState? _scriptState;
 
         private readonly string _lineInitCode;
 
@@ -43,24 +43,24 @@ namespace MockWebApi.Templating
         {
             _scriptState = await RunLineOfCodeFromAsync(lineOfCode, _scriptState);
 
-            object result = _scriptState.ReturnValue;
+            object? result = _scriptState?.ReturnValue;
             // variables that were defined in the script can be accessed
             // throught the _scriptState.Variables[0].Name .Type and .Value
 
-            ScriptVariable scriptVariable = _scriptState.GetVariable(CONSOLE_REDIRECT_VARIABLE_NAME);
-            string consoleOutput = scriptVariable.Value.ToString();
+            ScriptVariable? scriptVariable = _scriptState?.GetVariable(CONSOLE_REDIRECT_VARIABLE_NAME);
+            string consoleOutput = scriptVariable?.Value.ToString()!;
 
             return result ?? consoleOutput;
         }
 
-        private async Task<ScriptState> RunLineOfCodeFromAsync(string lineOfCode, ScriptState scriptState)
+        private async Task<ScriptState?> RunLineOfCodeFromAsync(string lineOfCode, ScriptState? scriptState)
         {
             Script scriptStep = _script
                 .ContinueWith(_redirectConsoleOutput)
                 .ContinueWith(_lineInitCode)
                 .ContinueWith(lineOfCode);
 
-            ScriptState newScriptState = null;
+            ScriptState? newScriptState = null;
 
             try
             {
@@ -76,9 +76,9 @@ namespace MockWebApi.Templating
             return newScriptState;
         }
 
-        private async Task<ScriptState> RunAsync(Script script, ScriptState scriptState)
+        private async Task<ScriptState> RunAsync(Script script, ScriptState? scriptState)
         {
-            ScriptState newScriptState = null;
+            ScriptState? newScriptState = null;
 
             if (scriptState == null)
             {

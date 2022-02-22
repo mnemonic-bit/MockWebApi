@@ -4,18 +4,18 @@ using Microsoft.Extensions.DependencyInjection;
 using MockWebApi.Configuration;
 using MockWebApi.Extension;
 
-using System;
-using System.Net.Http;
-
-namespace MockWebApi.Tests.TestUtils
+namespace MockWebApi.Test
 {
-    internal class MockWebApiTestServer : IDisposable
+    /// <summary>
+    /// The MockWebApiTestServer is capable of mocking a single API endpoint.
+    /// </summary>
+    public class MockWebApiTestServer : IDisposable
     {
 
         private readonly TestServer _testServer;
         private readonly ServiceConfigurationProxy _serviceConfigurationProxy;
 
-        internal MockWebApiTestServer(IServiceConfiguration serviceConfiguration)
+        public MockWebApiTestServer(IServiceConfiguration serviceConfiguration)
         {
             _serviceConfigurationProxy = new ServiceConfigurationProxy(serviceConfiguration);
             _testServer = CreateTestServer(_serviceConfigurationProxy);
@@ -29,12 +29,12 @@ namespace MockWebApi.Tests.TestUtils
             }
         }
 
-        internal HttpClient CreateHttpClient()
+        public HttpClient CreateHttpClient()
         {
             return _testServer.CreateClient();
         }
 
-        internal HttpMessageHandler CreateHttpMessageHandler()
+        public HttpMessageHandler CreateHttpMessageHandler()
         {
             return _testServer.CreateHandler();
         }

@@ -28,5 +28,13 @@ namespace MockWebApi.Extension
             return new Dictionary<string, string>(enumerable.Select(q => new KeyValuePair<string, string>(q.Key, q.Value.ToString())));
         }
 
+        public static IEnumerable<TElem> NotNull<TElem>(this IEnumerable<TElem?> enumerable)
+            where TElem : class
+        {
+            return enumerable
+                .Where(element => element != null)
+                .Select(element => element!);
+        }
+
     }
 }

@@ -5,7 +5,7 @@ namespace MockWebApi.Extension
     public static class StringExtensions
     {
 
-        public static T ParseInto<T>(this string value)
+        public static T? ParseInto<T>(this string value)
         {
             if (string.IsNullOrEmpty(value))
             {

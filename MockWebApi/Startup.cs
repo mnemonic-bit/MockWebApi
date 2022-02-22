@@ -5,13 +5,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
-
 using MockWebApi.Configuration;
 using MockWebApi.Extension;
 using MockWebApi.GraphQL;
 using MockWebApi.Middleware;
-using System;
-using System.Reflection;
 
 namespace MockWebApi
 {

@@ -17,7 +17,7 @@ namespace MockWebApi.Templating
             _scriptText = scriptText;
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (obj is ScriptFragment scriptFragment)
             {

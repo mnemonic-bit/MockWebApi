@@ -12,7 +12,7 @@ namespace MockWebApi.Service
 
         bool RemoveServices();
 
-        bool TryGetService(string serviceName, out IService service);
+        bool TryGetService(string serviceName, out IService? service);
 
     }
 }

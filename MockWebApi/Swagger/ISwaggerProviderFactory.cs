@@ -4,6 +4,6 @@ namespace MockWebApi.Swagger
 {
     public interface ISwaggerProviderFactory
     {
-        ISwaggerProvider GetSwaggerProvider(string serviceName = null);
+        ISwaggerProvider GetSwaggerProvider(string? serviceName = null);
     }
 }

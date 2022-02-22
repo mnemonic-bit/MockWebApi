@@ -1,7 +1,7 @@
-﻿using MockWebApi.Extension;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using MockWebApi.Extension;
 
 namespace MockWebApi.Routing
 {
@@ -26,9 +26,9 @@ namespace MockWebApi.Routing
                 RouteParser routeParser = new RouteParser();
                 Route route = routeParser.Parse(routeTemplate);
 
-                if (TryFindRoute(route, out MatchCandidate candidate))
+                if (TryFindRoute(route, out MatchCandidate? candidate) && candidate != null)
                 {
-                    RouteInfo foundRouteInfo = candidate.PartCandidate.Infos.First(routeInfo => routeInfo.Info == candidate.Info);
+                    RouteInfo foundRouteInfo = candidate.PartCandidate?.Infos.First(routeInfo => routeInfo.Info == candidate.Info)!;
                     foundRouteInfo.Info = routeInfo;
                     return;
                 }
@@ -80,14 +80,14 @@ namespace MockWebApi.Routing
             }
         }
 
-        public bool TryFindRoute(string path, out TInfo info)
+        public bool TryFindRoute(string path, out TInfo? info)
         {
             lock (_matchGraph)
             {
                 RouteParser routeParser = new RouteParser();
                 Route parsedRoute = routeParser.Parse(path);
 
-                if (!TryFindRoute(parsedRoute, out MatchCandidate candidate))
+                if (!TryFindRoute(parsedRoute, out MatchCandidate? candidate) || candidate == null)
                 {
                     info = default;
                     return false;
@@ -101,7 +101,7 @@ namespace MockWebApi.Routing
 
         #region GetAllRoutes
 
-        private IEnumerable<TInfo> EnumerateAllCandidates(RouteGraphNode graphNode)
+        private IEnumerable<TInfo> EnumerateAllCandidates(RouteGraphNode? graphNode)
         {
             if (graphNode == null)
             {
@@ -135,11 +135,11 @@ namespace MockWebApi.Routing
 
         #region TryFindRoute
 
-        private bool TryFindRoute(Route route, out MatchCandidate candidate)
+        private bool TryFindRoute(Route route, out MatchCandidate? candidate)
         {
             candidate = default;
 
-            ICollection<MatchCandidate> initialCandidates = new HashSet<MatchCandidate>
+            ICollection<MatchCandidate>? initialCandidates = new HashSet<MatchCandidate>
             {
                 new MatchCandidate()
                 {
@@ -148,7 +148,7 @@ namespace MockWebApi.Routing
             };
 
             IEnumerable<Route.Part> parts = route.Parts;
-            ICollection<MatchCandidate> candidates = parts.Aggregate(initialCandidates, TryFindRouteAggregate);
+            ICollection<MatchCandidate>? candidates = parts.Aggregate<Route.Part, ICollection<MatchCandidate>?>(initialCandidates, TryFindRouteAggregate);
 
             if (candidates.IsNullOrEmpty())
             {
@@ -170,7 +170,7 @@ namespace MockWebApi.Routing
             return true;
         }
 
-        private ICollection<MatchCandidate> TryFindRouteAggregate(ICollection<MatchCandidate> currentMatches, Route.Part part, bool isLastNode)
+        private ICollection<MatchCandidate>? TryFindRouteAggregate(ICollection<MatchCandidate>? currentMatches, Route.Part part, bool isLastNode)
         {
             if (currentMatches == null)
             {
@@ -192,7 +192,7 @@ namespace MockWebApi.Routing
             bool notFoundInAnyNode = true;
             foreach (MatchCandidate matchCandidate in currentMatches)
             {
-                if (!TryFindRoute(matchCandidate.NextNode, part, isLastNode, out ICollection<MatchCandidate> nextCandidates))
+                if (!TryFindRoute(matchCandidate.NextNode!, part, isLastNode, out ICollection<MatchCandidate>? nextCandidates) || nextCandidates == null)
                 {
                     continue;
                 }
@@ -205,7 +205,7 @@ namespace MockWebApi.Routing
             return !notFoundInAnyNode;
         }
 
-        private bool TryFindRoute(RouteGraphNode nextNode, Route.Part part, bool isLastNode, out ICollection<MatchCandidate> nextCandidates)
+        private bool TryFindRoute(RouteGraphNode nextNode, Route.Part part, bool isLastNode, out ICollection<MatchCandidate>? nextCandidates)
         {
             if (part is Route.LiteralPart literalPart)
             {
@@ -221,11 +221,11 @@ namespace MockWebApi.Routing
             }
         }
 
-        private bool TryFindLiteralPartRoute(RouteGraphNode nextNode, Route.LiteralPart literalPart, bool isLastNode, out ICollection<MatchCandidate> nextCandidates)
+        private bool TryFindLiteralPartRoute(RouteGraphNode nextNode, Route.LiteralPart literalPart, bool isLastNode, out ICollection<MatchCandidate>? nextCandidates)
         {
             nextCandidates = default;
 
-            if (!nextNode.Literals.TryGetValue(literalPart, out LiteralPartCandidates literalPartCandidates))
+            if (!nextNode.Literals.TryGetValue(literalPart, out LiteralPartCandidates? literalPartCandidates) || literalPartCandidates == null)
             {
                 return false;
             }
@@ -257,7 +257,7 @@ namespace MockWebApi.Routing
             return true;
         }
 
-        private bool TryFindVariablePartRoute(RouteGraphNode nextNode, Route.VariablePart variablePart, bool isLastNode, out ICollection<MatchCandidate> nextCandidates)
+        private bool TryFindVariablePartRoute(RouteGraphNode nextNode, Route.VariablePart variablePart, bool isLastNode, out ICollection<MatchCandidate>? nextCandidates)
         {
             nextCandidates = default;
 
@@ -301,7 +301,7 @@ namespace MockWebApi.Routing
 
         #region TryMatch
 
-        public bool TryMatch(string path, out RouteMatch<TInfo> routeMatch)
+        public bool TryMatch(string path, out RouteMatch<TInfo>? routeMatch)
         {
             lock (_matchGraph)
             {
@@ -319,12 +319,19 @@ namespace MockWebApi.Routing
 
         private void AddRouteToMatchGraph(Route route, TInfo routeInfo)
         {
-            PartCandidate firstCandidate = null;
-            RouteGraphNode graph = _matchGraph;
+            PartCandidate? firstCandidate = null;
+            RouteGraphNode? graph = _matchGraph;
 
-            (RouteGraphNode leafNode, PartCandidate partCandidate) = route.Parts.Aggregate((graph, firstCandidate), (seed, part, isLast) => { PartCandidate partCandidate = GetPartCandidateFromGraphNode(seed.graph, part); return (partCandidate.NextNode, partCandidate); });
+            (RouteGraphNode? leafNode, PartCandidate? partCandidate) = route.Parts
+                .Aggregate<Route.Part, (RouteGraphNode?, PartCandidate?)>(
+                    (graph, firstCandidate),
+                    (seed, part, isLast) =>
+                    {
+                        PartCandidate partCandidate = GetPartCandidateFromGraphNode(seed.Item1!, part);
+                        return (partCandidate.NextNode, partCandidate);
+                    });
 
-            AddRouteInfoToPartCandidate(partCandidate, routeInfo, route.Parameters);
+            AddRouteInfoToPartCandidate(partCandidate!, routeInfo, route.Parameters);
         }
 
         private void AddRouteInfoToPartCandidate(PartCandidate partCandidate, TInfo routeInfo, IDictionary<string, string> parameters)
@@ -353,7 +360,7 @@ namespace MockWebApi.Routing
 
         private LiteralPartCandidates GetLiteralPartGraphNode(RouteGraphNode graph, Route.LiteralPart literalPart)
         {
-            if (!graph.Literals.TryGetValue(literalPart, out LiteralPartCandidates candidates))
+            if (!graph.Literals.TryGetValue(literalPart, out LiteralPartCandidates? candidates) || candidates == null)
             {
                 RouteGraphNode nextGraphNode = new RouteGraphNode()
                 {
@@ -392,12 +399,12 @@ namespace MockWebApi.Routing
 
         private bool RemoveRouteFromMatchGraph(Route route)
         {
-            if (!TryFindRoute(route, out MatchCandidate candidate))
+            if (!TryFindRoute(route, out MatchCandidate? candidate) || candidate == null)
             {
                 return false;
             }
 
-            RouteGraphNode lastNode = candidate.NextNode.Parent;
+            RouteGraphNode lastNode = candidate.NextNode?.Parent!;
 
             IEnumerable<RouteGraphNode> reversedNodePath = EnumerateGraphNodes(lastNode);
             IEnumerable<Route.Part> reversedRouteParts = route.Parts.Reverse();
@@ -405,14 +412,14 @@ namespace MockWebApi.Routing
             // Remove the info item from the last node
             RemoveInfoItemFromMatchGraphNode(lastNode, reversedRouteParts.First());
 
-            List<RouteGraphNode> result = Enumerable.Zip(reversedRouteParts, reversedNodePath)
+            List<RouteGraphNode?> result = Enumerable.Zip(reversedRouteParts, reversedNodePath)
                 .Select(pair => RemoveRouteFromMatchGraph(pair.Second, pair.First, false))
                 .ToList();
 
             return true;
         }
 
-        private IEnumerable<RouteGraphNode> EnumerateGraphNodes(RouteGraphNode graphNode)
+        private IEnumerable<RouteGraphNode> EnumerateGraphNodes(RouteGraphNode? graphNode)
         {
             while (graphNode != null)
             {
@@ -422,7 +429,7 @@ namespace MockWebApi.Routing
             }
         }
 
-        private RouteGraphNode RemoveInfoItemFromMatchGraphNode(RouteGraphNode graph, Route.Part part)
+        private RouteGraphNode? RemoveInfoItemFromMatchGraphNode(RouteGraphNode graph, Route.Part part)
         {
             if (part is Route.LiteralPart literalPart)
             {
@@ -438,27 +445,26 @@ namespace MockWebApi.Routing
             }
         }
 
-        private RouteGraphNode RemoveInfoItemFromLiteralPartOfMatchGraphNode(RouteGraphNode graph, Route.LiteralPart part)
+        private RouteGraphNode? RemoveInfoItemFromLiteralPartOfMatchGraphNode(RouteGraphNode graph, Route.LiteralPart part)
         {
-            if (!graph.Literals.TryGetValue(part, out LiteralPartCandidates candidates))
+            if (!graph.Literals.TryGetValue(part, out LiteralPartCandidates? candidates) || candidates == null)
             {
                 throw new InvalidOperationException($"Internal Error: Trying to remove part of route which does not exist.");
             }
 
-            RouteInfo infoToRemove = candidates.Infos.FirstOrDefault(); //TODO: fix this, we have to identify the routing info that belongs to the path that is removed.
-            candidates.Infos.Remove(infoToRemove);
+            RouteInfo? infoToRemove = candidates.Infos.FirstOrDefault(); //TODO: fix this, we have to identify the routing info that belongs to the path that is removed.
+
+            if (infoToRemove != null)
+            {
+                candidates.Infos.Remove(infoToRemove);
+            }
 
             return candidates.NextNode;
         }
 
         private RouteGraphNode RemoveInfoItemFromVariablePartOfMatchGraphNode(RouteGraphNode graph, Route.VariablePart part)
         {
-            VariablePartCandidates candidateToRemove = graph.Variables.FirstOrDefault();// (candidate => candidate.IsLast); // TODO, add the part to this class to check and filter for it.
-
-            if (candidateToRemove == null)
-            {
-                throw new InvalidOperationException($"Internal Error: Trying to remove part of route which does not exist.");
-            }
+            VariablePartCandidates candidateToRemove = graph.Variables.FirstOrDefault() ?? throw new InvalidOperationException($"Internal Error: Trying to remove part of route which does not exist."); ;
 
             graph.Variables.Remove(candidateToRemove);
 
@@ -466,7 +472,7 @@ namespace MockWebApi.Routing
             return graph;
         }
 
-        private RouteGraphNode RemoveRouteFromMatchGraph(RouteGraphNode graph, Route.Part part, bool isLast)
+        private RouteGraphNode? RemoveRouteFromMatchGraph(RouteGraphNode graph, Route.Part part, bool isLast)
         {
             if (part is Route.LiteralPart literalPart)
             {
@@ -482,9 +488,9 @@ namespace MockWebApi.Routing
             }
         }
 
-        private RouteGraphNode RemoveLiteralPartFromMatchGraph(RouteGraphNode graph, Route.LiteralPart part, bool isLast)
+        private RouteGraphNode? RemoveLiteralPartFromMatchGraph(RouteGraphNode graph, Route.LiteralPart part, bool isLast)
         {
-            if (!graph.Literals.TryGetValue(part, out LiteralPartCandidates candidates))
+            if (!graph.Literals.TryGetValue(part, out LiteralPartCandidates? candidates) || candidates == null)
             {
                 throw new InvalidOperationException($"Internal Error: Trying to remove part of route which does not exist.");
             }
@@ -505,7 +511,7 @@ namespace MockWebApi.Routing
 
         private RouteGraphNode RemoveVariablePartFromMatchGraph(RouteGraphNode graph, Route.VariablePart part, bool isLast)
         {
-            VariablePartCandidates candidateToRemove = graph.Variables.FirstOrDefault();// (candidate => candidate.IsLast); // TODO, add the part to this class to check and filter for it.
+            VariablePartCandidates? candidateToRemove = graph.Variables.FirstOrDefault();
 
             if (candidateToRemove == null)
             {
@@ -518,7 +524,7 @@ namespace MockWebApi.Routing
             return graph;
         }
 
-        private bool TryMatchRoute(Route route, out RouteMatch<TInfo> match)
+        private bool TryMatchRoute(Route route, out RouteMatch<TInfo>? match)
         {
             match = default;
 
@@ -531,7 +537,7 @@ namespace MockWebApi.Routing
             };
 
             IEnumerable<Route.Part> parts = route.Parts;
-            ICollection<MatchCandidate> candidates = parts.Aggregate(initialCandidates, TryMatchAggregate);
+            ICollection<MatchCandidate>? candidates = parts.Aggregate<Route.Part, ICollection<MatchCandidate>?>(initialCandidates, TryMatchAggregate);
 
             if (candidates.IsNullOrEmpty())
             {
@@ -561,17 +567,17 @@ namespace MockWebApi.Routing
             return false;
         }
 
-        private bool TryGetFixedCandidate(ICollection<MatchCandidate> candidates, out RouteMatch<TInfo> match)
+        private bool TryGetFixedCandidate(ICollection<MatchCandidate> candidates, out RouteMatch<TInfo>? match)
         {
             return TryFilterCandidate(candidates, c => c.IsSpecific, out match);
         }
 
-        private bool TryGetVariableCandidate(ICollection<MatchCandidate> candidates, out RouteMatch<TInfo> match)
+        private bool TryGetVariableCandidate(ICollection<MatchCandidate> candidates, out RouteMatch<TInfo>? match)
         {
             return TryFilterCandidate(candidates, c => !c.IsSpecific, out match);
         }
 
-        private bool TryFilterCandidate(ICollection<MatchCandidate> candidates, Func<MatchCandidate, bool> predicate, out RouteMatch<TInfo> match)
+        private bool TryFilterCandidate(ICollection<MatchCandidate> candidates, Func<MatchCandidate, bool> predicate, out RouteMatch<TInfo>? match)
         {
             match = default;
 
@@ -614,7 +620,7 @@ namespace MockWebApi.Routing
         /// <param name="part"></param>
         /// <param name="isLastNode"></param>
         /// <returns></returns>
-        private ICollection<MatchCandidate> TryMatchAggregate(ICollection<MatchCandidate> currentMatches, Route.Part part, bool isLastNode)
+        private ICollection<MatchCandidate>? TryMatchAggregate(ICollection<MatchCandidate>? currentMatches, Route.Part part, bool isLastNode)
         {
             if (currentMatches == null)
             {
@@ -646,7 +652,7 @@ namespace MockWebApi.Routing
             bool notFoundInAnyNode = true;
             foreach (MatchCandidate match in currentMatches)
             {
-                if (!TryMatch(match.NextNode, part, isLastNode, out ICollection<MatchCandidate> nextCandidates))
+                if (!TryMatch(match.NextNode!, part, isLastNode, out ICollection<MatchCandidate> nextCandidates))
                 {
                     continue;
                 }
@@ -716,7 +722,7 @@ namespace MockWebApi.Routing
         {
             matchCandidates = new HashSet<MatchCandidate>();
 
-            if (graph.Literals.TryGetValue(literalPart, out LiteralPartCandidates literalPartCandidates))
+            if (graph.Literals.TryGetValue(literalPart, out LiteralPartCandidates? literalPartCandidates))
             {
                 if (isLastNode && literalPartCandidates.Infos.Count > 0)
                 {
@@ -757,7 +763,7 @@ namespace MockWebApi.Routing
                         {
                             MatchCandidate matchCandidate = new MatchCandidate();
                             matchCandidate.Info = info.Info; // TODO: refactor this?
-                            matchCandidate.Variables.Add(GetVariableName(variable.Variable), literalPart.ToString());
+                            matchCandidate.Variables.Add(GetVariableName(variable.Variable!), literalPart.ToString());
 
                             return matchCandidate;
                         })
@@ -766,7 +772,7 @@ namespace MockWebApi.Routing
                     // This is for all matches that go beyond this node
                     MatchCandidate singleMatchCandidate = new MatchCandidate();
                     singleMatchCandidate.NextNode = variable.NextNode;
-                    singleMatchCandidate.Variables.Add(GetVariableName(variable.Variable), literalPart.ToString());
+                    singleMatchCandidate.Variables.Add(GetVariableName(variable.Variable!), literalPart.ToString());
 
                     matchCandidates.Add(singleMatchCandidate);
 
@@ -801,7 +807,7 @@ namespace MockWebApi.Routing
 
                     return newMatchCandidate;
                 })
-                .Where(candidates => candidates != null)
+                .NotNull()
                 .ToList();
 
             return true;
@@ -831,11 +837,11 @@ namespace MockWebApi.Routing
         {
             matchedParameter = null;
 
-            bool variableValueIsParameter = VariableValueIsParameterName(variableValue, out string parameterName);
+            bool variableValueIsParameter = VariableValueIsParameterName(variableValue, out string? parameterName);
 
-            if (!parameters.TryGetValue(variableName, out string parameterValue))
+            if (!parameters.TryGetValue(variableName, out string? parameterValue) || parameterValue == null)
             {
-                if (variableValueIsParameter)
+                if (variableValueIsParameter && parameterName != null)
                 {
                     matchedParameter = new KeyValuePair<string, string>(parameterName, "");
                     return true;
@@ -848,11 +854,11 @@ namespace MockWebApi.Routing
                 return variableValue == parameterValue;
             }
 
-            matchedParameter = new KeyValuePair<string, string>(parameterName, parameterValue);
+            matchedParameter = new KeyValuePair<string, string>(parameterName!, parameterValue);
             return true;
         }
 
-        private bool VariableValueIsParameterName(string variableValue, out string parameterName)
+        private bool VariableValueIsParameterName(string variableValue, out string? parameterName)
         {
             if (variableValue.StartsWith("{") && variableValue.EndsWith("}"))
             {
@@ -901,7 +907,7 @@ namespace MockWebApi.Routing
             /// <summary>
             /// This is the reference to the parent node in this route graph.
             /// </summary>
-            internal RouteGraphNode Parent { get; set; }
+            internal RouteGraphNode? Parent { get; set; }
 
             /// <summary>
             /// Each part of a path which is a literal will create a vertice
@@ -942,7 +948,7 @@ namespace MockWebApi.Routing
 
             public IDictionary<string, string> Parameters { get; } = new Dictionary<string, string>(); // TODO: fix this, this might not belong to a route information item.
 
-            public override bool Equals(object obj)
+            public override bool Equals(object? obj)
             {
                 if (!(obj is RouteInfo routeInfo))
                 {
@@ -962,7 +968,7 @@ namespace MockWebApi.Routing
         private class PartCandidate
         {
 
-            public RouteGraphNode NextNode { get; set; }
+            public RouteGraphNode? NextNode { get; set; }
 
             public ICollection<RouteInfo> Infos { get; } = new HashSet<RouteInfo>();
 
@@ -971,14 +977,14 @@ namespace MockWebApi.Routing
         private class LiteralPartCandidates : PartCandidate
         {
 
-            public Route.LiteralPart LiteralPart { get; set; }
+            public Route.LiteralPart? LiteralPart { get; set; }
 
         }
 
         private class VariablePartCandidates : PartCandidate
         {
 
-            public Route.VariablePart Variable { get; set; }
+            public Route.VariablePart? Variable { get; set; }
 
         }
 
@@ -1016,11 +1022,11 @@ namespace MockWebApi.Routing
                 }
             }
 
-            public RouteGraphNode NextNode { get; set; }
+            public RouteGraphNode? NextNode { get; set; }
 
-            public PartCandidate PartCandidate { get; set; }
+            public PartCandidate? PartCandidate { get; set; }
 
-            public TInfo Info { get; set; }
+            public TInfo? Info { get; set; }
 
             public IDictionary<string, string> Parameters { get; } = new Dictionary<string, string>();
 

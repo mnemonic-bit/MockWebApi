@@ -31,7 +31,7 @@ namespace MockWebApi.Configuration
 
             foreach(var service in configuration.Services)
             {
-                IServiceConfiguration serviceConfiguration = new ServiceConfiguration();
+                IServiceConfiguration serviceConfiguration = new ServiceConfiguration(service.ServiceName, service.BaseUrl);
                 IServiceConfigurationReader serviceConfigurationReader = new ServiceConfigurationReader(serviceConfiguration);
                 serviceConfigurationReader.ConfigureService(service);
                 _hostConfiguration.AddConfiguration(service.ServiceName, serviceConfiguration);

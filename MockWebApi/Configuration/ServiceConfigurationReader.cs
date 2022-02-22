@@ -19,14 +19,14 @@ namespace MockWebApi.Configuration
         {
             if (overwriteExisting)
             {
-                _serviceConfiguration.ServiceName = configuration.ServiceName;
-                _serviceConfiguration.Url = configuration.BaseUrl;
+                //_serviceConfiguration.ServiceName = configuration.ServiceName;
+                //_serviceConfiguration.Url = configuration.BaseUrl;
                 _serviceConfiguration.DefaultEndpointDescription = configuration.DefaultEndpointDescription;
             }
             else
             {
-                _serviceConfiguration.ServiceName ??= configuration.ServiceName;
-                _serviceConfiguration.Url ??= configuration.BaseUrl;
+                //_serviceConfiguration.ServiceName ??= configuration.ServiceName;
+                //_serviceConfiguration.Url ??= configuration.BaseUrl;
                 _serviceConfiguration.DefaultEndpointDescription ??= configuration.DefaultEndpointDescription;
             }
 

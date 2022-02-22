@@ -53,7 +53,7 @@ namespace MockWebApi.Routing
                 return Literal;
             }
 
-            public override bool Equals(object obj)
+            public override bool Equals(object? obj)
             {
                 if (obj is LiteralPart literalPart)
                 {
@@ -84,7 +84,7 @@ namespace MockWebApi.Routing
                 return $"{{{VariableName}}}";
             }
 
-            public override bool Equals(object obj)
+            public override bool Equals(object? obj)
             {
                 if (obj is VariablePart variablePart)
                 {

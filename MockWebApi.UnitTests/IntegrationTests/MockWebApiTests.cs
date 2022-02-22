@@ -1,6 +1,7 @@
 using MockWebApi.Auth;
 using MockWebApi.Configuration;
 using MockWebApi.Configuration.Model;
+using MockWebApi.Test;
 using MockWebApi.Tests.TestUtils;
 using System.Net;
 using System.Net.Http;
