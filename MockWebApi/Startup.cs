@@ -1,4 +1,6 @@
+using GraphQL;
 using GraphQL.Server;
+using GraphQL.SystemReactive;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -9,6 +11,8 @@ using MockWebApi.Configuration;
 using MockWebApi.Extension;
 using MockWebApi.GraphQL;
 using MockWebApi.Middleware;
+
+using GraphQLBuilderExtensions = GraphQL.MicrosoftDI.GraphQLBuilderExtensions;
 
 namespace MockWebApi
 {
@@ -31,9 +35,16 @@ namespace MockWebApi
             // GraphQL schema types...
             services.AddSingleton<RequestHistorySchema>();
 
-            services.AddGraphQL()
-                .AddGraphTypes(ServiceLifetime.Scoped)
-                .AddSystemTextJson();
+            //services.AddGraphQL()
+            //    .AddGraphTypes(ServiceLifetime.Scoped)
+            //    .AddSystemTextJson();
+            GraphQLBuilderExtensions.AddGraphQL(services)
+                .AddSubscriptionDocumentExecuter()
+                .AddServer(true)
+                .AddSchema<RequestHistorySchema>()
+                .AddDefaultEndpointSelectorPolicy()
+                .AddSystemTextJson()
+                .AddGraphTypes(typeof(RequestHistorySchema).Assembly);
 
             // The service-controller
             //services.AddMvc();
