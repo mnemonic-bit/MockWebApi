@@ -71,7 +71,7 @@ namespace MockWebApi.Routing
 
             items = serviceConfiguration.RouteMatcher
                 .GetAllRoutes()
-                .Select(endpointDescription => CreateApiDescription(serviceName, endpointDescription))
+                .Select(endpointState => CreateApiDescription(serviceName, endpointState.EndpointDescription))
                 .ToList()
                 .AsReadOnly();
 

@@ -10,7 +10,7 @@ namespace MockWebApi.Tests.TestUtils
 
         public static void AddEndpointDescription(this IServiceConfiguration serviceConfiguration, EndpointDescription endpointDescription)
         {
-            serviceConfiguration.RouteMatcher.AddRoute(endpointDescription.Route, endpointDescription);
+            serviceConfiguration.RouteMatcher.AddRoute(endpointDescription.Route, new EndpointState(endpointDescription));
         }
 
         public static IServiceConfiguration CreateBaseConfiguration(string serviceName)

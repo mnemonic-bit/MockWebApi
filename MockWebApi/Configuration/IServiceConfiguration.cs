@@ -20,7 +20,7 @@ namespace MockWebApi.Configuration
 
         IConfigurationCollection ConfigurationCollection { get; }
 
-        IRouteMatcher<EndpointDescription> RouteMatcher { get; }
+        IRouteMatcher<IEndpointState> RouteMatcher { get; }
 
         void ResetToDefault();
 

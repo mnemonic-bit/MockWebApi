@@ -48,8 +48,8 @@ namespace MockWebApi.Middleware
         {
             bool logServiceApiCalls = _serverConfig.ConfigurationCollection.Get<bool>(ConfigurationCollection.Parameters.LogServiceApiCalls);
             bool startsWithServiceApi = request.Path.StartsWithSegments("/service-api");
-            bool customRouteExists = _serverConfig.RouteMatcher.TryMatch(request.Path, out RouteMatch<EndpointDescription>? routeMatch) && routeMatch != null;
-            bool routeLogRule = customRouteExists && routeMatch!.RouteInformation.LogRequestInformation || !customRouteExists;
+            bool customRouteExists = _serverConfig.RouteMatcher.TryMatch(request.Path, out RouteMatch<IEndpointState>? routeMatch) && routeMatch != null;
+            bool routeLogRule = customRouteExists && routeMatch!.RouteInformation.EndpointDescription.LogRequestInformation || !customRouteExists;
 
             return startsWithServiceApi && logServiceApiCalls || !startsWithServiceApi && routeLogRule;
         }

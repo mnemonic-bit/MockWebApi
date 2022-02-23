@@ -21,7 +21,7 @@ namespace MockWebApi.Configuration
 
         public IConfigurationCollection ConfigurationCollection => BaseConfiguration.ConfigurationCollection;
 
-        public IRouteMatcher<EndpointDescription> RouteMatcher => BaseConfiguration.RouteMatcher;
+        public IRouteMatcher<IEndpointState> RouteMatcher => BaseConfiguration.RouteMatcher;
 
         public ServiceConfigurationProxy(IServiceConfiguration configuration)
         {

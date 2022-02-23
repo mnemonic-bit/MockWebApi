@@ -6,7 +6,7 @@ namespace MockWebApi.Configuration.Model
     /// An EndpointDescription contains all configurable details of a mocked
     /// endpoint (URL) on the MockWebApi server.
     /// </summary>
-    public class EndpointDescription : DefaultEndpointDescription
+    public class EndpointDescription : BaseEndpointDescription
     {
 
         /// <summary>
@@ -26,6 +26,12 @@ namespace MockWebApi.Configuration.Model
         public string RequestBodyType { get; set; } // PLAIN_TEXT, YAML, JSON, XML; TODO: make this either a MIME type as string / class, or enum
 
         public LifecyclePolicy LifecyclePolicy { get; set; }
+
+        /// <summary>
+        /// Holds a list of responses each of which can be walked through
+        /// either sequentially or using matching conditions.
+        /// </summary>
+        public HttpResult[] Results { get; set; }
 
         /// <summary>
         /// Gets or sets whether request-information should be

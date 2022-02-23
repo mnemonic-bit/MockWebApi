@@ -28,7 +28,7 @@ namespace MockWebApi.Configuration
 
         public IConfigurationCollection ConfigurationCollection { get; private set; }
 
-        public IRouteMatcher<EndpointDescription> RouteMatcher { get; private set; }
+        public IRouteMatcher<IEndpointState> RouteMatcher { get; private set; }
 
         public ServiceConfiguration(string serviceName, string url)
         {
@@ -61,7 +61,7 @@ namespace MockWebApi.Configuration
         public void ResetToDefault()
         {
             ConfigurationCollection = new ConfigurationCollection();
-            RouteMatcher = new RouteGraphMatcher<EndpointDescription>(new RouteParser());
+            RouteMatcher = new RouteGraphMatcher<IEndpointState>(new RouteParser());
             DefaultEndpointDescription = CreateDefaultEndpointDescription();
             ErrorResponseEndpointDescription = CreateErrorResponseEndpointDescription();
             JwtServiceOptions = CreateJwtServiceOptions();

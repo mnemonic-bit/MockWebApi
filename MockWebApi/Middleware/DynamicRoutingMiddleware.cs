@@ -35,7 +35,7 @@ namespace MockWebApi.Middleware
 
             string fullRequestPath = $"{request.Path}{request.QueryString}";
 
-            if (_serverConfig.RouteMatcher.TryMatch(fullRequestPath, out RouteMatch<EndpointDescription>? routeMatch) && routeMatch != null)
+            if (_serverConfig.RouteMatcher.TryMatch(fullRequestPath, out RouteMatch<IEndpointState>? routeMatch) && routeMatch != null)
             {
                 InvokeHandler(routeMatch);
             }
@@ -43,7 +43,7 @@ namespace MockWebApi.Middleware
             await _nextDelegate(context);
         }
 
-        private void InvokeHandler(RouteMatch<EndpointDescription> routeMatch)
+        private void InvokeHandler(RouteMatch<IEndpointState> routeMatch)
         {
             // TODO: implement invocation of a controller method. Possibly the
             // EndpointDescription has to be changed for that, too.

@@ -30,7 +30,10 @@ namespace MockWebApi.Configuration
                 BaseUrl = _serviceConfiguration.Url,
                 DefaultEndpointDescription = _serviceConfiguration.DefaultEndpointDescription,
                 JwtServiceOptions = _serviceConfiguration.JwtServiceOptions,
-                EndpointDescriptions = _serviceConfiguration.RouteMatcher.GetAllRoutes().ToArray()
+                EndpointDescriptions = _serviceConfiguration.RouteMatcher
+                    .GetAllRoutes()
+                    .Select(s => s.EndpointDescription)
+                    .ToArray()
             };
 
             return serviceConfiguration;

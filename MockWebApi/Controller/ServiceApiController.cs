@@ -117,7 +117,10 @@ namespace MockWebApi.Controller
                 BaseUrl = serviceConfiguration.Url,
                 DefaultEndpointDescription = serviceConfiguration.DefaultEndpointDescription,
                 JwtServiceOptions = serviceConfiguration.JwtServiceOptions,
-                EndpointDescriptions = serviceConfiguration.RouteMatcher.GetAllRoutes().ToArray()
+                EndpointDescriptions = serviceConfiguration.RouteMatcher
+                    .GetAllRoutes()
+                    .Select(s => s.EndpointDescription)
+                    .ToArray()
             };
 
             string configYaml = SerializeToYaml(config);
@@ -155,9 +158,9 @@ namespace MockWebApi.Controller
             oldServiceConfiguration.JwtServiceOptions = config.JwtServiceOptions;
 
             oldServiceConfiguration.RouteMatcher.RemoveAll();
-            foreach (EndpointDescription endpointDescription in (config.RouteMatcher.GetAllRoutes().ToArray() ?? new EndpointDescription[] { }))
+            foreach (EndpointDescription endpointDescription in (config.RouteMatcher.GetAllRoutes().Select(s => s.EndpointDescription).ToArray() ?? new EndpointDescription[] { }))
             {
-                oldServiceConfiguration.RouteMatcher.AddRoute(endpointDescription.Route, endpointDescription);
+                oldServiceConfiguration.RouteMatcher.AddRoute(endpointDescription.Route, new EndpointState(endpointDescription));
             }
 
             return Ok($"The mock web API '{service.ServiceConfiguration.ServiceName}' listening on '{service.ServiceConfiguration.Url}' has been reconfigured.");
@@ -246,7 +249,7 @@ namespace MockWebApi.Controller
             }
 
             IServiceConfiguration serviceConfiguration = service.ServiceConfiguration;
-            serviceConfiguration.RouteMatcher.AddRoute(endpointDescription.Route, endpointDescription);
+            serviceConfiguration.RouteMatcher.AddRoute(endpointDescription.Route, new EndpointState(endpointDescription));
 
             return Ok($"Configured route '{endpointDescription.Route}'.");
         }
@@ -336,7 +339,7 @@ namespace MockWebApi.Controller
         [HttpGet("{serviceName}/swagger/{documentVersion}/{documentName}")]
         public async Task GetSwaggerDocument(string serviceName, string documentVersion, string documentName)
         {
-            if (!_hostService.TryGetService(serviceName, out IService service))
+            if (!_hostService.TryGetService(serviceName, out IService? service))
             {
                 return;// BadRequest($"The service '{serviceName}' cannot be found.");
             }
@@ -348,7 +351,7 @@ namespace MockWebApi.Controller
                     host: service.ServiceConfiguration.Url,
                     basePath: "");
 
-            await RespondWithSwagger(HttpContext.Request.Path.Value, HttpContext.Response, swagger);
+            await RespondWithSwagger(HttpContext.Request.Path.Value, HttpContext!.Response, swagger);
         }
 
         [HttpGet("/swagger/{documentVersion}/{documentName}")]
@@ -368,7 +371,7 @@ namespace MockWebApi.Controller
         [HttpGet("{serviceName}/swagger/index.html")]
         public async Task GetSwaggerDocument(string serviceName)
         {
-            if (!_hostService.TryGetService(serviceName, out IService service))
+            if (!_hostService.TryGetService(serviceName, out IService? service))
             {
                 return;// BadRequest($"The service '{serviceName}' cannot be found.");
             }
@@ -457,9 +460,9 @@ namespace MockWebApi.Controller
             return config;
         }
 
-        private async Task RespondWithSwagger(string requestPath, HttpResponse response, OpenApiDocument swagger)
+        private async Task RespondWithSwagger(string? requestPath, HttpResponse response, OpenApiDocument swagger)
         {
-            if (Path.GetExtension(requestPath).ToUpper() == ".YAML")
+            if (Path.GetExtension(requestPath)?.ToUpper() == ".YAML")
             {
                 await RespondWithSwaggerYaml(response, swagger);
             }

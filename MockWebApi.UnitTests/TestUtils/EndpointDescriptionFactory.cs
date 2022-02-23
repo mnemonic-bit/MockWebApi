@@ -33,11 +33,14 @@ namespace MockWebApi.Tests.TestUtils
                 Route = path,
                 LifecyclePolicy = LifecyclePolicy.ApplyOnce,
                 RequestBodyType = "text/plain",
-                Result = new HttpResult()
+                Results = new HttpResult[]
                 {
-                    ContentType = "application/yaml",
-                    StatusCode = httpStatusCode,
-                    Body = body
+                    new HttpResult()
+                    {
+                        ContentType = "application/yaml",
+                        StatusCode = httpStatusCode,
+                        Body = body
+                    }
                 }
             };
 

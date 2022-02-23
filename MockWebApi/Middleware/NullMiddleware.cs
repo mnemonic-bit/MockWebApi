@@ -10,10 +10,10 @@ namespace MockWebApi.Middleware
     public class NullMiddleware
     {
 
-        private readonly RequestDelegate _nextDelegate;
+        private readonly RequestDelegate? _nextDelegate;
 
         public NullMiddleware(
-            RequestDelegate next = null)
+            RequestDelegate? next = null)
         {
             _nextDelegate = next;
         }

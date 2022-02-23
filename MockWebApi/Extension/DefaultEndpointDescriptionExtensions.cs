@@ -7,10 +7,8 @@ namespace MockWebApi.Extension
 
         public static void CopyTo(this DefaultEndpointDescription source, DefaultEndpointDescription destination)
         {
-            destination.AllowedUsers = source.AllowedUsers;
-            destination.CheckAuthorization = source.CheckAuthorization;
+            BaseEndpointDescriptionExtensions.CopyTo(source, destination);
             destination.Result = source.Result;
-            destination.ReturnCookies = source.ReturnCookies;
         }
 
     }

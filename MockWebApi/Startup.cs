@@ -55,7 +55,8 @@ namespace MockWebApi
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "MockWebApi", Version = "v1" });
-                c.AddServer(new OpenApiServer() { Url = HostConfiguration.DEFAULT_HOST_IP_AND_PORT });
+                //c.AddServer(new OpenApiServer() { Url = HostConfiguration.DEFAULT_HOST_IP_AND_PORT });
+                c.AddServer(new OpenApiServer() { Url = "http://locahost:6000" });
             });
         }
 

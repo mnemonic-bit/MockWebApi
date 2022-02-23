@@ -1,5 +1,6 @@
 ﻿using MockWebApi.Configuration;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MockWebApi.Service
 {
@@ -51,7 +52,7 @@ namespace MockWebApi.Service
             return result;
         }
 
-        public bool TryGetService(string serviceName, out IService? service)
+        public bool TryGetService(string serviceName, [NotNullWhen(true)] out IService? service)
         {
             return _services.TryGetValue(serviceName, out service);
         }

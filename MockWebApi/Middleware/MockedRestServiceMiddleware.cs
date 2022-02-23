@@ -54,16 +54,16 @@ namespace MockWebApi.Middleware
             RequestInformation? requestInformation = GetRequestInformation(context);
 
             string requestUri = context.Request.PathWithParameters();
-            bool requestUriDidMatch = TryGetHttpResult(requestUri, out EndpointDescription endpointDescription, out IDictionary<string, string> variables);
+            bool requestUriDidMatch = TryGetHttpResult(requestUri, out IEndpointState endpointState, out IDictionary<string, string> variables);
 
-            if (!CheckRequest(context, requestInformation, endpointDescription))
+            if (!CheckRequest(context, requestInformation, endpointState))
             {
-                (endpointDescription, variables) = GetErrorResponseEndpointDescription();
+                (endpointState, variables) = GetErrorResponseEndpointDescription();
             }
 
             requestInformation!.PathMatchedTemplate = requestUriDidMatch;
 
-            await MockResponse(context, endpointDescription, variables);
+            await MockResponse(context, endpointState, variables);
         }
 
 
@@ -71,7 +71,7 @@ namespace MockWebApi.Middleware
         ////////////////////////////////////////////////////////////////
 
 
-        private bool CheckRequest(HttpContext httpContext, [NotNullWhen(true)] RequestInformation? requestInformation, EndpointDescription endpointDescription)
+        private bool CheckRequest(HttpContext httpContext, [NotNullWhen(true)] RequestInformation? requestInformation, IEndpointState endpointState)
         {
             if (requestInformation == null)
             {
@@ -79,13 +79,13 @@ namespace MockWebApi.Middleware
             }
 
             // Check the method used for this request.
-            if (endpointDescription.HttpMethod != null && !endpointDescription.HttpMethod.Equals(requestInformation.HttpVerb))
+            if (endpointState.EndpointDescription.HttpMethod != null && !endpointState.EndpointDescription.HttpMethod.Equals(requestInformation.HttpVerb))
             {
                 return false;
             }
 
             // Check the authorization of the request.
-            if (!CkeckAuthorization(httpContext, endpointDescription))
+            if (!CkeckAuthorization(httpContext, endpointState.EndpointDescription))
             {
                 return false;
             }
@@ -115,56 +115,73 @@ namespace MockWebApi.Middleware
             return true;
         }
 
-        private bool TryGetHttpResult(string uri, out EndpointDescription endpointDescription, out IDictionary<string, string> variables)
+        private bool TryGetHttpResult(string uri, out IEndpointState endpointState, out IDictionary<string, string> variables)
         {
-            if (_serviceConfiguration.RouteMatcher.TryMatch(uri, out RouteMatch<EndpointDescription>? routeMatch) && routeMatch != null)
+            if (_serviceConfiguration.RouteMatcher.TryMatch(uri, out RouteMatch<IEndpointState>? routeMatch) && routeMatch != null)
             {
                 //TODO: clone the found routing information to make it tamper-proof
                 // and guard the config done by the user against changes made
                 // by this software.
+
                 ManageRouteLifeCycle(routeMatch);
-                endpointDescription = routeMatch.RouteInformation;
-                variables = routeMatch.Variables;
+
+                if (routeMatch.RouteInformation.HasNext())
+                {
+                    endpointState = routeMatch.RouteInformation;
+                    variables = routeMatch.Variables;
+                }
+                else
+                {
+                    (endpointState, variables) = GetDefaultEndpointDescription();
+                }
 
                 return true;
             }
 
-            (endpointDescription, variables) = GetDefaultEndpointDescription();
+            (endpointState, variables) = GetDefaultEndpointDescription();
 
             return false;
         }
 
-        private (EndpointDescription, IDictionary<string, string>) GetDefaultEndpointDescription()
+        private (IEndpointState, IDictionary<string, string>) GetDefaultEndpointDescription()
         {
             EndpointDescription endpointDescription = new EndpointDescription();
             _serviceConfiguration.DefaultEndpointDescription.CopyTo(endpointDescription);
+            endpointDescription.Results = new HttpResult[] { _serviceConfiguration.DefaultEndpointDescription.Result };
+
+            IEndpointState endpointState = new EndpointState(endpointDescription);
 
             IDictionary<string, string> variables = new Dictionary<string, string>();
 
-            return (endpointDescription, variables);
+            return (endpointState, variables);
         }
 
-        private (EndpointDescription, IDictionary<string, string>) GetErrorResponseEndpointDescription()
+        private (IEndpointState, IDictionary<string, string>) GetErrorResponseEndpointDescription()
         {
             EndpointDescription endpointDescription = new EndpointDescription();
             //TODO: create a config for the error-respoonse
             _serviceConfiguration.ErrorResponseEndpointDescription.CopyTo(endpointDescription);
 
+            EndpointState endpointState = new EndpointState(endpointDescription);
+
             IDictionary<string, string> variables = new Dictionary<string, string>();
 
-            return (endpointDescription, variables);
+            return (endpointState, variables);
         }
 
-        private async Task MockResponse(HttpContext context, EndpointDescription endpointDescription, IDictionary<string, string> variables)
+        private async Task MockResponse(HttpContext context, IEndpointState endpointState, IDictionary<string, string> variables)
         {
-            HttpResult httpResult = endpointDescription.Result;
+            if (!endpointState.TryGetHttpResult(out HttpResult? httpResult))
+            {
+                return;
+            }
 
             HttpResult response = await ExecuteTemplate(httpResult, variables);
 
             response.IsMockedResult = true; // Move this line to TryGetHttpResult()
             context.Items.Add(MiddlewareConstants.MockWebApiHttpResponse, response);
 
-            await FillResponse(context, endpointDescription, response);
+            await FillResponse(context, endpointState.EndpointDescription, response);
         }
 
         private async Task FillResponse(HttpContext context, EndpointDescription endpointDescription, HttpResult? response)
@@ -202,11 +219,31 @@ namespace MockWebApi.Middleware
             }
         }
 
-        private void ManageRouteLifeCycle(RouteMatch<EndpointDescription> routeMatch)
+        private void ManageRouteLifeCycle(RouteMatch<IEndpointState> routeMatch)
         {
-            if (routeMatch.RouteInformation.LifecyclePolicy == LifecyclePolicy.ApplyOnce)
+            switch(routeMatch.RouteInformation.EndpointDescription.LifecyclePolicy)
             {
-                _serviceConfiguration.RouteMatcher.Remove(routeMatch.RouteInformation.Route);
+                case LifecyclePolicy.ApplyOnce:
+                    {
+                        if (!routeMatch.RouteInformation.HasNext())
+                        {
+                            _serviceConfiguration.RouteMatcher.Remove(routeMatch.RouteInformation.EndpointDescription.Route);
+                        }
+                        break;
+                    }
+                case LifecyclePolicy.Repeat:
+                    {
+                        if (!routeMatch.RouteInformation.HasNext())
+                        {
+                            routeMatch.RouteInformation.Reset();
+                        }
+                        break;
+                    }
+                default:
+                    {
+                        _logger.LogWarning($"LifecyclePolicy '{routeMatch.RouteInformation.EndpointDescription.LifecyclePolicy}' not implemented.");
+                        break;
+                    }
             }
         }
 

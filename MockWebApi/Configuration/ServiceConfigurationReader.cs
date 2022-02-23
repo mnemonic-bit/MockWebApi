@@ -37,7 +37,7 @@ namespace MockWebApi.Configuration
 
             foreach (EndpointDescription endpoint in configuration.EndpointDescriptions)
             {
-                _serviceConfiguration.RouteMatcher.AddRoute(endpoint.Route, endpoint);
+                _serviceConfiguration.RouteMatcher.AddRoute(endpoint.Route, new EndpointState(endpoint));
             }
         }
 
