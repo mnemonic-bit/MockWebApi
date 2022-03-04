@@ -70,7 +70,6 @@ namespace MockWebApi.Service.Rest
 
                 _cancellationTokenSource.Cancel();
                 bool threadWasAborted = _serviceThread.Join(millisecondTimeout);
-                _serviceThread = null;
 
                 return threadWasAborted;
             }
