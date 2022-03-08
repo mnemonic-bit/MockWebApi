@@ -11,34 +11,41 @@ namespace MockWebApi.Data
 
         private static readonly ILiteDatabase _historyDatabase = CreateInMemoryLiteDb();
 
-        private static ILiteCollection<RequestHistoryItem> History => _historyDatabase.GetCollection<RequestHistoryItem>(REQUEST_HISTORY_COLLECTION_NAME);
-
-        public void Store(RequestHistoryItem information)
-        {
-            History.Insert(information);
-        }
+        private static ILiteCollection<RequestHistoryItem> _history => _historyDatabase.GetCollection<RequestHistoryItem>(REQUEST_HISTORY_COLLECTION_NAME);
 
         public void Clear()
         {
-            History.DeleteAll();
+            _history.DeleteAll();
         }
 
         public RequestHistoryItem GetInformation(string id)
         {
-            History.EnsureIndex(x => x.Request.Path == id);
-            return History.FindOne(x => x.Request.Path == id);
+            _history.EnsureIndex(x => x.Request.Path == id);
+            return _history.FindOne(x => x.Request.Path == id);
         }
 
         public RequestHistoryItem[] GetAllInformation(int? count)
         {
             if (count == null)
             {
-                return History.FindAll().ToArray();
+                return _history
+                    .FindAll()
+                    .OrderByDescending(item => item.Request.Date)
+                    .ToArray();
             }
             else
             {
-                return History.FindAll().TakeLast(count.Value).ToArray();
+                return _history
+                    .FindAll()
+                    .OrderByDescending(item => item.Request.Date)
+                    .Take(count.Value)
+                    .ToArray();
             }
+        }
+
+        public void Store(RequestHistoryItem information)
+        {
+            _history.Insert(information);
         }
 
         private static ILiteDatabase CreateLiteDbInFile()

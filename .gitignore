@@ -34,3 +34,4 @@ msbuild.wrn
 # NCrunch
 *.ncrunchproject
 *.ncrunchsolution
+_NCrunch_*/
