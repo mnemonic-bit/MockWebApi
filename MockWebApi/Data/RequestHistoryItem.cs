@@ -23,6 +23,11 @@ namespace MockWebApi.Data
         /// </summary>
         public Exception? Exception { get; private set; }
 
+        public RequestHistoryItem()
+        {
+            Request = new RequestInformation();
+        }
+
         public RequestHistoryItem(
             RequestInformation request,
             HttpResult? response)

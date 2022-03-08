@@ -75,7 +75,9 @@ namespace MockWebApi.Controller
 
             IService service = StartMockApiService(serviceConfiguration);
 
-            return Ok($"A new mock web API '{service.ServiceConfiguration.ServiceName}' has been started successfully at {DateTime.Now}, listening on '{service.ServiceConfiguration.Url}'.");
+            string logMessage = $"A new mock web API '{service.ServiceConfiguration.ServiceName}' has been started successfully at {DateTime.Now}, listening on '{service.ServiceConfiguration.Url}'.";
+
+            return Ok(logMessage);
         }
 
         [HttpPost("{serviceName}/stop")]
@@ -97,8 +99,11 @@ namespace MockWebApi.Controller
             }
 
             _hostService.RemoveService(serviceName);
+            _dataStore.Clear(); //TODO: clear only the data of this mocked service!
 
-            return Ok($"The service '{service.ServiceConfiguration.ServiceName}' has been stopped successfully at {DateTime.Now}.");
+            string logMessage = $"The service '{service.ServiceConfiguration.ServiceName}' has been stopped successfully at {DateTime.Now}.";
+
+            return Ok(logMessage);
         }
 
         [HttpGet("{serviceName}/configure")]
@@ -298,11 +303,11 @@ namespace MockWebApi.Controller
         }
 
         [HttpDelete("{serviceName}/request/{id?}")]
-        public IActionResult DeleteRequest(string serviceName, string id)
+        public IActionResult DeleteRequest(string serviceName, string? id)
         {
             if (string.IsNullOrEmpty(id))
             {
-                _dataStore.Clear();
+                _dataStore.Clear(); //TODO: clear only the data of this mocked service!
                 return Ok("All requests have been deleted");
             }
 

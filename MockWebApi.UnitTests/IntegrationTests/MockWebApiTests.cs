@@ -3,6 +3,7 @@ using MockWebApi.Configuration;
 using MockWebApi.Configuration.Model;
 using MockWebApi.Test;
 using MockWebApi.Tests.TestUtils;
+using System;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -243,6 +244,16 @@ namespace MockWebApi.Tests.IntegrationTests
                     StatusCode = HttpStatusCode.Unauthorized
                 }
             };
+
+            JwtServiceOptions jwtServiceOptions = new JwtServiceOptions()
+            {
+                Expiration = TimeSpan.FromMinutes(5),
+                SigningKey = "SECRET-SIGNING-KEY",
+                Audience = "INTEGRATION-TEST-AUDIENCE",
+                Issuer = "INTEGRATION-TEST-ISSUER"
+            };
+
+            serviceConfiguration.JwtServiceOptions = jwtServiceOptions;
 
             IJwtService jwtService = new JwtService(serviceConfiguration);
 
