@@ -186,23 +186,23 @@ namespace MockWebApi.Client
             await GetLastRequests(serviceName, null);
         }
 
-        public async Task<RequestInformation[]> GetLastRequests(string serviceName, int? count)
+        public async Task<RequestHistoryItem[]> GetLastRequests(string serviceName, int? count)
         {
             Response<string> response = await _webApi.GetLastRequests(serviceName, count);
 
             if (!response.ResponseMessage.IsSuccessStatusCode)
             {
-                return new RequestInformation[0];
+                return new RequestHistoryItem[0];
             }
 
             string? responseBody = response.StringContent;
 
             if (responseBody == null)
             {
-                return new RequestInformation[0];
+                return new RequestHistoryItem[0];
             }
 
-            RequestInformation[] requestInformation = DeserializeYaml<RequestInformation[]>(responseBody);
+            RequestHistoryItem[] requestInformation = DeserializeYaml<RequestHistoryItem[]>(responseBody);
             return requestInformation;
         }
 
