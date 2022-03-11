@@ -77,6 +77,8 @@ namespace MockWebApi.Controller
 
             string logMessage = $"A new mock web API '{service.ServiceConfiguration.ServiceName}' has been started successfully at {DateTime.Now}, listening on '{service.ServiceConfiguration.Url}'.";
 
+            _logger.LogInformation(logMessage);
+
             return Ok(logMessage);
         }
 
@@ -102,6 +104,8 @@ namespace MockWebApi.Controller
             _dataStore.Clear(); //TODO: clear only the data of this mocked service!
 
             string logMessage = $"The service '{service.ServiceConfiguration.ServiceName}' has been stopped successfully at {DateTime.Now}.";
+
+            _logger.LogInformation(logMessage);
 
             return Ok(logMessage);
         }

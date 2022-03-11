@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.Extensions.Logging;
 using MockWebApi.Configuration;
+using MockWebApi.Extension;
+using System;
 using System.Threading.Tasks;
 
 namespace MockWebApi.Middleware
@@ -22,14 +24,31 @@ namespace MockWebApi.Middleware
 
         public async Task InvokeAsync(HttpContext context)
         {
+            string requestUri = context.Request.PathWithParameters();
+
             System.Diagnostics.Stopwatch watch = System.Diagnostics.Stopwatch.StartNew();
+            try
+            {
+                await _nextDelegate(context);
 
-            await _nextDelegate(context);
+                watch.Stop();
+                long elapsedMilliseconds = watch.ElapsedMilliseconds;
 
-            watch.Stop();
-            long elapsedMilliseconds = watch.ElapsedMilliseconds;
+                int statusCode = context.Response.StatusCode;
 
-            _logger.LogInformation($"The total time the request took is {elapsedMilliseconds} milliseconds.");
+                _logger.LogInformation($"Processing the request for '{requestUri}'; Time {elapsedMilliseconds} ms; HTTP Status {statusCode}");
+            }
+            catch (Exception ex)
+            {
+                watch.Stop();
+                long elapsedMilliseconds = watch.ElapsedMilliseconds;
+
+                int statusCode = context.Response.StatusCode;
+
+                _logger.LogError($"An exception was thrown after processing the request for '{requestUri}'; Time: {elapsedMilliseconds} ms; HTTP Status {statusCode}");
+                _logger.LogError(ex.Message);
+            }
+
         }
 
     }
