@@ -1,18 +1,11 @@
-using GraphQL;
-using GraphQL.Server;
-using GraphQL.SystemReactive;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.OpenApi.Models;
-using MockWebApi.Configuration;
 using MockWebApi.Extension;
 using MockWebApi.GraphQL;
 using MockWebApi.Middleware;
-
-using GraphQLBuilderExtensions = GraphQL.MicrosoftDI.GraphQLBuilderExtensions;
 
 namespace MockWebApi
 {
@@ -29,35 +22,18 @@ namespace MockWebApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            // Service-API dependencies
+            // "self"-Service-API dependencies
             services.AddMockHostServices();
 
-            // GraphQL schema types...
-            services.AddSingleton<RequestHistorySchema>();
-
-            //services.AddGraphQL()
-            //    .AddGraphTypes(ServiceLifetime.Scoped)
-            //    .AddSystemTextJson();
-            GraphQLBuilderExtensions.AddGraphQL(services)
-                .AddSubscriptionDocumentExecuter()
-                .AddServer(true)
-                .AddSchema<RequestHistorySchema>()
-                .AddDefaultEndpointSelectorPolicy()
-                .AddSystemTextJson()
-                .AddGraphTypes(typeof(RequestHistorySchema).Assembly);
+            // GraphQL dependencies
+            services.AddGraphQLServices();
 
             // The service-controller
-            //services.AddMvc();
             services.AddControllers();
             services.AddDynamicRouting();
 
-            // Swagger
-            services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "MockWebApi", Version = "v1" });
-                //c.AddServer(new OpenApiServer() { Url = HostConfiguration.DEFAULT_HOST_IP_AND_PORT });
-                c.AddServer(new OpenApiServer() { Url = "http://locahost:6000" });
-            });
+            // Swagger services
+            services.AddSwagger();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -67,15 +43,15 @@ namespace MockWebApi
 
             //app.UseSwagger();
             //app.UseSwagger(c => c.RouteTemplate = "/swagger/v1/swagger.json" );
-            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "MockWebApi v1"));
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "MockWebApi v1");
+                //c.SwaggerEndpoint("/api/demo-service/swagger/v1/swagger.json", "DemoService v1");
+            });
 
             app.UseRouting();
 
             app.UseMiddleware<TimeMeasurementMiddleware>();
-            //app.UseMiddleware<StoreRequestDataMiddleware>();
-            //app.UseMiddleware<LoggingMiddleware>();
-
-            //app.UseDynamicRouting();
 
             app.UseAuthorization();
 

@@ -1,13 +1,16 @@
-﻿using MockWebApi.Configuration;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Net;
+using System.Net.NetworkInformation;
+using MockWebApi.Configuration;
 
 namespace MockWebApi.Service
 {
     /// <summary>
     /// The HostService is the central class which holds together
     /// all the references for each service (for mocking REST APIs,
-    /// or for proxying, gRPC) and makes the instance which is used
+    /// for proxying, or gRPC) and makes the instance which is used
     /// to servce the requests available through an interface.
     /// </summary>
     public class HostService : IHostService
@@ -18,6 +21,12 @@ namespace MockWebApi.Service
         {
             _services = new Dictionary<string, IService>();
             _hostConfiguration = hostConfiguration;
+
+            _ipAddresses = NetworkInterface
+                .GetAllNetworkInterfaces()
+                .SelectMany(nic => nic.GetIPProperties().UnicastAddresses)
+                .Select(addr => addr.Address)
+                .ToHashSet();
         }
 
         public IEnumerable<string> ServiceNames
@@ -25,6 +34,14 @@ namespace MockWebApi.Service
             get
             {
                 return _services.Keys;
+            }
+        }
+
+        public IEnumerable<IPAddress> IpAddresses
+        {
+            get
+            {
+                return _ipAddresses;
             }
         }
 
@@ -59,6 +76,8 @@ namespace MockWebApi.Service
 
         private readonly IHostConfiguration _hostConfiguration;
         private readonly IDictionary<string, IService> _services;
+
+        private readonly HashSet<IPAddress> _ipAddresses;
 
     }
 }

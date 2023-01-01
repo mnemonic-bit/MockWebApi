@@ -21,6 +21,16 @@ namespace MockWebApi.Configuration.Model
         /// </summary>
         public string HttpMethod { get; set; }
 
+        /// <summary>
+        /// If CORS must be disabled, this property can be set true.
+        /// By default, CORS is enabled for all REST APIs. As a result
+        /// all response messages will have an added HTTP header which
+        /// indicates that calling this API from any location is allowed.
+        /// If this value is set to true, no additional HTTP header will
+        /// be set.
+        /// </summary>
+        public bool DisableCors { get; set; }
+
         public Dictionary<string, string> Parameters { get; set; }
 
         public string RequestBodyType { get; set; } // PLAIN_TEXT, YAML, JSON, XML; TODO: make this either a MIME type as string / class, or enum

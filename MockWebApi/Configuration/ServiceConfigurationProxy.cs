@@ -25,7 +25,6 @@ namespace MockWebApi.Configuration
 
         public ServiceConfigurationProxy(IServiceConfiguration configuration)
         {
-
             BaseConfiguration = configuration;
         }
 

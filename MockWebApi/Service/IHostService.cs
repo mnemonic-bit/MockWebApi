@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Net;
 
 namespace MockWebApi.Service
 {
@@ -7,6 +8,8 @@ namespace MockWebApi.Service
     {
 
         IEnumerable<string> ServiceNames { get; }
+
+        IEnumerable<IPAddress> IpAddresses { get; }
 
         void AddService(string serviceName, IService service);
 

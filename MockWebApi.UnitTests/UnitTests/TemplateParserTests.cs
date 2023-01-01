@@ -1,4 +1,5 @@
-﻿using MockWebApi.Templating;
+﻿using FluentAssertions;
+using MockWebApi.Templating;
 using Xunit;
 
 namespace MockWebApi.Tests.UnitTests
@@ -19,13 +20,15 @@ namespace MockWebApi.Tests.UnitTests
             Template template = parser.Parse(text);
 
             // Assert
-            Assert.Single(template.Fragments);
+            template.Fragments.Should().HaveCount(1);
 
             Fragment fragment = template.Fragments[0];
-            Assert.IsType<StringFragment>(template.Fragments[0]);
+            fragment.Should().NotBeNull();
+            fragment.Should().BeOfType<StringFragment>();
 
             StringFragment stringFragment = fragment as StringFragment;
-            Assert.Equal(text, stringFragment.Text);
+            stringFragment.Should().NotBeNull();
+            stringFragment.Text.Should().Be(text);
         }
 
         [Fact]
@@ -48,8 +51,9 @@ namespace MockWebApi.Tests.UnitTests
             Template template = parser.Parse(text);
 
             // Assert
-            Assert.Equal(fragments[0], template.Fragments[0]);
-            Assert.Equal(fragments, template.Fragments);
+            template.Fragments[0].Should().NotBeNull();
+            template.Fragments[0].Should().Be(fragments[0]);
+            template.Fragments.Should().BeEquivalentTo(fragments);
         }
 
         [Theory]

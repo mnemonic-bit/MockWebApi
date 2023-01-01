@@ -8,5 +8,26 @@ namespace MockWebApi.Templating
     public class Fragment
     {
 
+        /// <summary>
+        /// Need to override this method in order to make
+        /// Fluent Assertions work.
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public override bool Equals(object? obj)
+        {
+            return base.Equals(obj);
+        }
+
+        /// <summary>
+        /// Need to override this method in order to make
+        /// Fluent Assertions work.
+        /// </summary>
+        /// <returns></returns>
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
     }
 }

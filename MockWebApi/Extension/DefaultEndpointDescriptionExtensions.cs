@@ -11,5 +11,11 @@ namespace MockWebApi.Extension
             destination.Result = source.Result;
         }
 
+        public static void CopyTo(this DefaultEndpointDescription source, EndpointDescription destination)
+        {
+            BaseEndpointDescriptionExtensions.CopyTo(source, destination);
+            destination.Results = new HttpResult[] { source.Result };
+        }
+
     }
 }

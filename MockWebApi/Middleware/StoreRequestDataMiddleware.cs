@@ -65,7 +65,7 @@ namespace MockWebApi.Middleware
         private bool RequestShouldNotBeStored(HttpRequest request)
         {
             bool trackServiceApiCalls = _serverConfig.ConfigurationCollection.Get<bool>(ConfigurationCollection.Parameters.TrackServiceApiCalls);
-            bool startsWithServiceApi = request.Path.StartsWithSegments("/rest-api");
+            bool startsWithServiceApi = request.Path.StartsWithSegments($"/{DefaultValues.SERVICE_API_ROUTE_PREFIX}");
             bool routeOptOut = _serverConfig.RouteMatcher.TryMatch(request.PathWithParameters(), out RouteMatch<IEndpointState>? routeMatch) && (!routeMatch?.RouteInformation.EndpointDescription.PersistRequestInformation ?? false);
 
             return startsWithServiceApi && !trackServiceApiCalls || routeOptOut;

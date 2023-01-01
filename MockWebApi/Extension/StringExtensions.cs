@@ -1,4 +1,7 @@
 ﻿using System;
+using MockWebApi.Configuration;
+using MockWebApi.Configuration.Model;
+using MockWebApi.Service.Rest;
 
 namespace MockWebApi.Extension
 {
@@ -33,6 +36,28 @@ namespace MockWebApi.Extension
         public static bool IsNullOrEmpty(this string str)
         {
             return string.IsNullOrEmpty(str);
+        }
+
+        public static IServiceConfiguration DeserializeServiceConfiguration(this string config, string serviceName)
+        {
+            MockedServiceConfiguration mockedServiceConfiguration = config.DeserializeYaml<MockedServiceConfiguration>() ?? new MockedServiceConfiguration();
+            mockedServiceConfiguration.ServiceName = serviceName;
+            mockedServiceConfiguration.BaseUrl ??= DefaultValues.DEFAULT_MOCK_BASE_URL;
+
+            IServiceConfiguration serviceConfiguration = new ServiceConfiguration(
+                mockedServiceConfiguration.ServiceName,
+                mockedServiceConfiguration.BaseUrl);
+
+            ServiceConfigurationReader serviceConfigurationReader = new ServiceConfigurationReader(serviceConfiguration);
+            serviceConfigurationReader.ConfigureService(mockedServiceConfiguration, true);
+
+            return serviceConfiguration;
+        }
+
+        public static IServiceConfiguration DeserializeServerConfiguration(this string config)
+        {
+            //TODO: implement a converter for the full server configuration.
+            return null;
         }
 
     }

@@ -31,10 +31,24 @@ namespace MockWebApi.Swagger
             SwaggerUIOptions options = GetSwaggerUIOptions(serviceConfiguration);
 
             SwaggerUIMiddleware swaggerUIMiddleware = new SwaggerUIMiddleware(
-                (HttpContext context) => Task.Delay(0),
+                (HttpContext context) =>
+                {
+                    return Task.Delay(0);
+                },
                 _hostingEnv,
                 _loggerFactory,
                 options);
+
+            // The path needs to be tweaked for all requests that come
+            // along this path, because we try to use the Swagger UI
+            // file provider to serve all anciliary files.
+            string currentPath = httpContext.Request.Path;
+            if (!currentPath.ToLower().EndsWith("index.html"))
+            {
+                int indexOfSwaggerString = currentPath.IndexOf("/swagger/");
+                currentPath = currentPath.Substring(indexOfSwaggerString, currentPath.Length - indexOfSwaggerString);
+                httpContext.Request.Path = currentPath;
+            }
 
             await swaggerUIMiddleware.Invoke(httpContext);
         }
@@ -51,7 +65,7 @@ namespace MockWebApi.Swagger
                     Urls = new List<UrlDescriptor>() { new UrlDescriptor() { Name = "v1", Url = $"/{routePrefix}/v1/swagger.json" } }
                 },
                 RoutePrefix = routePrefix,
-                DocumentTitle = "The Document Title",
+                DocumentTitle = $"Swagger UI - {serviceConfiguration.ServiceName}",
                 HeadContent = "Additional Page Header Content"
             };
 

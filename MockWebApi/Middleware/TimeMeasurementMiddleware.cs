@@ -1,10 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc.ApiExplorer;
-using Microsoft.Extensions.Logging;
-using MockWebApi.Configuration;
-using MockWebApi.Extension;
-using System;
+﻿using System;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using MockWebApi.Extension;
 
 namespace MockWebApi.Middleware
 {
@@ -36,7 +34,7 @@ namespace MockWebApi.Middleware
 
                 int statusCode = context.Response.StatusCode;
 
-                _logger.LogInformation($"Processing the request for '{requestUri}'; Time {elapsedMilliseconds} ms; HTTP Status {statusCode}");
+                _logger.LogInformation("Processing the request for '{0}'; Time {1} ms; HTTP Status {2}", requestUri, elapsedMilliseconds, statusCode);
             }
             catch (Exception ex)
             {
@@ -45,7 +43,7 @@ namespace MockWebApi.Middleware
 
                 int statusCode = context.Response.StatusCode;
 
-                _logger.LogError($"An exception was thrown after processing the request for '{requestUri}'; Time: {elapsedMilliseconds} ms; HTTP Status {statusCode}");
+                _logger.LogError(ex, "An exception was thrown after processing the request for '{0}'; Time: {1} ms; HTTP Status {2}", requestUri, elapsedMilliseconds, statusCode);
                 _logger.LogError(ex.Message);
             }
 

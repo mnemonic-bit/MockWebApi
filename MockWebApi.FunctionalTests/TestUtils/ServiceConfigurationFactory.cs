@@ -3,7 +3,7 @@ using MockWebApi.Configuration.Model;
 using MockWebApi.Service.Rest;
 using System;
 
-namespace MockWebApi.Tests.TestUtils
+namespace MockWebApi.FunctionalTests.TestUtils
 {
     internal static class ServiceConfigurationFactory
     {

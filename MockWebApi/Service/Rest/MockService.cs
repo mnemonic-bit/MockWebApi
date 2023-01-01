@@ -40,13 +40,13 @@ namespace MockWebApi.Service.Rest
         public MockService(IHostBuilder hostBuilder, IServiceConfiguration serviceConfiguration)
         {
             _hostBuilder = hostBuilder;
-            _serviceConfigurationProxy = new ServiceConfigurationProxy(serviceConfiguration ?? new ServiceConfiguration("service1", MockHostBuilder.DEFAULT_MOCK_BASE_URL));
+            _serviceConfigurationProxy = new ServiceConfigurationProxy(serviceConfiguration ?? new ServiceConfiguration("service1", DefaultValues.DEFAULT_MOCK_BASE_URL));
             _cancellationTokenSource = new CancellationTokenSource();
         }
 
         public void StartService()
         {
-            lock(_serviceThreadLock)
+            lock (_serviceThreadLock)
             {
                 if (_serviceThread != null)
                 {
@@ -61,7 +61,7 @@ namespace MockWebApi.Service.Rest
 
         public bool StopService(int millisecondTimeout = 300000)
         {
-            lock(_serviceThreadLock)
+            lock (_serviceThreadLock)
             {
                 if (_serviceThread == null)
                 {

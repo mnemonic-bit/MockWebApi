@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using MockWebApi.Configuration;
 using MockWebApi.Extension;
 using Serilog;
 using Serilog.Filters;
@@ -13,9 +14,7 @@ namespace MockWebApi.Service.Rest
     public class MockHostBuilder
     {
 
-        public const string DEFAULT_MOCK_BASE_URL = "http://0.0.0.0:5000";
-
-        public static IHostBuilder Create(string baseUrls = DEFAULT_MOCK_BASE_URL, string environment = "Development")
+        public static IHostBuilder Create(string baseUrls = DefaultValues.DEFAULT_MOCK_BASE_URL, string environment = "Development")
         {
             string[] args = new string[] { };
 

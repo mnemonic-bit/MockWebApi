@@ -33,9 +33,14 @@ namespace MockWebApi.Routing
         /// between two slashes, or a variable, representing a variable
         /// part between one or more slashes.
         /// </summary>
-        public abstract class Part
+        public abstract class Part : IComparer<Part>
         {
-
+            public int Compare(Part? x, Part? y)
+            {
+                bool xIsLiteral = x is LiteralPart;
+                bool yIsLiteral = y is LiteralPart;
+                return xIsLiteral == yIsLiteral ? 0 : xIsLiteral ? 1 : -1;
+            }
         }
 
         public class LiteralPart : Part

@@ -9,12 +9,22 @@ namespace MockWebApi.Configuration.Extensions
 
         public static string SerializeToJson<TObject>(this TObject obj)
         {
+            if (obj == null)
+            {
+                return string.Empty;
+            }
+
             string result = JsonConvert.SerializeObject(obj, Formatting.Indented);
             return result;
         }
 
         public static string SerializeToYaml<TObject>(this TObject obj)
         {
+            if (obj == null)
+            {
+                return string.Empty;
+            }
+
             StringWriter stringWriter = new StringWriter();
             Serializer serializer = new Serializer();
             serializer.Serialize(stringWriter, obj);

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using MockWebApi.Auth;
@@ -24,12 +25,6 @@ namespace MockWebApi.Middleware
     /// </summary>
     public class MockedRestServiceMiddleware
     {
-
-        private readonly RequestDelegate _nextDelegate;
-        private readonly IServiceConfiguration _serviceConfiguration;
-        private readonly IAuthorizationService _authorizationService;
-        private readonly ITemplateExecutor _templateExecutor;
-        private readonly ILogger<StoreRequestDataMiddleware> _logger;
 
         public MockedRestServiceMiddleware(
             RequestDelegate next,
@@ -51,35 +46,43 @@ namespace MockWebApi.Middleware
             // can use it to stop a long-running request.
             //CancellationToken cancellationToken = HttpContext.RequestAborted;
 
-            RequestInformation? requestInformation = GetRequestInformation(context);
-
             string requestUri = context.Request.PathWithParameters();
             bool requestUriDidMatch = TryGetHttpResult(requestUri, out IEndpointState endpointState, out IDictionary<string, string> variables);
 
-            if (!CheckRequest(context, requestInformation, endpointState))
+            // Check if this is a CORS pre-flight check, and handle
+            // it by replying the status code 204 (no content).
+            if (endpointState != null && !endpointState.EndpointDescription.DisableCors)
+            {
+                if (context.Request.Method.Equals(HttpMethods.Options))
+                {
+                    FillResponseWithPreFlightHttpHeader(context);
+                    return;
+                }
+            }
+
+            RequestInformation? requestInformation = GetRequestInformation(context);
+            requestInformation!.PathMatchedTemplate = requestUriDidMatch;
+
+            if (!CheckRequest(context, /*requestInformation,*/ endpointState))
             {
                 (endpointState, variables) = GetErrorResponseEndpointDescription();
             }
-
-            requestInformation!.PathMatchedTemplate = requestUriDidMatch;
 
             await MockResponse(context, endpointState, variables);
         }
 
 
-        ////////////////////////////////////////////////////////////////
-        ////////////////////////////////////////////////////////////////
+        private readonly RequestDelegate _nextDelegate;
+        private readonly IServiceConfiguration _serviceConfiguration;
+        private readonly IAuthorizationService _authorizationService;
+        private readonly ITemplateExecutor _templateExecutor;
+        private readonly ILogger<StoreRequestDataMiddleware> _logger;
 
 
-        private bool CheckRequest(HttpContext httpContext, [NotNullWhen(true)] RequestInformation? requestInformation, IEndpointState endpointState)
+        private bool CheckRequest(HttpContext httpContext, IEndpointState endpointState)
         {
-            if (requestInformation == null)
-            {
-                return false;
-            }
-
             // Check the method used for this request.
-            if (endpointState.EndpointDescription.HttpMethod != null && !endpointState.EndpointDescription.HttpMethod.Equals(requestInformation.HttpVerb))
+            if (endpointState.EndpointDescription.HttpMethod != null && !endpointState.EndpointDescription.HttpMethod.Equals(httpContext.Request.Method))
             {
                 return false;
             }
@@ -194,8 +197,25 @@ namespace MockWebApi.Middleware
             context.Response.StatusCode = (int)response.StatusCode; // ?? _serviceConfiguration.DefaultEndpointDescription.Result.StatusCode; // _serviceConfiguration.ConfigurationCollection.Get<int>(ConfigurationCollection.Parameters.DefaultHttpStatusCode);
             context.Response.ContentType = response.ContentType ?? _serviceConfiguration.DefaultEndpointDescription.Result.ContentType; // _serviceConfiguration.ConfigurationCollection.Get<string>(ConfigurationCollection.Parameters.DefaultContentType) ?? throw new Exception($"The system is not configured corectly, expected to find a default content type.");
 
-            response.Headers = context.Response.Headers.ToDictionary();
+            FillResponseWithHttpHeaders(context, endpointDescription, response);
 
+            FillResponseWithCookies(context, endpointDescription, response);
+
+            await FillResponseWithBody(context, response);
+        }
+
+        private static async Task FillResponseWithBody(HttpContext context, HttpResult response)
+        {
+            string body = response.Body;
+            if (body != null)
+            {
+                byte[] bodyArray = Encoding.UTF8.GetBytes(response.Body);
+                await context.Response.BodyWriter.WriteAsync(new ReadOnlyMemory<byte>(bodyArray));
+            }
+        }
+
+        private static void FillResponseWithCookies(HttpContext context, EndpointDescription endpointDescription, HttpResult response)
+        {
             if (endpointDescription.ReturnCookies)
             {
                 // This one mirrors the cookies from the request.
@@ -208,20 +228,52 @@ namespace MockWebApi.Middleware
             // This one inserts/overwrites the cookies from the endpoint-configuration.
             foreach (KeyValuePair<string, string> cookie in response.Cookies)
             {
+                context.Response.Cookies.Delete(cookie.Key);
                 context.Response.Cookies.Append(cookie.Key, cookie.Value);
             }
+        }
 
-            string body = response.Body;
-            if (body != null)
+        private static void FillResponseWithHttpHeaders(HttpContext context, EndpointDescription endpointDescription, HttpResult response)
+        {
+            if (response.Headers != null)
             {
-                byte[] bodyArray = Encoding.UTF8.GetBytes(response.Body);
-                await context.Response.BodyWriter.WriteAsync(new ReadOnlyMemory<byte>(bodyArray));
+                foreach (var header in response.Headers)
+                {
+                    context.Response.Headers[header.Key] = header.Value;
+                }
             }
+
+            if (!endpointDescription.DisableCors)
+            {
+                context.Response.Headers["Access-Control-Allow-Origin"] = "*";
+            }
+        }
+
+        private static void FillResponseWithPreFlightHttpHeader(HttpContext context)
+        {
+            context.Response.StatusCode = (int)HttpStatusCode.NoContent;
+
+            if (!string.IsNullOrEmpty(context.Request.Headers["Origin"]))
+            {
+                context.Response.Headers["Access-Control-Allow-Origin"] = context.Request.Headers["Origin"];
+            }
+
+            context.Response.Headers["Access-Control-Allow-Methods"] = string.IsNullOrEmpty(context.Request.Headers["Access-Control-Request-Method"])
+                ? context.Request.Headers["Access-Control-Request-Method"]
+                : HttpMethods.Get;
+
+            if (!string.IsNullOrEmpty(context.Request.Headers["Access-Control-Request-Headers"]))
+            {
+                context.Response.Headers["Access-Control-Allow-Headers"] = context.Request.Headers["Access-Control-Request-Headers"];
+            }
+
+            context.Response.Headers["Access-Control-Allow-Credentials"] = "true";
+            context.Response.Headers["Access-Control-Max-Age"] = "240";
         }
 
         private void ManageRouteLifeCycle(RouteMatch<IEndpointState> routeMatch)
         {
-            switch(routeMatch.RouteInformation.EndpointDescription.LifecyclePolicy)
+            switch (routeMatch.RouteInformation.EndpointDescription.LifecyclePolicy)
             {
                 case LifecyclePolicy.ApplyOnce:
                     {
@@ -261,7 +313,7 @@ namespace MockWebApi.Middleware
             result.Body = await ExecuteTemplate(result.Body, variables);
             result.ContentType = await ExecuteTemplate(result.ContentType, variables);
 
-            string? httpStatusCodeString = await ExecuteTemplate($"{ (int)(result.StatusCode) }", variables);
+            string? httpStatusCodeString = await ExecuteTemplate($"{(int)(result.StatusCode)}", variables);
             HttpStatusCode? newHttpStatusCode = ConvertToHttpStatusCode(httpStatusCodeString);
             if (newHttpStatusCode.HasValue)
             {

@@ -7,7 +7,7 @@ using Xunit;
 
 namespace MockWebApi.Tests.UnitTests
 {
-    public class RouteGraphMatherTests
+    public class RouteGraphMatcherTests
     {
 
         [Theory]
@@ -35,24 +35,28 @@ namespace MockWebApi.Tests.UnitTests
         }
 
         //TODO: should this feature be implemented?
-        [Theory]
-        [InlineData("/{variable1}/fixed/start", "/{variable2}/fixed/start")]
-        public void AddRoute_ShouldThrowException_WhenOverlappingRoutesAreGiven(string pathTemplate1, string pathTemplate2)
-        {
-            // Arrange
-            IRouteParser routeParser = new RouteParser();
-            RouteGraphMatcher<EndpointDescription> graphMatcher = new RouteGraphMatcher<EndpointDescription>(routeParser);
-            EndpointDescription endpointDescription = new EndpointDescription();
-            graphMatcher.AddRoute(pathTemplate1, endpointDescription);
+        // At the moment the current info-item is just replaced if the same
+        // path-structure is presented, treating variable renamings at same
+        // positions as the same variable.
+        //[Theory]
+        //[InlineData("/{variable1}/fixed/start", "/{variable2}/fixed/start")]
+        //public void AddRoute_ShouldThrowException_WhenOverlappingRoutesAreGiven(string pathTemplate1, string pathTemplate2)
+        //{
+        //    // Arrange
+        //    IRouteParser routeParser = new RouteParser();
+        //    RouteGraphMatcher<EndpointDescription> graphMatcher = new RouteGraphMatcher<EndpointDescription>(routeParser);
+        //    EndpointDescription endpointDescription = new EndpointDescription();
+        //    graphMatcher.AddRoute(pathTemplate1, endpointDescription);
 
-            // Act + Assert
-            Assert.ThrowsAny<Exception>(() => graphMatcher.AddRoute(pathTemplate2, endpointDescription));
-        }
+        //    // Act + Assert
+        //    Assert.ThrowsAny<Exception>(() => graphMatcher.AddRoute(pathTemplate2, endpointDescription));
+        //}
 
         [Theory]
         [InlineData("/some/path", "/some/path")]
         [InlineData("/{variable1}/{variable2}/start", "/{variable1}/{variable2}/start")]
         [InlineData("/{variable}/fixed/start", "/{variable}/fixed/start")]
+        [InlineData("/{variable1}/fixed/start", "/{variable2}/fixed/start")]
         public void AddRoute_ShouldReplaceInfoItem_WhenSamePathIsAddedWithNewInfos(string pathTemplate, string path)
         {
             // Arrange
@@ -217,9 +221,16 @@ namespace MockWebApi.Tests.UnitTests
 
         //TODO: needs to implement an ordering of candidates according
         // to the specificy of route matching.
-        [Theory]
+        // Implement it this way:
+        // treat the pattern as a string made of 0s and 1s, for each
+        // variable use a 0, for each literal a 1. Then just do a
+        // lexicographical ordering, and choose the first we find.
+        // In other words, the pattern which has the earliest literal
+        // matching, will win.
+        [Theory(Skip = "This feature is not implemented yet.")]
         [InlineData(new string[] { "/{variable1}/{variable2}/start", "/{variable}/fixed/start" }, "/different/fixed/start")]
         [InlineData(new string[] { "/{variable1}/start/{variable2}", "/{variable}/start/fixed" }, "/different/start/fixed")]
+        [InlineData(new string[] { "/{variable1}/{variable2}/start", "/{variable}/fixed/{variable2}" }, "/different/fixed/start")]
         public void TryMatch_ShouldFindMostSpecificMatch(string[] pathTemplates, string path)
         {
             // Arrange

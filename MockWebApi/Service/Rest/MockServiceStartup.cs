@@ -42,6 +42,7 @@ namespace MockWebApi.Service.Rest
             app.UseMiddleware<TimeMeasurementMiddleware>();
             app.UseMiddleware<StoreRequestDataMiddleware>();
             app.UseMiddleware<LoggingMiddleware>();
+            app.UseMiddleware<HttpHeadersMiddleware>(HttpHeadersPolicy.Empty);
             app.UseMiddleware<MockedRestServiceMiddleware>();
         }
 

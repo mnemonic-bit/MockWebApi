@@ -76,7 +76,7 @@ namespace MockWebApi.Configuration
                 ReturnCookies = true,
                 Result = new HttpResult()
                 {
-                    StatusCode = HttpStatusCode.OK,
+                    StatusCode = HttpStatusCode.NotFound,
                     ContentType = "text/plain"
                 }
             };
