@@ -192,6 +192,13 @@ namespace MockWebApi.Middleware
             await FillResponse(context, endpointState.EndpointDescription, response);
         }
 
+        private RequestInformation? GetRequestInformation(HttpContext context)
+        {
+            context.Items.TryGetValue(MiddlewareConstants.MockWebApiHttpRequestInfomation, out object? contextItem);
+            RequestInformation? requestInformation = contextItem as RequestInformation;
+            return requestInformation;
+        }
+
         private async Task FillResponse(HttpContext context, EndpointDescription endpointDescription, HttpResult? response)
         {
             if (response == null)
@@ -199,22 +206,26 @@ namespace MockWebApi.Middleware
                 return;
             }
 
+            string contentType = response.ContentType ?? _serviceConfiguration.DefaultEndpointDescription.Result.ContentType;
+            HttpContentType httpContentType = new HttpContentType(contentType);
+
             context.Response.StatusCode = (int)response.StatusCode; // ?? _serviceConfiguration.DefaultEndpointDescription.Result.StatusCode; // _serviceConfiguration.ConfigurationCollection.Get<int>(ConfigurationCollection.Parameters.DefaultHttpStatusCode);
-            context.Response.ContentType = response.ContentType ?? _serviceConfiguration.DefaultEndpointDescription.Result.ContentType; // _serviceConfiguration.ConfigurationCollection.Get<string>(ConfigurationCollection.Parameters.DefaultContentType) ?? throw new Exception($"The system is not configured corectly, expected to find a default content type.");
+            context.Response.ContentType = httpContentType.ToString(); // _serviceConfiguration.ConfigurationCollection.Get<string>(ConfigurationCollection.Parameters.DefaultContentType) ?? throw new Exception($"The system is not configured corectly, expected to find a default content type.");
 
             FillResponseWithHttpHeaders(context, endpointDescription, response);
 
             FillResponseWithCookies(context, endpointDescription, response);
 
-            await FillResponseWithBody(context, response);
+            await FillResponseWithBody(context, response, httpContentType);
         }
 
-        private static async Task FillResponseWithBody(HttpContext context, HttpResult response)
+        private static async Task FillResponseWithBody(HttpContext context, HttpResult response, HttpContentType httpContentType)
         {
             string body = response.Body;
             if (body != null)
             {
-                byte[] bodyArray = Encoding.UTF8.GetBytes(response.Body);
+                Encoding encoding = httpContentType.CharacterEncoding;
+                byte[] bodyArray = encoding.GetBytes(response.Body);
                 await context.Response.BodyWriter.WriteAsync(new ReadOnlyMemory<byte>(bodyArray));
             }
         }
@@ -302,13 +313,6 @@ namespace MockWebApi.Middleware
                         break;
                     }
             }
-        }
-
-        private RequestInformation? GetRequestInformation(HttpContext context)
-        {
-            context.Items.TryGetValue(MiddlewareConstants.MockWebApiHttpRequestInfomation, out object? contextItem);
-            RequestInformation? requestInformation = contextItem as RequestInformation;
-            return requestInformation;
         }
 
         private async Task<HttpResult> ExecuteTemplate(HttpResult httpResult, IDictionary<string, string> variables)

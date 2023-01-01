@@ -23,6 +23,7 @@ namespace MockWebApi.Extension
         {
             webHostBuilder
                 .UseStartup<Startup>()
+                .UseKestrel(options => { options.AddServerHeader = false; })
                 .UseUrls(HostConfiguration.DEFAULT_HOST_IP_AND_PORT) //TODO: configure this from outside config-sources
                 .UseSerilog();
 

@@ -33,6 +33,7 @@ namespace MockWebApi.Service.Rest
                 {
                     webBuilder
                         .UseEnvironment(environment)
+                        .UseKestrel(options => { options.AddServerHeader = false; })
                         .UseUrls(baseUrls)
                         .SetupMockWebApi();
                 });
