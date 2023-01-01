@@ -63,12 +63,12 @@ namespace MockWebApi.Middleware
             RequestInformation? requestInformation = GetRequestInformation(context);
             requestInformation!.PathMatchedTemplate = requestUriDidMatch;
 
-            if (!CheckRequest(context, /*requestInformation,*/ endpointState))
+            if (!CheckRequest(context, endpointState))
             {
                 (endpointState, variables) = GetErrorResponseEndpointDescription();
             }
 
-            await MockResponse(context, endpointState, variables);
+            await MockResponse(context, endpointState!, variables);
         }
 
 
@@ -79,8 +79,13 @@ namespace MockWebApi.Middleware
         private readonly ILogger<StoreRequestDataMiddleware> _logger;
 
 
-        private bool CheckRequest(HttpContext httpContext, IEndpointState endpointState)
+        private bool CheckRequest(HttpContext httpContext, IEndpointState? endpointState)
         {
+            if (endpointState == null)
+            {
+                return false;
+            }
+
             // Check the method used for this request.
             if (endpointState.EndpointDescription.HttpMethod != null && !endpointState.EndpointDescription.HttpMethod.Equals(httpContext.Request.Method))
             {

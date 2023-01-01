@@ -57,7 +57,7 @@ namespace MockWebApi.Extension
         public static IServiceConfiguration DeserializeServerConfiguration(this string config)
         {
             //TODO: implement a converter for the full server configuration.
-            return null;
+            throw new NotImplementedException();
         }
 
     }

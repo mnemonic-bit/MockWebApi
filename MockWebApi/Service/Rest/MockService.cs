@@ -75,12 +75,14 @@ namespace MockWebApi.Service.Rest
             }
         }
 
+
         private readonly IHostBuilder _hostBuilder;
         private Thread? _serviceThread;
         private readonly string _serviceThreadLock = Guid.NewGuid().ToString();
         private readonly CancellationTokenSource _cancellationTokenSource;
 
         private readonly ServiceConfigurationProxy _serviceConfigurationProxy;
+
 
         private void ThreadStart(CancellationToken cancellationToken)
         {
