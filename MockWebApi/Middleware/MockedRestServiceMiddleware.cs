@@ -253,10 +253,11 @@ namespace MockWebApi.Middleware
             // a compression stream for each, starting with the last one,
             // because the last compression mentioned in the encodings-list
             // will receive the compression result of its predecessor.
-            Stream compressionStream = contentEncodings
+            Stream compressionStream = (contentEncodings ?? "")
                 .Split(',')
                 .Select(contentEncoding => contentEncoding.Trim())
                 .Reverse()
+                .Where(x => !string.IsNullOrEmpty(x))
                 .Aggregate(destStream, CreateCompressionStream);
 
             return compressionStream;
