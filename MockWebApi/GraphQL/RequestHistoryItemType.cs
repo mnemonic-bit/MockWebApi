@@ -8,10 +8,10 @@ namespace MockWebApi.GraphQL
 
         public RequestHistoryItemType()
         {
-            Name = "RequestHistoryItem";
-
-            Field<RequestInformationType>("request");
-            Field<HttpResultType>("response");
+            Name = nameof(RequestHistoryItem);
+            
+            Field<RequestInformationType>(nameof(RequestHistoryItem.Request));
+            Field<HttpResultType>(nameof(RequestHistoryItem.Response));
         }
 
     }

@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using MockWebApi.Auth;
@@ -42,10 +43,6 @@ namespace MockWebApi.Middleware
 
         public async Task InvokeAsync(HttpContext context)
         {
-            // TODO: add a cancellation token to wherever we
-            // can use it to stop a long-running request.
-            //CancellationToken cancellationToken = HttpContext.RequestAborted;
-
             string requestUri = context.Request.PathWithParameters();
             bool requestUriDidMatch = TryGetHttpResult(requestUri, out IEndpointState endpointState, out IDictionary<string, string> variables);
 
@@ -219,15 +216,76 @@ namespace MockWebApi.Middleware
             await FillResponseWithBody(context, response, httpContentType);
         }
 
-        private static async Task FillResponseWithBody(HttpContext context, HttpResult response, HttpContentType httpContentType)
+        private static async Task FillResponseWithBody(HttpContext context, HttpResult httpResult, HttpContentType httpContentType)
         {
-            string body = response.Body;
-            if (body != null)
+            string body = httpResult.Body;
+
+            if (body == null)
             {
-                Encoding encoding = httpContentType.CharacterEncoding;
-                byte[] bodyArray = encoding.GetBytes(response.Body);
-                await context.Response.BodyWriter.WriteAsync(new ReadOnlyMemory<byte>(bodyArray));
+                return;
             }
+
+            byte[] bodyBuffer = await CreateBodyBuffer(httpResult, httpContentType, body);
+
+            await context.Response.BodyWriter.WriteAsync(new ReadOnlyMemory<byte>(bodyBuffer), context.RequestAborted);
+        }
+
+        private static async Task<byte[]> CreateBodyBuffer(HttpResult httpResult, HttpContentType httpContentType, string body)
+        {
+            Encoding encoding = httpContentType.CharacterEncoding;
+            byte[] bodyArray = encoding.GetBytes(body);
+            using Stream sourceStream = new MemoryStream(bodyArray);
+
+            using Stream destStream = new MemoryStream();
+            using Stream compressStream = CreateNestedCompressionStream(destStream, httpResult.ContentEncoding);
+
+            sourceStream.CopyTo(compressStream);
+            await compressStream.FlushAsync();
+
+            destStream.Position = 0;
+            byte[] bodyBuffer = await destStream.ReadToEndAsync();
+            return bodyBuffer;
+        }
+
+        private static Stream CreateNestedCompressionStream(Stream destStream, string contentEncodings)
+        {
+            // Split the comma-separated list of encodings, and create
+            // a compression stream for each, starting with the last one,
+            // because the last compression mentioned in the encodings-list
+            // will receive the compression result of its predecessor.
+            Stream compressionStream = contentEncodings
+                .Split(',')
+                .Select(contentEncoding => contentEncoding.Trim())
+                .Reverse()
+                .Aggregate(destStream, CreateCompressionStream);
+
+            return compressionStream;
+        }
+
+        private static Stream CreateCompressionStream(Stream destStream, string contentEncoding)
+        {
+            switch (contentEncoding)
+            {
+                case "br":
+                    // Brotli compression
+                    destStream = new BrotliStream(destStream, CompressionMode.Compress, true);
+                    break;
+                case "compress":
+                    // LZW compression
+                    break;
+                case "deflate":
+                    // zlib structure with deflate compression
+                    destStream = new DeflateStream(destStream, CompressionMode.Compress, true);
+                    break;
+                case "gzip":
+                    // LZ77 compression
+                    destStream = new GZipStream(destStream, CompressionMode.Compress, true);
+                    break;
+                default:
+                    throw new Exception($"Compression '{contentEncoding}' not supported by this server");
+            }
+
+            return destStream;
         }
 
         private static void FillResponseWithCookies(HttpContext context, EndpointDescription endpointDescription, HttpResult response)
@@ -257,6 +315,11 @@ namespace MockWebApi.Middleware
                 {
                     context.Response.Headers[header.Key] = header.Value;
                 }
+            }
+
+            if (response.ContentEncoding != null)
+            {
+                context.Response.Headers["Content-Encoding"] = response.ContentEncoding;
             }
 
             if (!endpointDescription.DisableCors)

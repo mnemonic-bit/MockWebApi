@@ -13,6 +13,7 @@ namespace MockWebApi.Extension
             {
                 Body = body ?? httpResult.Body,
                 ContentType = contentType ?? httpResult.ContentType,
+                ContentEncoding = httpResult.ContentEncoding,
                 Headers = headers ?? httpResult.Headers,
                 IsMockedResult = isMockedResult ?? httpResult.IsMockedResult,
                 StatusCode = httpStatusCode ?? httpResult.StatusCode

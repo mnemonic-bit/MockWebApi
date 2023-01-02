@@ -25,7 +25,7 @@ namespace MockWebApi.Configuration.Model
         /// </summary>
         public HttpStatusCode StatusCode { get; set; }
 
-        public bool IsMockedResult { get; set; }
+        public bool IsMockedResult { get; set; } // TODO: remove this from the config Nuget
 
         /// <summary>
         /// The body of the response
@@ -37,6 +37,13 @@ namespace MockWebApi.Configuration.Model
         /// this will be set to the default value, which is "text/plain"
         /// </summary>
         public string ContentType { get; set; }
+
+        /// <summary>
+        /// The content-encoding representation used in the body itself.
+        /// This can have multiple comma separated values, e.g.
+        /// 'deflate' or 'deflate, gzip' are valid values.
+        /// </summary>
+        public string ContentEncoding { get; set; }
 
         /// <summary>
         /// A map of cookies set in this response.

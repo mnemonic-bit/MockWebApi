@@ -16,6 +16,11 @@ namespace MockWebApi.Extension
 
             result.Headers = httpResponse.Headers.ToDictionary();
 
+            if (httpResponse.Headers.ContainsKey("Content-Encoding"))
+            {
+                result.ContentEncoding = httpResponse.Headers["Content-Encoding"];
+            }
+
             //result.Cookies = httpResponse.Cookies.ToDictionary(); // does not work
 
             return result;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Text;
 
 namespace MockWebApi.Model
@@ -18,12 +19,17 @@ namespace MockWebApi.Model
 
             if (string.IsNullOrEmpty(contentType))
             {
-                throw new ArgumentException($"Cannot parse given content type '{contentType}', its null or empty", nameof(contentType));
+                ContentType = DefaultContentType;
+                CharacterEncoding = DefaultCharacterEncoding;
+                return;
             }
 
-            CharacterEncoding = Encoding.Latin1;
+            CharacterEncoding = DefaultCharacterEncoding;
 
-            string[] characterSet = contentType.Split(';');
+            string[] characterSet = contentType
+                .Split(';')
+                .Select(x => x.Trim())
+                .ToArray();
 
             if (characterSet.Length < 1)
             {
@@ -37,7 +43,11 @@ namespace MockWebApi.Model
                 return;
             }
 
-            string[] encodingName = characterSet[1].Trim().Split('=');
+            string[] encodingName = characterSet[1]
+                .Split('=')
+                .Select(x => x.Trim())
+                .ToArray();
+
             if (encodingName.Length < 2 || encodingName[0] != "charset")
             {
                 return;
@@ -53,6 +63,10 @@ namespace MockWebApi.Model
         {
             return CharacterEncoding.Equals(Encoding.Latin1) ? ContentType : $"{ContentType};charset={CharacterEncoding.HeaderName}";
         }
+
+
+        private readonly string DefaultContentType = "text/plain";
+        private readonly Encoding DefaultCharacterEncoding = Encoding.Latin1;
 
 
         private static bool TryGetEncoding(string encodingName, [NotNullWhen(true)] out Encoding? encoding)

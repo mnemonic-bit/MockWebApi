@@ -29,6 +29,8 @@ namespace MockWebApi.Model
 
         public string? ContentType { get; set; }
 
+        public string? ContentEncoding { get; set; }
+
         [YamlMember(ScalarStyle = ScalarStyle.Literal)]
         public string? Body { get; set; }
 

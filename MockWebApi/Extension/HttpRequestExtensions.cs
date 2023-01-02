@@ -17,7 +17,7 @@ namespace MockWebApi.Extension
         {
             request.EnableBuffering();
 
-            string body = await request.Body.ReadString(encoding);
+            string body = await request.Body.ReadStringAsync(encoding);
 
             request.Body.Position = 0;
 
@@ -43,6 +43,11 @@ namespace MockWebApi.Extension
                 Parameters = request.Query.ToDictionary(),
                 HttpHeaders = request.Headers.ToDictionary()
             };
+
+            if (request.Headers.ContainsKey("Content-Encoding"))
+            {
+                requestInfos.ContentEncoding = request.Headers["Content-Encoding"];
+            }
 
             string requestBody = await request.GetBody(Encoding.UTF8);
             requestBody = requestBody.Replace("\r\n", "\n");
