@@ -9,18 +9,14 @@ namespace MockWebApi.Configuration
 
         string ServiceName { get; }
 
-        string Url { get; }
+        /// <summary>
+        /// The type of the mocked service, e.g. REST, gRPC, or PROXY.
+        /// </summary>
+        string ServiceType { get; }
 
-        DefaultEndpointDescription DefaultEndpointDescription { get; set; }
+        public string Url { get; }
 
-        //TODO: create a class of its own for the error response
-        DefaultEndpointDescription ErrorResponseEndpointDescription { get; set; }
-
-        JwtServiceOptions JwtServiceOptions { get; set; }
-
-        IConfigurationCollection ConfigurationCollection { get; }
-
-        IRouteMatcher<IEndpointState> RouteMatcher { get; }
+        public bool TrackServiceApiCalls { get; }
 
         void ResetToDefault();
 

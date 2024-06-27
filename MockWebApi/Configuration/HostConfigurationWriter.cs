@@ -7,11 +7,11 @@ namespace MockWebApi.Configuration
     public class HostConfigurationWriter : IHostConfigurationWriter
     {
 
-        private readonly IConfigurationFileWriter _configurationWriter;
+        private readonly IConfigurationWriter _configurationWriter;
         private readonly IHostConfiguration _hostConfiguration;
 
         public HostConfigurationWriter(
-            IConfigurationFileWriter configurationWriter,
+            IConfigurationWriter configurationWriter,
             IHostConfiguration hostConfiguration)
         {
             _configurationWriter = configurationWriter;

@@ -1,478 +1,530 @@
 {
 	"info": {
-		"_postman_id": "2602fba9-1681-4228-a481-ca4f597a70d6",
+		"_postman_id": "c9b38f95-02b8-4aa9-94ad-95206f98412c",
 		"name": "MockWebApi",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "11553017"
 	},
 	"item": [
 		{
-			"name": "Startup And Teardown",
+			"name": "REST",
 			"item": [
 				{
-					"name": "Start",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "ServiceName: demo-service\r\nBaseUrl: http://0.0.0.0:{{DEMO_SERVICE_PORT}}\r\nDefaultEndpointDescription:\r\n  CheckAuthorization: false\r\n  AllowedUsers: []\r\n  Result:\r\n    StatusCode: 403\r\n    Body:\r\n    ContentType: text/plain\r\n  ReturnCookies: false"
-						},
-						"url": {
-							"raw": "http://localhost:{{MOCK_API_PORT}}/api/{{DEMO_SERVICE_NAME}}/start",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "{{MOCK_API_PORT}}",
-							"path": [
-								"api",
-								"{{DEMO_SERVICE_NAME}}",
-								"start"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Stop",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"url": {
-							"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/api/{{DEMO_SERVICE_NAME}}/stop",
-							"protocol": "http",
-							"host": [
-								"{{MOCK_API_HOST}}"
-							],
-							"port": "{{MOCK_API_PORT}}",
-							"path": [
-								"api",
-								"{{DEMO_SERVICE_NAME}}",
-								"stop"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Configure Server",
-			"item": [
-				{
-					"name": "Get IP Addresses Of Server",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/api/ip-addresses",
-							"protocol": "http",
-							"host": [
-								"{{MOCK_API_HOST}}"
-							],
-							"port": "{{MOCK_API_PORT}}",
-							"path": [
-								"api",
-								"ip-addresses"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Mocked Service Names",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/api/mocked-service-names",
-							"protocol": "http",
-							"host": [
-								"{{MOCK_API_HOST}}"
-							],
-							"port": "{{MOCK_API_PORT}}",
-							"path": [
-								"api",
-								"mocked-service-names"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Configure Service",
-			"item": [
-				{
-					"name": "Get Service Config",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/api/{{DEMO_SERVICE_NAME}}/configure",
-							"protocol": "http",
-							"host": [
-								"{{MOCK_API_HOST}}"
-							],
-							"port": "{{MOCK_API_PORT}}",
-							"path": [
-								"api",
-								"{{DEMO_SERVICE_NAME}}",
-								"configure"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Set Service Config",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "ServiceName: {{DEMO_SERVICE_NAME}}\r\nBaseUrl: http://0.0.0.0:{{DEMO_SERVICE_PORT}}\r\nDefaultEndpointDescription:\r\n  CheckAuthorization: false\r\n  AllowedUsers: []\r\n  Result:\r\n    StatusCode: OK\r\n  ReturnCookies: true\r\nJwtServiceOptions:\r\n  Issuer: ISSUER\r\n  Audience: AUDIENCE\r\n  Expiration: 01:00:00\r\n  SigningKey: This is the default key set by the mock web api on startup and whenever you reset the service to default settings\r\nEndpointDescriptions:\r\n- Route: /defined/route\r\n  HttpMethod: \r\n  DisableCors: false\r\n  Parameters: \r\n  RequestBodyType: application/JSON\r\n  LifecyclePolicy: Repeat\r\n  PersistRequestInformation: false\r\n  LogRequestInformation: true\r\n  CheckAuthorization: false\r\n  AllowedUsers:\r\n  - juser\r\n  - albert\r\n  Results:\r\n  - Headers: \r\n    StatusCode: Created\r\n    IsMockedResult: false\r\n    Body: >-\r\n      {\r\n          \"id\": \"12309832\",\r\n          \"fieldName\": \"this can be anything\"\r\n      }\r\n    ContentType: text/plain;charset=ISO-8859-1\r\n    Cookies: \r\n  ReturnCookies: true\r\n- Route: /defined/route/series\r\n  HttpMethod: \r\n  Parameters: \r\n  RequestBodyType: text/plain\r\n  LifecyclePolicy: Repeat\r\n  PersistRequestInformation: false\r\n  LogRequestInformation: true\r\n  CheckAuthorization: false\r\n  AllowedUsers:\r\n  - juser\r\n  - albert\r\n  Results:\r\n  - Headers: \r\n    StatusCode: Created\r\n    IsMockedResult: false\r\n    Body: >-\r\n      {\r\n          \"id\": \"1001\",\r\n          \"fieldName\": \"this can be something\"\r\n      }\r\n    ContentType: application/JSON\r\n    Cookies: \r\n  - Headers: \r\n    StatusCode: Created\r\n    IsMockedResult: false\r\n    Body: >-\r\n      {\r\n          \"id\": \"2002\",\r\n          \"fieldName\": \"this can be something else\"\r\n      }\r\n    ContentType: application/JSON\r\n    Cookies: \r\n  ReturnCookies: true\r\n- Route: /one-time/route\r\n  HttpMethod: \r\n  DisableCors: false\r\n  Parameters: \r\n  RequestBodyType: text/plain\r\n  LifecyclePolicy: ApplyOnce\r\n  PersistRequestInformation: false\r\n  LogRequestInformation: true\r\n  CheckAuthorization: false\r\n  AllowedUsers:\r\n  - juser\r\n  - albert\r\n  Results:\r\n  - Headers: \r\n    StatusCode: Accepted\r\n    IsMockedResult: false\r\n    Body: >-\r\n      {\r\n          \"just\": \"once\"\r\n      }\r\n    ContentType: application/JSON;charset=utf-8\r\n    Cookies: \r\n  ReturnCookies: true\r\n- Route: /one-time/series\r\n  HttpMethod: \r\n  Parameters: \r\n  RequestBodyType: text/plain\r\n  LifecyclePolicy: ApplyOnce\r\n  PersistRequestInformation: false\r\n  LogRequestInformation: true\r\n  CheckAuthorization: false\r\n  AllowedUsers:\r\n  - juser\r\n  - albert\r\n  Results:\r\n  - Headers: \r\n    StatusCode: Accepted\r\n    IsMockedResult: false\r\n    Body: >-\r\n      {\r\n          \"the\": \"first\"\r\n      }\r\n    ContentType: application/JSON\r\n    Cookies: \r\n  - Headers: \r\n    StatusCode: Accepted\r\n    IsMockedResult: false\r\n    Body: >-\r\n      {\r\n          \"the\": \"last\"\r\n      }\r\n    ContentType: application/JSON\r\n    Cookies: \r\n  ReturnCookies: true\r\n- Route: /NO/CORS\r\n  HttpMethod: \r\n  DisableCors: true\r\n  Parameters: \r\n  RequestBodyType: text/plain\r\n  LifecyclePolicy: ApplyOnce\r\n  PersistRequestInformation: false\r\n  LogRequestInformation: true\r\n  CheckAuthorization: false\r\n  AllowedUsers:\r\n  - juser\r\n  - albert\r\n  Results:\r\n  - Headers: \r\n    StatusCode: Accepted\r\n    IsMockedResult: false\r\n    Body: >-\r\n      {\r\n          \"just\": \"once\"\r\n      }\r\n    ContentType: application/JSON\r\n    Cookies: \r\n  ReturnCookies: true\r\n"
-						},
-						"url": {
-							"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/api/{{DEMO_SERVICE_NAME}}/configure",
-							"protocol": "http",
-							"host": [
-								"{{MOCK_API_HOST}}"
-							],
-							"port": "{{MOCK_API_PORT}}",
-							"path": [
-								"api",
-								"{{DEMO_SERVICE_NAME}}",
-								"configure"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Reset Service Config",
-					"request": {
-						"method": "DELETE",
-						"header": [],
-						"url": {
-							"raw": "http://localhost:{{MOCK_API_PORT}}/api/{{DEMO_SERVICE_NAME}}/configure",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "{{MOCK_API_PORT}}",
-							"path": [
-								"api",
-								"{{DEMO_SERVICE_NAME}}",
-								"configure"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "TrackServiceApiCalls",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/api/{{DEMO_SERVICE_NAME}}/configure?TrackServiceApiCalls=false",
-							"protocol": "http",
-							"host": [
-								"{{MOCK_API_HOST}}"
-							],
-							"port": "{{MOCK_API_PORT}}",
-							"path": [
-								"api",
-								"{{DEMO_SERVICE_NAME}}",
-								"configure"
-							],
-							"query": [
-								{
-									"key": "TrackServiceApiCalls",
-									"value": "false"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get DefaultResponse",
-					"protocolProfileBehavior": {
-						"disableBodyPruning": true
-					},
-					"request": {
-						"method": "GET",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": ""
-						},
-						"url": {
-							"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/api/{{DEMO_SERVICE_NAME}}/configure/default",
-							"protocol": "http",
-							"host": [
-								"{{MOCK_API_HOST}}"
-							],
-							"port": "{{MOCK_API_PORT}}",
-							"path": [
-								"api",
-								"{{DEMO_SERVICE_NAME}}",
-								"configure",
-								"default"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Set DefaultResponse",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "CheckAuthorization: false\r\nAllowedUsers:\r\n- juser\r\n- albert\r\nResult:\r\n  Headers: \r\n  StatusCode: 500\r\n  IsMockedResult: false\r\n  Body: this is the default-resonse\r\n  ContentType: plain/text\r\n  Cookies: \r\nReturnCookies: true"
-						},
-						"url": {
-							"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/api/{{DEMO_SERVICE_NAME}}/configure/default",
-							"protocol": "http",
-							"host": [
-								"{{MOCK_API_HOST}}"
-							],
-							"port": "{{MOCK_API_PORT}}",
-							"path": [
-								"api",
-								"{{DEMO_SERVICE_NAME}}",
-								"configure",
-								"default"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Add Route /defined/route",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "Route: /defined/route\r\nLifecyclePolicy: Repeat\r\nRequestBodyType: text/plain\r\nCheckAuthorization: false\r\nPersistRequestInformation: true\r\nAllowedUsers:\r\n- juser\r\n- albert\r\nResults:\r\n- Headers: \r\n  StatusCode: 201\r\n  IsMockedResult: false\r\n  Body: |-\r\n    {\r\n        \"id\": \"12309832\",\r\n        \"fieldName\": \"this can be anything\"\r\n    }\r\n  ContentType: application/JSON\r\n  Cookies: \r\nReturnCookies: true"
-						},
-						"url": {
-							"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/api/{{DEMO_SERVICE_NAME}}/configure/route",
-							"protocol": "http",
-							"host": [
-								"{{MOCK_API_HOST}}"
-							],
-							"port": "{{MOCK_API_PORT}}",
-							"path": [
-								"api",
-								"{{DEMO_SERVICE_NAME}}",
-								"configure",
-								"route"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Add Route /one-time/route",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "Route: /one-time/route\r\nLifecyclePolicy: ApplyOnce\r\nRequestBodyType: text/plain\r\nCheckAuthorization: false\r\nPersistRequestInformation: false\r\nAllowedUsers:\r\n- juser\r\n- albert\r\nResults:\r\n- Headers: \r\n  StatusCode: 202\r\n  IsMockedResult: false\r\n  Body: |-\r\n    {\r\n        \"just\": \"once\"\r\n    }\r\n  ContentType: application/JSON\r\n  Cookies: \r\nReturnCookies: true"
-						},
-						"url": {
-							"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/api/{{DEMO_SERVICE_NAME}}/configure/route",
-							"protocol": "http",
-							"host": [
-								"{{MOCK_API_HOST}}"
-							],
-							"port": "{{MOCK_API_PORT}}",
-							"path": [
-								"api",
-								"{{DEMO_SERVICE_NAME}}",
-								"configure",
-								"route"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Add Route /one-time/series",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "Route: /one-time/series\r\nLifecyclePolicy: ApplyOnce\r\nRequestBodyType: text/plain\r\nCheckAuthorization: false\r\nPersistRequestInformation: false\r\nAllowedUsers:\r\n- juser\r\n- albert\r\nResults:\r\n- Headers: \r\n  StatusCode: 202\r\n  Body: |-\r\n    {\r\n        \"just\": \"once\"\r\n    }\r\n  ContentType: text/JSON\r\n  Cookies: \r\n- Headers: \r\n  StatusCode: 201\r\n  Body: |-\r\n    {\r\n        \"now\": \"twice\"\r\n    }\r\n  ContentType: application/JSON\r\n  Cookies: \r\nReturnCookies: true"
-						},
-						"url": {
-							"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/api/{{DEMO_SERVICE_NAME}}/configure/route",
-							"protocol": "http",
-							"host": [
-								"{{MOCK_API_HOST}}"
-							],
-							"port": "{{MOCK_API_PORT}}",
-							"path": [
-								"api",
-								"{{DEMO_SERVICE_NAME}}",
-								"configure",
-								"route"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Add Route /api/path/with/{variable}",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "Route: /api/path/with/{variable}\r\nLifecyclePolicy: Repeat\r\nRequestBodyType: text/plain\r\nCheckAuthorization: false\r\nHttpMethod: POST\r\nPersistRequestInformation: true\r\nAllowedUsers:\r\n- juser\r\n- albert\r\nResults:\r\n- Headers: \r\n  StatusCode: 201\r\n  IsMockedResult: false\r\n  Body: |-\r\n    {\r\n        \"id\": \"12309832\",\r\n        \"fieldName\": \"this can be anything\"\r\n    }\r\n  ContentType: application/JSON\r\n  Cookies: \r\nReturnCookies: true"
-						},
-						"url": {
-							"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/api/{{DEMO_SERVICE_NAME}}/configure/route",
-							"protocol": "http",
-							"host": [
-								"{{MOCK_API_HOST}}"
-							],
-							"port": "{{MOCK_API_PORT}}",
-							"path": [
-								"api",
-								"{{DEMO_SERVICE_NAME}}",
-								"configure",
-								"route"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Request History",
-			"item": [
-				{
-					"name": "Get Requests",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/api/{{DEMO_SERVICE_NAME}}/request/tail/3",
-							"protocol": "http",
-							"host": [
-								"{{MOCK_API_HOST}}"
-							],
-							"port": "{{MOCK_API_PORT}}",
-							"path": [
-								"api",
-								"{{DEMO_SERVICE_NAME}}",
-								"request",
-								"tail",
-								"3"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Clear Request History",
-					"request": {
-						"method": "DELETE",
-						"header": [],
-						"url": {
-							"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/api/{{DEMO_SERVICE_NAME}}/request",
-							"protocol": "http",
-							"host": [
-								"{{MOCK_API_HOST}}"
-							],
-							"port": "{{MOCK_API_PORT}}",
-							"path": [
-								"api",
-								"{{DEMO_SERVICE_NAME}}",
-								"request"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Requests",
-			"item": [
-				{
-					"name": "CORS",
+					"name": "Start And Teardown",
 					"item": [
 						{
-							"name": "CORS Pre-Flight Check",
+							"name": "Start REST Service",
 							"request": {
-								"method": "OPTIONS",
-								"header": [
-									{
-										"key": "Origin",
-										"value": "{{MOCK_API_HOST}}:{{MOCK_API_PORT}}",
-										"type": "default"
-									},
-									{
-										"key": "Access-Control-Request-Method",
-										"value": "GET",
-										"type": "default"
-									}
-								],
+								"method": "POST",
+								"header": [],
 								"url": {
-									"raw": "http://{{MOCK_API_HOST}}:{{DEMO_SERVICE_PORT}}/NO/CORS",
+									"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/api/{{DEMO_REST_SERVICE_NAME}}/start",
 									"protocol": "http",
 									"host": [
 										"{{MOCK_API_HOST}}"
 									],
-									"port": "{{DEMO_SERVICE_PORT}}",
+									"port": "{{MOCK_API_PORT}}",
 									"path": [
-										"NO",
-										"CORS"
+										"api",
+										"{{DEMO_REST_SERVICE_NAME}}",
+										"start"
 									]
 								}
 							},
 							"response": []
 						},
 						{
-							"name": "CORS Pre-Flight Check Special Request Header",
+							"name": "Stop REST Service",
 							"request": {
-								"method": "OPTIONS",
-								"header": [
-									{
-										"key": "Origin",
-										"value": "{{MOCK_API_HOST}}:{{MOCK_API_PORT}}",
-										"type": "default"
-									},
-									{
-										"key": "Access-Control-Request-Method",
-										"value": "GET",
-										"type": "default"
-									},
-									{
-										"key": "Access-Control-Request-Headers",
-										"value": "Some-Special-Request-Header",
-										"type": "default"
-									}
-								],
+								"method": "POST",
+								"header": [],
 								"url": {
-									"raw": "http://{{MOCK_API_HOST}}:{{DEMO_SERVICE_PORT}}/NO/CORS",
+									"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/api/{{DEMO_REST_SERVICE_NAME}}/stop",
 									"protocol": "http",
 									"host": [
 										"{{MOCK_API_HOST}}"
 									],
-									"port": "{{DEMO_SERVICE_PORT}}",
+									"port": "{{MOCK_API_PORT}}",
+									"path": [
+										"api",
+										"{{DEMO_REST_SERVICE_NAME}}",
+										"stop"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Requests",
+					"item": [
+						{
+							"name": "CORS",
+							"item": [
+								{
+									"name": "CORS Pre-Flight Check",
+									"request": {
+										"method": "OPTIONS",
+										"header": [
+											{
+												"key": "Origin",
+												"value": "{{MOCK_API_HOST}}:{{MOCK_API_PORT}}",
+												"type": "default"
+											},
+											{
+												"key": "Access-Control-Request-Method",
+												"value": "GET",
+												"type": "default"
+											}
+										],
+										"url": {
+											"raw": "http://{{MOCK_API_HOST}}:{{DEMO_REST_SERVICE_PORT}}/NO/CORS",
+											"protocol": "http",
+											"host": [
+												"{{MOCK_API_HOST}}"
+											],
+											"port": "{{DEMO_REST_SERVICE_PORT}}",
+											"path": [
+												"NO",
+												"CORS"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "CORS Pre-Flight Check Special Request Header",
+									"request": {
+										"method": "OPTIONS",
+										"header": [
+											{
+												"key": "Origin",
+												"value": "{{MOCK_API_HOST}}:{{MOCK_API_PORT}}",
+												"type": "default"
+											},
+											{
+												"key": "Access-Control-Request-Method",
+												"value": "GET",
+												"type": "default"
+											},
+											{
+												"key": "Access-Control-Request-Headers",
+												"value": "Some-Special-Request-Header",
+												"type": "default"
+											}
+										],
+										"url": {
+											"raw": "http://{{MOCK_API_HOST}}:{{DEMO_REST_SERVICE_PORT}}/NO/CORS",
+											"protocol": "http",
+											"host": [
+												"{{MOCK_API_HOST}}"
+											],
+											"port": "{{DEMO_REST_SERVICE_PORT}}",
+											"path": [
+												"NO",
+												"CORS"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "/brand/new/path",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "sdf",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "http://{{MOCK_API_HOST}}:{{DEMO_REST_SERVICE_PORT}}/brand/new/path",
+									"protocol": "http",
+									"host": [
+										"{{MOCK_API_HOST}}"
+									],
+									"port": "{{DEMO_REST_SERVICE_PORT}}",
+									"path": [
+										"brand",
+										"new",
+										"path"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "/content/encoding/br",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true,
+								"disabledSystemHeaders": {}
+							},
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "",
+										"value": "",
+										"type": "text",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "http://{{MOCK_API_HOST}}:{{DEMO_REST_SERVICE_PORT}}/content/encoding/br",
+									"protocol": "http",
+									"host": [
+										"{{MOCK_API_HOST}}"
+									],
+									"port": "{{DEMO_REST_SERVICE_PORT}}",
+									"path": [
+										"content",
+										"encoding",
+										"br"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "/content/encoding/defalte",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "sdf",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "http://{{MOCK_API_HOST}}:{{DEMO_REST_SERVICE_PORT}}/content/encoding/deflate",
+									"protocol": "http",
+									"host": [
+										"{{MOCK_API_HOST}}"
+									],
+									"port": "{{DEMO_REST_SERVICE_PORT}}",
+									"path": [
+										"content",
+										"encoding",
+										"deflate"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "/content/encoding/gzip",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "sdf",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "http://{{MOCK_API_HOST}}:{{DEMO_REST_SERVICE_PORT}}/content/encoding/gzip",
+									"protocol": "http",
+									"host": [
+										"{{MOCK_API_HOST}}"
+									],
+									"port": "{{DEMO_REST_SERVICE_PORT}}",
+									"path": [
+										"content",
+										"encoding",
+										"gzip"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "/content/encoding/gzip+deflate",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "sdf",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "http://{{MOCK_API_HOST}}:{{DEMO_REST_SERVICE_PORT}}/content/encoding/gzip+deflate",
+									"protocol": "http",
+									"host": [
+										"{{MOCK_API_HOST}}"
+									],
+									"port": "{{DEMO_REST_SERVICE_PORT}}",
+									"path": [
+										"content",
+										"encoding",
+										"gzip+deflate"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "/defined/route",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "sdf",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "http://{{MOCK_API_HOST}}:{{DEMO_REST_SERVICE_PORT}}/defined/route",
+									"protocol": "http",
+									"host": [
+										"{{MOCK_API_HOST}}"
+									],
+									"port": "{{DEMO_REST_SERVICE_PORT}}",
+									"path": [
+										"defined",
+										"route"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "/defined/route/series",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "sdf",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "http://{{MOCK_API_HOST}}:{{DEMO_REST_SERVICE_PORT}}/defined/route/series",
+									"protocol": "http",
+									"host": [
+										"{{MOCK_API_HOST}}"
+									],
+									"port": "{{DEMO_REST_SERVICE_PORT}}",
+									"path": [
+										"defined",
+										"route",
+										"series"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "/one-time/route",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "sdf",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "http://{{MOCK_API_HOST}}:{{DEMO_REST_SERVICE_PORT}}/one-time/route",
+									"protocol": "http",
+									"host": [
+										"{{MOCK_API_HOST}}"
+									],
+									"port": "{{DEMO_REST_SERVICE_PORT}}",
+									"path": [
+										"one-time",
+										"route"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "/one-time/series",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "sdf",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "http://{{MOCK_API_HOST}}:{{DEMO_REST_SERVICE_PORT}}/one-time/series",
+									"protocol": "http",
+									"host": [
+										"{{MOCK_API_HOST}}"
+									],
+									"port": "{{DEMO_REST_SERVICE_PORT}}",
+									"path": [
+										"one-time",
+										"series"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "/some/path",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://{{MOCK_API_HOST}}:{{DEMO_REST_SERVICE_PORT}}/some/path",
+									"protocol": "http",
+									"host": [
+										"{{MOCK_API_HOST}}"
+									],
+									"port": "{{DEMO_REST_SERVICE_PORT}}",
+									"path": [
+										"some",
+										"path"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "/api/path/with/{variable}",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "http://{{MOCK_API_HOST}}:{{DEMO_REST_SERVICE_PORT}}/api/path/with/7ba87fd9-1283-4181-80d0-0158d2f94b97",
+									"protocol": "http",
+									"host": [
+										"{{MOCK_API_HOST}}"
+									],
+									"port": "{{DEMO_REST_SERVICE_PORT}}",
+									"path": [
+										"api",
+										"path",
+										"with",
+										"7ba87fd9-1283-4181-80d0-0158d2f94b97"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "/NO/CORS",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://{{MOCK_API_HOST}}:{{DEMO_REST_SERVICE_PORT}}/NO/CORS",
+									"protocol": "http",
+									"host": [
+										"{{MOCK_API_HOST}}"
+									],
+									"port": "{{DEMO_REST_SERVICE_PORT}}",
 									"path": [
 										"NO",
 										"CORS"
@@ -482,346 +534,681 @@
 							"response": []
 						}
 					]
-				},
-				{
-					"name": "/brand/new/path",
-					"protocolProfileBehavior": {
-						"disableBodyPruning": true
-					},
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "sdf",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": ""
-						},
-						"url": {
-							"raw": "http://{{MOCK_API_HOST}}:{{DEMO_SERVICE_PORT}}/brand/new/path",
-							"protocol": "http",
-							"host": [
-								"{{MOCK_API_HOST}}"
-							],
-							"port": "{{DEMO_SERVICE_PORT}}",
-							"path": [
-								"brand",
-								"new",
-								"path"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "/defined/route",
-					"protocolProfileBehavior": {
-						"disableBodyPruning": true
-					},
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "sdf",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": ""
-						},
-						"url": {
-							"raw": "http://{{MOCK_API_HOST}}:{{DEMO_SERVICE_PORT}}/defined/route",
-							"protocol": "http",
-							"host": [
-								"{{MOCK_API_HOST}}"
-							],
-							"port": "{{DEMO_SERVICE_PORT}}",
-							"path": [
-								"defined",
-								"route"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "/defined/route/series",
-					"protocolProfileBehavior": {
-						"disableBodyPruning": true
-					},
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "sdf",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": ""
-						},
-						"url": {
-							"raw": "http://{{MOCK_API_HOST}}:{{DEMO_SERVICE_PORT}}/defined/route/series",
-							"protocol": "http",
-							"host": [
-								"{{MOCK_API_HOST}}"
-							],
-							"port": "{{DEMO_SERVICE_PORT}}",
-							"path": [
-								"defined",
-								"route",
-								"series"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "/one-time/route",
-					"protocolProfileBehavior": {
-						"disableBodyPruning": true
-					},
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "sdf",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": ""
-						},
-						"url": {
-							"raw": "http://{{MOCK_API_HOST}}:{{DEMO_SERVICE_PORT}}/one-time/route",
-							"protocol": "http",
-							"host": [
-								"{{MOCK_API_HOST}}"
-							],
-							"port": "{{DEMO_SERVICE_PORT}}",
-							"path": [
-								"one-time",
-								"route"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "/one-time/series",
-					"protocolProfileBehavior": {
-						"disableBodyPruning": true
-					},
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "sdf",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": ""
-						},
-						"url": {
-							"raw": "http://{{MOCK_API_HOST}}:{{DEMO_SERVICE_PORT}}/one-time/series",
-							"protocol": "http",
-							"host": [
-								"{{MOCK_API_HOST}}"
-							],
-							"port": "{{DEMO_SERVICE_PORT}}",
-							"path": [
-								"one-time",
-								"series"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "/some/path",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "http://{{MOCK_API_HOST}}:{{DEMO_SERVICE_PORT}}/some/path",
-							"protocol": "http",
-							"host": [
-								"{{MOCK_API_HOST}}"
-							],
-							"port": "{{DEMO_SERVICE_PORT}}",
-							"path": [
-								"some",
-								"path"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "/api/path/with/{variable}",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"url": {
-							"raw": "http://{{MOCK_API_HOST}}:{{DEMO_SERVICE_PORT}}/api/path/with/7ba87fd9-1283-4181-80d0-0158d2f94b97",
-							"protocol": "http",
-							"host": [
-								"{{MOCK_API_HOST}}"
-							],
-							"port": "{{DEMO_SERVICE_PORT}}",
-							"path": [
-								"api",
-								"path",
-								"with",
-								"7ba87fd9-1283-4181-80d0-0158d2f94b97"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "/NO/CORS",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "http://{{MOCK_API_HOST}}:{{DEMO_SERVICE_PORT}}/NO/CORS",
-							"protocol": "http",
-							"host": [
-								"{{MOCK_API_HOST}}"
-							],
-							"port": "{{DEMO_SERVICE_PORT}}",
-							"path": [
-								"NO",
-								"CORS"
-							]
-						}
-					},
-					"response": []
 				}
 			]
 		},
 		{
-			"name": "Swagger",
+			"name": "GPRC",
 			"item": [
 				{
-					"name": "Swagger Index Html",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/swagger/index.html",
-							"protocol": "http",
-							"host": [
-								"{{MOCK_API_HOST}}"
-							],
-							"port": "{{MOCK_API_PORT}}",
-							"path": [
-								"swagger",
-								"index.html"
-							]
+					"name": "Start And Teardown",
+					"item": [
+						{
+							"name": "Start GRPC Service",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "ServiceName: demo-service\r\nBaseUrl: http://0.0.0.0:{{DEMO_GRPC_SERVICE_PORT}}\r\nServiceType: GRPC\r\nDefaultEndpointDescription:\r\n  CheckAuthorization: false\r\n  AllowedUsers: []\r\n  Result:\r\n    StatusCode: 403\r\n    Body:\r\n    ContentType: text/plain\r\n  ReturnCookies: false"
+								},
+								"url": {
+									"raw": "http://localhost:{{MOCK_API_PORT}}/api/{{DEMO_GRPC_SERVICE_NAME}}/start",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "{{MOCK_API_PORT}}",
+									"path": [
+										"api",
+										"{{DEMO_GRPC_SERVICE_NAME}}",
+										"start"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Stop gRPC Service",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/api/{{DEMO_GRPC_SERVICE_NAME}}/stop",
+									"protocol": "http",
+									"host": [
+										"{{MOCK_API_HOST}}"
+									],
+									"port": "{{MOCK_API_PORT}}",
+									"path": [
+										"api",
+										"{{DEMO_GRPC_SERVICE_NAME}}",
+										"stop"
+									]
+								}
+							},
+							"response": []
 						}
-					},
-					"response": []
+					]
+				}
+			]
+		},
+		{
+			"name": "Proxy",
+			"item": [
+				{
+					"name": "Startup And Teardown",
+					"item": [
+						{
+							"name": "Start Proxy Service",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "ServiceName: {{DEMO_PROXY_SERVICE_NAME}}\r\nBaseUrl: https://0.0.0.0:{{DEMO_PROXY_SERVICE_PORT}}\r\nServiceType: PROXY\r\nDestinationUrl: https://localhost:6000"
+								},
+								"url": {
+									"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/api/{{DEMO_PROXY_SERVICE_NAME}}/start",
+									"protocol": "http",
+									"host": [
+										"{{MOCK_API_HOST}}"
+									],
+									"port": "{{MOCK_API_PORT}}",
+									"path": [
+										"api",
+										"{{DEMO_PROXY_SERVICE_NAME}}",
+										"start"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Stop Proxy Service",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/api/{{DEMO_PROXY_SERVICE_NAME}}/stop",
+									"protocol": "http",
+									"host": [
+										"{{MOCK_API_HOST}}"
+									],
+									"port": "{{MOCK_API_PORT}}",
+									"path": [
+										"api",
+										"{{DEMO_PROXY_SERVICE_NAME}}",
+										"stop"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "General",
+			"item": [
+				{
+					"name": "Configure Service",
+					"item": [
+						{
+							"name": "Get Service Config",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/api/{{DEMO_REST_SERVICE_NAME}}/configure",
+									"protocol": "http",
+									"host": [
+										"{{MOCK_API_HOST}}"
+									],
+									"port": "{{MOCK_API_PORT}}",
+									"path": [
+										"api",
+										"{{DEMO_REST_SERVICE_NAME}}",
+										"configure"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Set Service Config",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "ServiceName: {{DEMO_REST_SERVICE_NAME}}\r\nBaseUrl: http://0.0.0.0:{{DEMO_REST_SERVICE_PORT}}\r\nServiceType: REST\r\nDefaultEndpointDescription:\r\n  CheckAuthorization: false\r\n  AllowedUsers: []\r\n  Result:\r\n    StatusCode: OK\r\n  ReturnCookies: true\r\nJwtServiceOptions:\r\n  Issuer: ISSUER\r\n  Audience: AUDIENCE\r\n  Expiration: 01:00:00\r\n  SigningKey: This is the default key set by the mock web api on startup and whenever you reset the service to default settings\r\nEndpointDescriptions:\r\n- Route: /defined/route\r\n  HttpMethod: \r\n  DisableCors: false\r\n  Parameters: \r\n  RequestBodyType: application/JSON\r\n  LifecyclePolicy: Repeat\r\n  PersistRequestInformation: false\r\n  LogRequestInformation: true\r\n  CheckAuthorization: false\r\n  AllowedUsers:\r\n  - juser\r\n  - albert\r\n  Results:\r\n  - Headers:\r\n    StatusCode: Created\r\n    IsMockedResult: false\r\n    Body: >-\r\n      {\r\n          \"id\": \"12309832\",\r\n          \"fieldName\": \"this can be anything\"\r\n      }\r\n    ContentType: text/plain;charset=ISO-8859-1\r\n    ContentEncoding: deflate, gzip\r\n    Cookies: \r\n  ReturnCookies: true\r\n- Route: /defined/route/series\r\n  HttpMethod: \r\n  Parameters: \r\n  RequestBodyType: text/plain\r\n  LifecyclePolicy: Repeat\r\n  PersistRequestInformation: false\r\n  LogRequestInformation: true\r\n  CheckAuthorization: false\r\n  AllowedUsers:\r\n  - juser\r\n  - albert\r\n  Results:\r\n  - Headers: \r\n    StatusCode: Created\r\n    IsMockedResult: false\r\n    Body: >-\r\n      {\r\n          \"id\": \"1001\",\r\n          \"fieldName\": \"this can be something\"\r\n      }\r\n    ContentType: application/JSON;charset=utf-8\r\n    Cookies: \r\n  - Headers: \r\n    StatusCode: Created\r\n    IsMockedResult: false\r\n    Body: >-\r\n      {\r\n          \"id\": \"2002\",\r\n          \"fieldName\": \"this can be something else\"\r\n      }\r\n    ContentType: application/JSON;charset=UTF-8\r\n    Cookies: \r\n  ReturnCookies: true\r\n- Route: /one-time/route\r\n  HttpMethod: \r\n  DisableCors: false\r\n  Parameters: \r\n  RequestBodyType: text/plain\r\n  LifecyclePolicy: ApplyOnce\r\n  PersistRequestInformation: false\r\n  LogRequestInformation: true\r\n  CheckAuthorization: false\r\n  AllowedUsers:\r\n  - juser\r\n  - albert\r\n  Results:\r\n  - Headers: \r\n    StatusCode: Accepted\r\n    IsMockedResult: false\r\n    Body: >-\r\n      {\r\n          \"just\": \"once\"\r\n      }\r\n    ContentType: application/JSON;charset=utf-8\r\n    Cookies: \r\n  ReturnCookies: true\r\n- Route: /one-time/series\r\n  HttpMethod: \r\n  Parameters: \r\n  RequestBodyType: text/plain\r\n  LifecyclePolicy: ApplyOnce\r\n  PersistRequestInformation: false\r\n  LogRequestInformation: true\r\n  CheckAuthorization: false\r\n  AllowedUsers:\r\n  - juser\r\n  - albert\r\n  Results:\r\n  - Headers: \r\n    StatusCode: Accepted\r\n    IsMockedResult: false\r\n    Body: >-\r\n      {\r\n          \"the\": \"first\"\r\n      }\r\n    ContentType: application/JSON\r\n    Cookies: \r\n  - Headers: \r\n    StatusCode: Accepted\r\n    IsMockedResult: false\r\n    Body: >-\r\n      {\r\n          \"the\": \"last\"\r\n      }\r\n    ContentType: application/JSON\r\n    Cookies: \r\n  ReturnCookies: true\r\n- Route: /NO/CORS\r\n  HttpMethod: \r\n  DisableCors: true\r\n  Parameters: \r\n  RequestBodyType: text/plain\r\n  LifecyclePolicy: ApplyOnce\r\n  PersistRequestInformation: false\r\n  LogRequestInformation: true\r\n  CheckAuthorization: false\r\n  AllowedUsers:\r\n  - juser\r\n  - albert\r\n  Results:\r\n  - Headers: \r\n    StatusCode: Accepted\r\n    IsMockedResult: false\r\n    Body: >-\r\n      {\r\n          \"just\": \"once\"\r\n      }\r\n    ContentType: application/JSON\r\n    Cookies: \r\n  ReturnCookies: true\r\n- Route: /content/encoding/br\r\n  HttpMethod: GET\r\n  DisableCors: false\r\n  RequestBodyType: application/JSON\r\n  LifecyclePolicy: Repeat\r\n  PersistRequestInformation: true\r\n  LogRequestInformation: true\r\n  CheckAuthorization: false\r\n  Results:\r\n  - Headers:\r\n    StatusCode: OK\r\n    Body: >-\r\n      {\r\n          \"id\": \"12309832\",\r\n          \"fieldName\": \"this information has been compressed with Brotli successfully\"\r\n      }\r\n    ContentType: application/JSON;charset=ISO-8859-1\r\n    ContentEncoding: br\r\n- Route: /content/encoding/deflate\r\n  HttpMethod: GET\r\n  DisableCors: false\r\n  RequestBodyType: application/JSON\r\n  LifecyclePolicy: Repeat\r\n  PersistRequestInformation: true\r\n  LogRequestInformation: true\r\n  CheckAuthorization: false\r\n  Results:\r\n  - Headers:\r\n    StatusCode: OK\r\n    Body: >-\r\n      {\r\n          \"id\": \"12309832\",\r\n          \"fieldName\": \"this information has been compressed with Deflate successfully\"\r\n      }\r\n    ContentType: application/JSON;charset=ISO-8859-1\r\n    ContentEncoding: deflate\r\n- Route: /content/encoding/gzip\r\n  HttpMethod: GET\r\n  DisableCors: false\r\n  RequestBodyType: application/JSON\r\n  LifecyclePolicy: Repeat\r\n  PersistRequestInformation: true\r\n  LogRequestInformation: true\r\n  CheckAuthorization: false\r\n  Results:\r\n  - Headers:\r\n    StatusCode: OK\r\n    Body: >-\r\n      {\r\n          \"id\": \"12309832\",\r\n          \"fieldName\": \"this information has been compressed with LZ77 successfully\"\r\n      }\r\n    ContentType: application/JSON;charset=ISO-8859-1\r\n    ContentEncoding: gzip\r\n- Route: /content/encoding/gzip+deflate\r\n  HttpMethod: GET\r\n  DisableCors: false\r\n  RequestBodyType: application/JSON\r\n  LifecyclePolicy: Repeat\r\n  PersistRequestInformation: true\r\n  LogRequestInformation: true\r\n  CheckAuthorization: false\r\n  Results:\r\n  - Headers:\r\n    StatusCode: OK\r\n    Body: >-\r\n      {\r\n          \"id\": \"12309832\",\r\n          \"fieldName\": \"this information has been compressed with LZ77 successfully\"\r\n      }\r\n    ContentType: application/JSON;charset=ISO-8859-1\r\n    ContentEncoding: gzip, deflate\r\n"
+								},
+								"url": {
+									"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/api/{{DEMO_REST_SERVICE_NAME}}/configure",
+									"protocol": "http",
+									"host": [
+										"{{MOCK_API_HOST}}"
+									],
+									"port": "{{MOCK_API_PORT}}",
+									"path": [
+										"api",
+										"{{DEMO_REST_SERVICE_NAME}}",
+										"configure"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Reset Service Config",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:{{MOCK_API_PORT}}/api/{{DEMO_REST_SERVICE_NAME}}/configure",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "{{MOCK_API_PORT}}",
+									"path": [
+										"api",
+										"{{DEMO_REST_SERVICE_NAME}}",
+										"configure"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "TrackServiceApiCalls",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/api/{{DEMO_REST_SERVICE_NAME}}/configure?TrackServiceApiCalls=false",
+									"protocol": "http",
+									"host": [
+										"{{MOCK_API_HOST}}"
+									],
+									"port": "{{MOCK_API_PORT}}",
+									"path": [
+										"api",
+										"{{DEMO_REST_SERVICE_NAME}}",
+										"configure"
+									],
+									"query": [
+										{
+											"key": "TrackServiceApiCalls",
+											"value": "false"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get DefaultResponse",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/api/{{DEMO_REST_SERVICE_NAME}}/configure/default",
+									"protocol": "http",
+									"host": [
+										"{{MOCK_API_HOST}}"
+									],
+									"port": "{{MOCK_API_PORT}}",
+									"path": [
+										"api",
+										"{{DEMO_REST_SERVICE_NAME}}",
+										"configure",
+										"default"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Set DefaultResponse",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "CheckAuthorization: false\r\nAllowedUsers:\r\n- juser\r\n- albert\r\nResult:\r\n  Headers: \r\n  StatusCode: 500\r\n  IsMockedResult: false\r\n  Body: this is the default-resonse\r\n  ContentType: plain/text\r\n  Cookies: \r\nReturnCookies: true"
+								},
+								"url": {
+									"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/api/{{DEMO_REST_SERVICE_NAME}}/configure/default",
+									"protocol": "http",
+									"host": [
+										"{{MOCK_API_HOST}}"
+									],
+									"port": "{{MOCK_API_PORT}}",
+									"path": [
+										"api",
+										"{{DEMO_REST_SERVICE_NAME}}",
+										"configure",
+										"default"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Add Route /defined/route",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "Route: /defined/route\r\nLifecyclePolicy: Repeat\r\nRequestBodyType: text/plain\r\nCheckAuthorization: false\r\nPersistRequestInformation: true\r\nAllowedUsers:\r\n- juser\r\n- albert\r\nResults:\r\n- Headers: \r\n  StatusCode: 201\r\n  IsMockedResult: false\r\n  Body: |-\r\n    {\r\n        \"id\": \"12309832\",\r\n        \"fieldName\": \"this can be anything\"\r\n    }\r\n  ContentType: application/JSON\r\n  Cookies: \r\nReturnCookies: true"
+								},
+								"url": {
+									"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/api/{{DEMO_REST_SERVICE_NAME}}/configure/route",
+									"protocol": "http",
+									"host": [
+										"{{MOCK_API_HOST}}"
+									],
+									"port": "{{MOCK_API_PORT}}",
+									"path": [
+										"api",
+										"{{DEMO_REST_SERVICE_NAME}}",
+										"configure",
+										"route"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Add Route /one-time/route",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "Route: /one-time/route\r\nLifecyclePolicy: ApplyOnce\r\nRequestBodyType: text/plain\r\nCheckAuthorization: false\r\nPersistRequestInformation: false\r\nAllowedUsers:\r\n- juser\r\n- albert\r\nResults:\r\n- Headers: \r\n  StatusCode: 202\r\n  IsMockedResult: false\r\n  Body: |-\r\n    {\r\n        \"just\": \"once\"\r\n    }\r\n  ContentType: application/JSON\r\n  Cookies: \r\nReturnCookies: true"
+								},
+								"url": {
+									"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/api/{{DEMO_REST_SERVICE_NAME}}/configure/route",
+									"protocol": "http",
+									"host": [
+										"{{MOCK_API_HOST}}"
+									],
+									"port": "{{MOCK_API_PORT}}",
+									"path": [
+										"api",
+										"{{DEMO_REST_SERVICE_NAME}}",
+										"configure",
+										"route"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Add Route /one-time/series",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "Route: /one-time/series\r\nLifecyclePolicy: ApplyOnce\r\nRequestBodyType: text/plain\r\nCheckAuthorization: false\r\nPersistRequestInformation: false\r\nAllowedUsers:\r\n- juser\r\n- albert\r\nResults:\r\n- Headers: \r\n  StatusCode: 202\r\n  Body: |-\r\n    {\r\n        \"just\": \"once\"\r\n    }\r\n  ContentType: text/JSON\r\n  Cookies: \r\n- Headers: \r\n  StatusCode: 201\r\n  Body: |-\r\n    {\r\n        \"now\": \"twice\"\r\n    }\r\n  ContentType: application/JSON\r\n  Cookies: \r\nReturnCookies: true"
+								},
+								"url": {
+									"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/api/{{DEMO_REST_SERVICE_NAME}}/configure/route",
+									"protocol": "http",
+									"host": [
+										"{{MOCK_API_HOST}}"
+									],
+									"port": "{{MOCK_API_PORT}}",
+									"path": [
+										"api",
+										"{{DEMO_REST_SERVICE_NAME}}",
+										"configure",
+										"route"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Add Route /api/path/with/{variable}",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "Route: /api/path/with/{variable}\r\nLifecyclePolicy: Repeat\r\nRequestBodyType: text/plain\r\nCheckAuthorization: false\r\nHttpMethod: POST\r\nPersistRequestInformation: true\r\nAllowedUsers:\r\n- juser\r\n- albert\r\nResults:\r\n- Headers: \r\n  StatusCode: 201\r\n  IsMockedResult: false\r\n  Body: |-\r\n    {\r\n        \"id\": \"12309832\",\r\n        \"fieldName\": \"this can be anything\"\r\n    }\r\n  ContentType: application/JSON\r\n  Cookies: \r\nReturnCookies: true"
+								},
+								"url": {
+									"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/api/{{DEMO_REST_SERVICE_NAME}}/configure/route",
+									"protocol": "http",
+									"host": [
+										"{{MOCK_API_HOST}}"
+									],
+									"port": "{{MOCK_API_PORT}}",
+									"path": [
+										"api",
+										"{{DEMO_REST_SERVICE_NAME}}",
+										"configure",
+										"route"
+									]
+								}
+							},
+							"response": []
+						}
+					]
 				},
 				{
-					"name": "Swagger Index Html Of Demo Service",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/api/{{DEMO_SERVICE_NAME}}/swagger/index.html",
-							"protocol": "http",
-							"host": [
-								"{{MOCK_API_HOST}}"
-							],
-							"port": "{{MOCK_API_PORT}}",
-							"path": [
-								"api",
-								"{{DEMO_SERVICE_NAME}}",
-								"swagger",
-								"index.html"
-							]
+					"name": "Diagnostic",
+					"item": [
+						{
+							"name": "Client Infos",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/diagnostic/client-infos",
+									"protocol": "http",
+									"host": [
+										"{{MOCK_API_HOST}}"
+									],
+									"port": "{{MOCK_API_PORT}}",
+									"path": [
+										"diagnostic",
+										"client-infos"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Request Infos",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Transfer-Encoding",
+										"value": "ISO-8859-1",
+										"type": "default"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"Id\": 1234356,\r\n    \"Content\": \"Some sophisticated content.\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/diagnostic/request-infos",
+									"protocol": "http",
+									"host": [
+										"{{MOCK_API_HOST}}"
+									],
+									"port": "{{MOCK_API_PORT}}",
+									"path": [
+										"diagnostic",
+										"request-infos"
+									]
+								}
+							},
+							"response": []
 						}
-					},
-					"response": []
+					]
 				},
 				{
-					"name": "Swagger Json For demo-service",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/api/{{DEMO_SERVICE_NAME}}/swagger/v1/swagger.json",
-							"protocol": "http",
-							"host": [
-								"{{MOCK_API_HOST}}"
-							],
-							"port": "{{MOCK_API_PORT}}",
-							"path": [
-								"api",
-								"{{DEMO_SERVICE_NAME}}",
-								"swagger",
-								"v1",
-								"swagger.json"
-							]
+					"name": "GraphQL",
+					"item": [
+						{
+							"name": "Playground",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/playground",
+									"protocol": "http",
+									"host": [
+										"{{MOCK_API_HOST}}"
+									],
+									"port": "{{MOCK_API_PORT}}",
+									"path": [
+										"playground"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Requests",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"operationName\": null,\r\n    \"variables\": {},\r\n    \"query\": \"{\\n  requestHistory {\\n    request {\\n      path\\n      httpVerb\\n      body\\n    }\\n    response {\\n      statusCode\\n      contentType\\n      body\\n    }\\n  }\\n}\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/graphql",
+									"protocol": "http",
+									"host": [
+										"{{MOCK_API_HOST}}"
+									],
+									"port": "{{MOCK_API_PORT}}",
+									"path": [
+										"graphql"
+									]
+								}
+							},
+							"response": []
 						}
-					},
-					"response": []
+					]
 				},
 				{
-					"name": "Swagger Json",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/swagger/v1/swagger.json",
-							"protocol": "http",
-							"host": [
-								"{{MOCK_API_HOST}}"
-							],
-							"port": "{{MOCK_API_PORT}}",
-							"path": [
-								"swagger",
-								"v1",
-								"swagger.json"
-							]
+					"name": "Request History",
+					"item": [
+						{
+							"name": "Get Requests",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/api/{{DEMO_REST_SERVICE_NAME}}/request/tail/10",
+									"protocol": "http",
+									"host": [
+										"{{MOCK_API_HOST}}"
+									],
+									"port": "{{MOCK_API_PORT}}",
+									"path": [
+										"api",
+										"{{DEMO_REST_SERVICE_NAME}}",
+										"request",
+										"tail",
+										"10"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Clear Request History",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/api/{{DEMO_REST_SERVICE_NAME}}/request",
+									"protocol": "http",
+									"host": [
+										"{{MOCK_API_HOST}}"
+									],
+									"port": "{{MOCK_API_PORT}}",
+									"path": [
+										"api",
+										"{{DEMO_REST_SERVICE_NAME}}",
+										"request"
+									]
+								}
+							},
+							"response": []
 						}
-					},
-					"response": []
+					]
+				},
+				{
+					"name": "Server Configuration",
+					"item": [
+						{
+							"name": "Get IP Addresses Of Server",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/api/ip-addresses",
+									"protocol": "http",
+									"host": [
+										"{{MOCK_API_HOST}}"
+									],
+									"port": "{{MOCK_API_PORT}}",
+									"path": [
+										"api",
+										"ip-addresses"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Mocked Service Names",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/api/mocked-service-names",
+									"protocol": "http",
+									"host": [
+										"{{MOCK_API_HOST}}"
+									],
+									"port": "{{MOCK_API_PORT}}",
+									"path": [
+										"api",
+										"mocked-service-names"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Swagger",
+					"item": [
+						{
+							"name": "Swagger Index Html",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/swagger/index.html",
+									"protocol": "http",
+									"host": [
+										"{{MOCK_API_HOST}}"
+									],
+									"port": "{{MOCK_API_PORT}}",
+									"path": [
+										"swagger",
+										"index.html"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Swagger Index Html Of Demo Service",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/api/{{DEMO_REST_SERVICE_NAME}}/swagger/index.html",
+									"protocol": "http",
+									"host": [
+										"{{MOCK_API_HOST}}"
+									],
+									"port": "{{MOCK_API_PORT}}",
+									"path": [
+										"api",
+										"{{DEMO_REST_SERVICE_NAME}}",
+										"swagger",
+										"index.html"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Swagger Json For demo-service",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/api/{{DEMO_REST_SERVICE_NAME}}/swagger/v1/swagger.json",
+									"protocol": "http",
+									"host": [
+										"{{MOCK_API_HOST}}"
+									],
+									"port": "{{MOCK_API_PORT}}",
+									"path": [
+										"api",
+										"{{DEMO_REST_SERVICE_NAME}}",
+										"swagger",
+										"v1",
+										"swagger.json"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Swagger Json",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://{{MOCK_API_HOST}}:{{MOCK_API_PORT}}/swagger/v1/swagger.json",
+									"protocol": "http",
+									"host": [
+										"{{MOCK_API_HOST}}"
+									],
+									"port": "{{MOCK_API_PORT}}",
+									"path": [
+										"swagger",
+										"v1",
+										"swagger.json"
+									]
+								}
+							},
+							"response": []
+						}
+					]
 				}
 			]
 		}

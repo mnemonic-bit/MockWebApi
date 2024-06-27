@@ -5,13 +5,13 @@ namespace MockWebApi.Configuration
     public interface IServiceConfigurationFileReader
     {
 
-        MockedServiceConfiguration ReadConfiguration(string fileName);
+        MockedRestServiceConfiguration ReadConfiguration(string fileName);
 
-        MockedServiceConfiguration ReadConfiguration(string configuration, string configurationFormat);
+        MockedRestServiceConfiguration ReadConfiguration(string configuration, string configurationFormat);
 
-        MockedServiceConfiguration ReadFromJson(string text);
+        MockedRestServiceConfiguration ReadFromJson(string text);
 
-        MockedServiceConfiguration ReadFromYaml(string text);
+        MockedRestServiceConfiguration ReadFromYaml(string text);
 
     }
 }

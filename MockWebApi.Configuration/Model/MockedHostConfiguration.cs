@@ -22,7 +22,7 @@
         /// <summary>
         /// An array of mocked-service configurations.
         /// </summary>
-        public MockedServiceConfiguration[] Services { get; set; }
+        public MockedRestServiceConfiguration[] Services { get; set; }
 
     }
 }

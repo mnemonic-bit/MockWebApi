@@ -1,8 +1,7 @@
-﻿using MockWebApi.Configuration.Model;
+﻿using System.Linq;
+using MockWebApi.Configuration.Model;
 using MockWebApi.Routing;
 using MockWebApi.Tests.TestUtils;
-using System;
-using System.Linq;
 using Xunit;
 
 namespace MockWebApi.Tests.UnitTests
@@ -199,6 +198,8 @@ namespace MockWebApi.Tests.UnitTests
         [InlineData(new string[] { "/some/specific/path", "/some/speficic/path/detail" }, "/some/speficic/path/detail")]
         [InlineData(new string[] { "/some/specific/path?emptyParam=&paramWithValue=ABC", "/some/specific/path?emptyParam=&paramWithValue=XYZ" }, "/some/specific/path?emptyParam=&paramWithValue=ABC")]
         [InlineData(new string[] { "/some/specific/path?emptyParam=&paramWithValue=ABC", "/some/specific/path?emptyParam=&paramWithValue={var}" }, "/some/specific/path?emptyParam=&paramWithValue=A")]
+        [InlineData(new string[] { "/some/path?var1" }, "/some/path?var1")]
+        [InlineData(new string[] { "/some/path?var1={param1}&var2" }, "/some/path?var1=some-value&var2")]
         [InlineData(new string[] { "/some/path?var1={param1}&var2=value2" }, "/some/path?var1=some-value&var2=value2")]
         public void TryMatch_ShouldFindMatch(string[] pathTemplates, string path)
         {

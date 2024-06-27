@@ -4,7 +4,8 @@ using System.Linq;
 namespace MockWebApi.Routing
 {
     /// <summary>
-    /// This is a simple route matcher wich can only match constants,
+    /// This is a simple route matcher wich can only match constants. Its an alternative
+    /// to the full <code>RouteGraphMatcher</code> for testing-purposes.
     /// </summary>
     /// <typeparam name="TInfo"></typeparam>
     public class SimpleRouteMatcher<TInfo> : IRouteMatcher<TInfo>

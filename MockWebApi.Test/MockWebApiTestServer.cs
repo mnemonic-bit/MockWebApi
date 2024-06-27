@@ -12,10 +12,7 @@ namespace MockWebApi.Test
     public class MockWebApiTestServer : IDisposable
     {
 
-        private readonly TestServer _testServer;
-        private readonly ServiceConfigurationProxy _serviceConfigurationProxy;
-
-        public MockWebApiTestServer(IServiceConfiguration serviceConfiguration)
+        public MockWebApiTestServer(IRestServiceConfiguration serviceConfiguration)
         {
             _serviceConfigurationProxy = new ServiceConfigurationProxy(serviceConfiguration);
             _testServer = CreateTestServer(_serviceConfigurationProxy);
@@ -39,10 +36,15 @@ namespace MockWebApi.Test
             return _testServer.CreateHandler();
         }
 
+
+        private readonly TestServer _testServer;
+        private readonly ServiceConfigurationProxy _serviceConfigurationProxy;
+
+
         private TestServer CreateTestServer(ServiceConfigurationProxy serviceConfiguration)
         {
             IWebHostBuilder hostBuilder = new WebHostBuilder()
-                .SetupMockWebApi()
+                .SetupMockRestApi()
                 .ConfigureServices(services =>
                 {
                     services.AddSingleton<IServiceConfiguration>(serviceConfiguration);

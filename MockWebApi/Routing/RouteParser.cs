@@ -1,8 +1,8 @@
-﻿using MockWebApi.Extension;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
+using MockWebApi.Extension;
 
 namespace MockWebApi.Routing
 {
@@ -74,9 +74,20 @@ namespace MockWebApi.Routing
                     parameters = parameters.Substring(1);
                 }
 
-                int indexOfEquals = param.IndexOf("=");
-                (string name, string value) = param.SplitAt(indexOfEquals);
-                value = HttpUtility.UrlDecode(value.Substring(1));
+                string? name = null;
+                string? value = null;
+
+                if (param.Contains("="))
+                {
+                    int indexOfEquals = param.IndexOf("=");
+                    (name, value) = param.SplitAt(indexOfEquals);
+                    value = HttpUtility.UrlDecode(value.Substring(1));
+                }
+                else
+                {
+                    name = param;
+                    value = string.Empty;
+                }
 
                 result.Add(name, value);
             }

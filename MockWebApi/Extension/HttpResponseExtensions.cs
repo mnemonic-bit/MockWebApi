@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System.Net;
+using Microsoft.AspNetCore.Http;
 using MockWebApi.Configuration.Model;
-using System.Net;
 
 namespace MockWebApi.Extension
 {

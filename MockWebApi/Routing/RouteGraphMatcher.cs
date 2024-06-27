@@ -41,7 +41,7 @@ namespace MockWebApi.Routing
         {
             lock (_matchGraph)
             {
-                return TryFindRoute(routeTemplate, out TInfo _);
+                return TryFindRoute(routeTemplate, out TInfo? _);
             }
         }
 
@@ -846,7 +846,7 @@ namespace MockWebApi.Routing
             {
                 if (variableValueIsParameter && parameterName != null)
                 {
-                    matchedParameter = new KeyValuePair<string, string>(parameterName, "");
+                    matchedParameter = new KeyValuePair<string, string>(parameterName, string.Empty);
                     return true;
                 }
                 return false;

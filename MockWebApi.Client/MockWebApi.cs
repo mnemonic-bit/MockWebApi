@@ -42,15 +42,15 @@ namespace MockWebApi.Client
         /// </summary>
         /// <param name="serviceName"></param>
         /// <returns></returns>
-        public async Task<bool> StartNewMockWebApi(string serviceName, MockedServiceConfiguration? config = null)
+        public async Task<bool> StartNewMockWebApi(string serviceName, MockedRestServiceConfiguration? config = null)
         {
             if (string.IsNullOrEmpty(serviceName))
             {
                 return false;
             }
 
-            IConfigurationFileWriter configrationWriter = new ConfigurationFileWriter();
-            string serviceConfiguration = config == null ? "" : configrationWriter.WriteToYaml(config);
+            IConfigurationWriter configrationWriter = new ConfigurationWriter();
+            string serviceConfiguration = config == null ? string.Empty : configrationWriter.WriteToYaml(config);
 
             Response<string> response = await _webApi.StartNewMockApi(serviceName, null, serviceConfiguration);
 
@@ -86,9 +86,9 @@ namespace MockWebApi.Client
         /// </summary>
         /// <param name="serviceConfiguration">The configuration that will be uploaded to the server.</param>
         /// <returns>Returns true of the server responded with OK.</returns>
-        public async Task<bool> ConfigureMockWebApi(MockedServiceConfiguration serviceConfiguration)
+        public async Task<bool> ConfigureMockWebApi(MockedRestServiceConfiguration serviceConfiguration)
         {
-            ConfigurationFileWriter configurationWriter = new ConfigurationFileWriter();
+            ConfigurationWriter configurationWriter = new ConfigurationWriter();
             string configurationAsYaml = configurationWriter.WriteConfiguration(serviceConfiguration);
 
             Response<string> response = await _webApi.UploadConfiguration(serviceConfiguration.ServiceName, configurationAsYaml);
@@ -109,12 +109,12 @@ namespace MockWebApi.Client
         public Task<bool> ConfigureMockWebApi(string fileName)
         {
             IServiceConfigurationFileReader configrationReader = new ServiceConfigurationFileReader();
-            MockedServiceConfiguration serviceConfiguration = configrationReader.ReadConfiguration(fileName);
+            MockedRestServiceConfiguration serviceConfiguration = configrationReader.ReadConfiguration(fileName);
 
             return ConfigureMockWebApi(serviceConfiguration);
         }
 
-        public async Task<MockedServiceConfiguration?> DownloadMockWebApiConfiguration(string serviceName, string format = "YAML")
+        public async Task<MockedRestServiceConfiguration?> DownloadMockWebApiConfiguration(string serviceName, string format = "YAML")
         {
             Response<string> response = await _webApi.DownloadConfiguration(serviceName);
 
@@ -125,7 +125,7 @@ namespace MockWebApi.Client
 
             string? configurationAsString = response.StringContent;
             ServiceConfigurationFileReader configurationReader = new ServiceConfigurationFileReader();
-            MockedServiceConfiguration configuration = configurationReader.ReadConfiguration(configurationAsString, format);
+            MockedRestServiceConfiguration configuration = configurationReader.ReadConfiguration(configurationAsString, format);
 
             return configuration;
         }

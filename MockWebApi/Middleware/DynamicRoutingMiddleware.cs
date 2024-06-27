@@ -15,13 +15,9 @@ namespace MockWebApi.Middleware
     public class DynamicRoutingMiddleware
     {
 
-        private readonly RequestDelegate _nextDelegate;
-        private readonly IServiceConfiguration _serverConfig;
-        private readonly ILogger<StoreRequestDataMiddleware> _logger;
-
         public DynamicRoutingMiddleware(
             RequestDelegate next,
-            IServiceConfiguration serverConfig,
+            IRestServiceConfiguration serverConfig,
             ILogger<StoreRequestDataMiddleware> logger)
         {
             _nextDelegate = next;
@@ -42,6 +38,12 @@ namespace MockWebApi.Middleware
 
             await _nextDelegate(context);
         }
+
+
+        private readonly RequestDelegate _nextDelegate;
+        private readonly IRestServiceConfiguration _serverConfig;
+        private readonly ILogger<StoreRequestDataMiddleware> _logger;
+
 
         private void InvokeHandler(RouteMatch<IEndpointState> routeMatch)
         {

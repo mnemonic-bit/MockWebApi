@@ -49,7 +49,7 @@ namespace MockWebApi.Controller
             var swagger = swaggerProvider.GetSwagger(
                     documentName: documentVersion,
                     host: "http://localhost:6000",
-                    basePath: "");
+                    basePath: string.Empty);
 
             await RespondWithSwagger(HttpContext.Request.Path.Value, HttpContext.Response, swagger);
         }
@@ -69,7 +69,7 @@ namespace MockWebApi.Controller
             var swagger = swaggerProvider.GetSwagger(
                     documentName: documentVersion,
                     host: host,
-                    basePath: $"");
+                    basePath: string.Empty);
 
             await RespondWithSwagger(HttpContext.Request.Path.Value, HttpContext!.Response, swagger);
         }

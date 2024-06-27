@@ -2,18 +2,18 @@
 
 namespace MockWebApi.Configuration
 {
-    public interface IConfigurationFileWriter
+    public interface IConfigurationWriter
     {
 
-        string WriteConfiguration(MockedServiceConfiguration serviceConfiguration, string outputFormat = "YAML");
+        string WriteConfiguration(MockedRestServiceConfiguration serviceConfiguration, string outputFormat = "YAML");
 
         string WriteConfiguration(MockedHostConfiguration hostConfiguration, string outputFormat = "YAML");
 
-        string WriteToJson(MockedServiceConfiguration serviceConfiguration);
+        string WriteToJson(MockedRestServiceConfiguration serviceConfiguration);
 
         string WriteToJson(MockedHostConfiguration hostConfiguration);
 
-        string WriteToYaml(MockedServiceConfiguration serviceConfiguration);
+        string WriteToYaml(MockedRestServiceConfiguration serviceConfiguration);
 
         string WriteToYaml(MockedHostConfiguration serviceConfiguration);
 

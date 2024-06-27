@@ -1,20 +1,18 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using MockWebApi.Configuration;
-using MockWebApi.Extension;
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using MockWebApi.Configuration;
+using MockWebApi.Extension;
 
-namespace MockWebApi.Service.Rest
+namespace MockWebApi.Service
 {
     /// <summary>
-    /// The MockService is the component which represents an instance
-    /// of the MockWebApi. Since this mock-server can run multiple
-    /// instances at the same time, we encapsulated this in a class
-    /// of its own.
+    /// This class provides a basic implementation of the <code>IService</code>
+    /// interface, and leaves only the implementation of one method which builds
+    /// and starts the service.
     /// </summary>
-    public class MockService : IService
+    public abstract class ServiceBase<TConfig> : IService<TConfig>
+        where TConfig : IServiceConfiguration
     {
 
         public ServiceState ServiceState
@@ -25,23 +23,30 @@ namespace MockWebApi.Service.Rest
             }
         }
 
-        public IServiceConfiguration ServiceConfiguration
+        public virtual TConfig ServiceConfiguration { get; set; }
+
+        IServiceConfiguration IService.ServiceConfiguration
         {
-            get
-            {
-                return _serviceConfigurationProxy.BaseConfiguration;
-            }
+            get => ServiceConfiguration;
             set
             {
-                _serviceConfigurationProxy.BaseConfiguration = value;
+                if (value is TConfig config)
+                {
+                    ServiceConfiguration = config;
+                }
             }
         }
 
-        public MockService(IHostBuilder hostBuilder, IServiceConfiguration serviceConfiguration)
+        public ServiceBase(TConfig serviceConfiguration)
         {
-            _hostBuilder = hostBuilder;
-            _serviceConfigurationProxy = new ServiceConfigurationProxy(serviceConfiguration ?? new ServiceConfiguration("service1", DefaultValues.DEFAULT_MOCK_BASE_URL));
+            ServiceConfiguration = serviceConfiguration;
+            //ServiceConfigurationProxy = new ServiceConfigurationProxy(serviceConfiguration ?? new RestServiceConfiguration("service1", DefaultValues.DEFAULT_MOCK_BASE_URL));
             _cancellationTokenSource = new CancellationTokenSource();
+        }
+
+        public void Dispose()
+        {
+            _cancellationTokenSource.Dispose();
         }
 
         public void StartService()
@@ -75,13 +80,16 @@ namespace MockWebApi.Service.Rest
             }
         }
 
+        public abstract Task BuildAndStartService(CancellationToken cancellationToken = default);
 
-        private readonly IHostBuilder _hostBuilder;
+        public abstract Task StopAndTearDownService(CancellationToken cancellationToken = default);
+
+
+        //protected ServiceConfigurationProxy ServiceConfigurationProxy { get; init; }
+
         private Thread? _serviceThread;
         private readonly string _serviceThreadLock = Guid.NewGuid().ToString();
         private readonly CancellationTokenSource _cancellationTokenSource;
-
-        private readonly ServiceConfigurationProxy _serviceConfigurationProxy;
 
 
         private void ThreadStart(CancellationToken cancellationToken)
@@ -99,15 +107,23 @@ namespace MockWebApi.Service.Rest
             }
         }
 
-        private async Task BuildAndStartService(CancellationToken cancellationToken = default)
+        //TODO: remove this later, we drop the service by cancelling
+        // the cancellation token, and then wait for the thread to join.
+        private bool ThreadStop(int millisecondTimeout, CancellationToken cancellationToken)
         {
-            await _hostBuilder
-                .ConfigureServices(services =>
-                {
-                    services.AddSingleton<IServiceConfiguration>(_serviceConfigurationProxy);
-                })
-                .Build()
-                .RunAsync(cancellationToken);
+            try
+            {
+                return StopAndTearDownService(cancellationToken)
+                    .Wait(millisecondTimeout, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (AggregateException)
+            {
+            }
+
+            return false;
         }
 
     }

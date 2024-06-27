@@ -10,7 +10,6 @@ using MockWebApi.Data;
 using MockWebApi.Extension;
 using MockWebApi.Routing;
 using MockWebApi.Service;
-using MockWebApi.Service.Rest;
 
 namespace MockWebApi.Controller
 {
@@ -39,7 +38,8 @@ namespace MockWebApi.Controller
         {
             string body = await HttpContext.Request.GetBody(Encoding.UTF8);
 
-            IServiceConfiguration serviceConfiguration = body.DeserializeServiceConfiguration(serviceName);
+            IServiceConfiguration? serviceConfiguration = default;
+            body.DeserializeServiceConfiguration(serviceName, ref serviceConfiguration);
 
             Uri serviceUri = new Uri(serviceConfiguration.Url);
             string serviceIp = serviceUri.Host;
@@ -53,12 +53,12 @@ namespace MockWebApi.Controller
                 return BadRequest($"Cannot bind '{serviceName}' to IP address '{serviceIp}', because the host has no such network interface configured.");
             }
 
-            if (_hostService.TryGetService(serviceName, out IService _))
+            if (_hostService.ContainsService(serviceName))
             {
                 return BadRequest($"The service '{serviceName}' already exists.");
             }
 
-            IService service = StartMockApiService(serviceConfiguration);
+            IService service = _hostService.StartMockApiService(serviceConfiguration);
 
             string logMessage = $"A new mock web API '{service.ServiceConfiguration.ServiceName}' has been started successfully at {DateTime.Now}, listening on '{service.ServiceConfiguration.Url}'.";
 
@@ -93,19 +93,6 @@ namespace MockWebApi.Controller
             _logger.LogInformation(logMessage);
 
             return Ok(logMessage);
-        }
-
-        private MockService StartMockApiService(IServiceConfiguration serviceConfiguration)
-        {
-            MockService mockService = new MockService(
-                MockHostBuilder.Create(serviceConfiguration.Url),
-                serviceConfiguration);
-
-            mockService.StartService();
-
-            _hostService.AddService(serviceConfiguration.ServiceName, mockService);
-
-            return mockService;
         }
 
     }

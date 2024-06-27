@@ -1,7 +1,9 @@
 ﻿using System.Linq;
 using GraphQL;
 using GraphQL.Server;
-using GraphQL.SystemReactive;
+using LiteDB;
+
+//using GraphQL.SystemReactive;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
@@ -11,7 +13,7 @@ using MockWebApi.GraphQL;
 using MockWebApi.Service;
 using MockWebApi.Swagger;
 
-using GraphQLBuilderExtensions = GraphQL.MicrosoftDI.GraphQLBuilderExtensions;
+//using GraphQLBuilderExtensions = GraphQL.MicrosoftDI..GraphQLBuilderExtensions;
 
 namespace MockWebApi.Extension
 {
@@ -31,13 +33,13 @@ namespace MockWebApi.Extension
             // GraphQL schema types...
             services.AddSingleton<RequestHistorySchema>();
 
-            GraphQLBuilderExtensions.AddGraphQL(services)
-                .AddSubscriptionDocumentExecuter()
-                .AddServer(true)
-                .AddSchema<RequestHistorySchema>()
-                .AddDefaultEndpointSelectorPolicy()
-                .AddSystemTextJson()
-                .AddGraphTypes(typeof(RequestHistorySchema).Assembly);
+            services.AddGraphQL(builder =>
+            {
+                builder
+                    .AddSchema<RequestHistorySchema>()
+                    .AddSystemTextJson()
+                    .AddGraphTypes(typeof(RequestHistorySchema).Assembly);
+            });
 
             return services;
         }
@@ -57,7 +59,7 @@ namespace MockWebApi.Extension
 
             services.AddTransient<ISwaggerUiService, SwaggerUiService>();
 
-            services.AddTransient<IConfigurationFileWriter, ConfigurationFileWriter>();
+            services.AddTransient<IConfigurationWriter, ConfigurationWriter>();
 
             services.AddTransient<IHostConfigurationReader, HostConfigurationReader>();
             services.AddTransient<IHostConfigurationWriter, HostConfigurationWriter>();

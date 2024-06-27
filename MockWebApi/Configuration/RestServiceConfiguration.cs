@@ -1,10 +1,10 @@
-﻿using MockWebApi.Configuration.Model;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Net;
+using MockWebApi.Configuration.Model;
 using MockWebApi.Data;
 using MockWebApi.Extension;
 using MockWebApi.Routing;
-using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Net;
 
 namespace MockWebApi.Configuration
 {
@@ -13,12 +13,16 @@ namespace MockWebApi.Configuration
     /// The mock server can host multiple services, each of which will be described
     /// by one of these instances.
     /// </summary>
-    public class ServiceConfiguration : IServiceConfiguration
+    public class RestServiceConfiguration : IRestServiceConfiguration
     {
 
         public string ServiceName { get; private set; }
 
         public string Url { get; private set; }
+
+        public bool TrackServiceApiCalls { get; private set; }
+
+        public string ServiceType { get; private set; }
 
         public DefaultEndpointDescription DefaultEndpointDescription { get; set; }
 
@@ -30,24 +34,25 @@ namespace MockWebApi.Configuration
 
         public IRouteMatcher<IEndpointState> RouteMatcher { get; private set; }
 
-        public ServiceConfiguration(string serviceName, string url)
+        /// <summary>
+        /// Initializes a new service configuration for a service with a given
+        /// name, and a specific URL. If no service type is provided, the service
+        /// will provide a REST interface.
+        /// </summary>
+        /// <param name="serviceName"></param>
+        /// <param name="url"></param>
+        /// <param name="serviceType"></param>
+        public RestServiceConfiguration(string serviceName, string url)
         {
             ServiceName = serviceName;
             Url = url;
             ResetToDefault();
-        }
-
-        public void InitFrom(ServiceConfiguration serviceConfiguration)
-        {
-            DefaultEndpointDescription = serviceConfiguration.DefaultEndpointDescription;
-            ConfigurationCollection = serviceConfiguration.ConfigurationCollection;
-            RouteMatcher = serviceConfiguration.RouteMatcher;
-            JwtServiceOptions = serviceConfiguration.JwtServiceOptions;
+            ServiceType = "REST";
         }
 
         public bool ReadFromYaml(string configYaml)
         {
-            ServiceConfiguration deserializedServiceConfiguration = configYaml.DeserializeYaml<ServiceConfiguration>();
+            RestServiceConfiguration deserializedServiceConfiguration = configYaml.DeserializeYaml<RestServiceConfiguration>();
             InitFrom(deserializedServiceConfiguration);
 
             return true;
@@ -107,10 +112,18 @@ namespace MockWebApi.Configuration
                 Audience = "AUDIENCE",
                 Issuer = "ISSUER",
                 Expiration = TimeSpan.FromHours(1),
-                SigningKey = "This is the default key set by the mock web api on startup and whenever you reset the service to default settings"
+                SigningKey = "This is the default key set by the MockWebApi on startup and whenever you reset the service to the default settings"
             };
 
             return jwtServiceOptions;
+        }
+
+        private void InitFrom(RestServiceConfiguration serviceConfiguration)
+        {
+            DefaultEndpointDescription = serviceConfiguration.DefaultEndpointDescription;
+            ConfigurationCollection = serviceConfiguration.ConfigurationCollection;
+            RouteMatcher = serviceConfiguration.RouteMatcher;
+            JwtServiceOptions = serviceConfiguration.JwtServiceOptions;
         }
 
     }

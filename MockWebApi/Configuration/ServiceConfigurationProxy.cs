@@ -4,14 +4,18 @@ using MockWebApi.Routing;
 
 namespace MockWebApi.Configuration
 {
-    public class ServiceConfigurationProxy : IServiceConfiguration
+    public class ServiceConfigurationProxy : IRestServiceConfiguration
     {
 
-        public IServiceConfiguration BaseConfiguration { get; set; }
+        public IRestServiceConfiguration BaseConfiguration { get; set; }
 
         public string ServiceName { get => BaseConfiguration.ServiceName; }
 
         public string Url { get => BaseConfiguration.Url; }
+
+        public bool TrackServiceApiCalls { get => BaseConfiguration.TrackServiceApiCalls; }
+
+        public string ServiceType { get => BaseConfiguration.ServiceType; }
 
         public DefaultEndpointDescription DefaultEndpointDescription { get => BaseConfiguration.DefaultEndpointDescription; set => BaseConfiguration.DefaultEndpointDescription = value; }
 
@@ -23,7 +27,7 @@ namespace MockWebApi.Configuration
 
         public IRouteMatcher<IEndpointState> RouteMatcher => BaseConfiguration.RouteMatcher;
 
-        public ServiceConfigurationProxy(IServiceConfiguration configuration)
+        public ServiceConfigurationProxy(IRestServiceConfiguration configuration)
         {
             BaseConfiguration = configuration;
         }

@@ -6,25 +6,29 @@ namespace MockWebApi.Configuration
     public class ServiceConfigurationWriter : IServiceConfigurationWriter
     {
 
-        private readonly IConfigurationFileWriter _configurationWriter;
-        private readonly IServiceConfiguration _serviceConfiguration;
-
         public ServiceConfigurationWriter(
-            IConfigurationFileWriter configurationWriter,
-            IServiceConfiguration serviceConfiguration)
+            IConfigurationWriter configurationWriter,
+            IRestServiceConfiguration serviceConfiguration)
         {
             _configurationWriter = configurationWriter;
             _serviceConfiguration = serviceConfiguration;
         }
 
-        public string WriteConfiguration(MockedServiceConfiguration serviceConfiguration, string outputFormat = "YAML")
+        public static string WriteConfiguration(IConfigurationWriter writer, IServiceConfiguration configuration, string outputFormat = "YAML")
+        {
+            //TODO: implement this. This needs a more diverse set of configuration classes in
+            // the MockWebApi.Configuration library.
+            return string.Empty;
+        }
+
+        public string WriteConfiguration(MockedRestServiceConfiguration serviceConfiguration, string outputFormat = "YAML")
         {
             return _configurationWriter.WriteConfiguration(serviceConfiguration, outputFormat.ToUpper());
         }
 
-        public MockedServiceConfiguration GetServiceConfiguration()
+        public MockedRestServiceConfiguration GetServiceConfiguration()
         {
-            MockedServiceConfiguration serviceConfiguration = new MockedServiceConfiguration
+            MockedRestServiceConfiguration serviceConfiguration = new MockedRestServiceConfiguration
             {
                 ServiceName = _serviceConfiguration.ServiceName,
                 BaseUrl = _serviceConfiguration.Url,
@@ -38,6 +42,11 @@ namespace MockWebApi.Configuration
 
             return serviceConfiguration;
         }
+
+
+        private readonly IConfigurationWriter _configurationWriter;
+        private readonly IRestServiceConfiguration _serviceConfiguration;
+
 
     }
 }

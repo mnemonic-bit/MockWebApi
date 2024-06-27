@@ -12,9 +12,6 @@ namespace MockWebApi.Controller
     public class JwtController : ControllerBase
     {
 
-        private readonly ILogger<JwtController> _logger;
-        private readonly IHostService _hostService;
-
         public JwtController(
             ILogger<JwtController> logger,
             IHostService hostService)
@@ -27,7 +24,7 @@ namespace MockWebApi.Controller
         [HttpGet("{serviceName}/jwt")]
         public IActionResult GetJwtTokenViaHttpGet([FromRoute] string serviceName, [FromQuery] string userName)
         {
-            if (!_hostService.TryGetService(serviceName, out IService? service) || service == null)
+            if (!_hostService.ContainsService(serviceName))
             {
                 return BadRequest($"The service '{serviceName}' cannot be found.");
             }
@@ -37,7 +34,12 @@ namespace MockWebApi.Controller
                 return BadRequest("No user name was given in this request.");
             }
 
-            IServiceConfiguration serviceConfiguration = service.ServiceConfiguration;
+            if (!_hostService.TryGetService(serviceName, out IService<IRestServiceConfiguration>? service) || service == null)
+            {
+                return BadRequest($"The service '{serviceName}' is not a REST service.");
+            }
+
+            IRestServiceConfiguration serviceConfiguration = service.ServiceConfiguration;
 
             JwtCredentialUser user = new JwtCredentialUser()
             {
@@ -50,6 +52,11 @@ namespace MockWebApi.Controller
 
             return Ok(token);
         }
+
+
+        private readonly ILogger<JwtController> _logger;
+        private readonly IHostService _hostService;
+
 
     }
 }

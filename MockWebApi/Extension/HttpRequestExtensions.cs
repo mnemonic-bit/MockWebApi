@@ -1,12 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Extensions;
-
-using MockWebApi.Model;
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Extensions;
+using MockWebApi.Model;
 
 namespace MockWebApi.Extension
 {
@@ -27,6 +25,16 @@ namespace MockWebApi.Extension
         public static string PathWithParameters(this HttpRequest request)
         {
             return $"{request.Path}{request.QueryString}";
+        }
+
+        public static string Uri(this HttpRequest request)
+        {
+            return $"{request.Scheme}://{request.FullHost()}/{request.PathWithParameters()}";
+        }
+
+        public static string FullHost(this HttpRequest request)
+        {
+            return $"{request.Host.Host}{(request.Host.Port == null ? string.Empty : ":")}{request.Host.Port}";
         }
 
         public static async Task<RequestInformation> CreateRequestInformation(this HttpRequest request)

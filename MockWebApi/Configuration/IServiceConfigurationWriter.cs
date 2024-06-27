@@ -5,9 +5,9 @@ namespace MockWebApi.Configuration
     public interface IServiceConfigurationWriter
     {
 
-        public string WriteConfiguration(MockedServiceConfiguration serviceConfiguration, string outputFormat = "YAML");
+        public string WriteConfiguration(MockedRestServiceConfiguration serviceConfiguration, string outputFormat = "YAML");
 
-        public MockedServiceConfiguration GetServiceConfiguration();
+        public MockedRestServiceConfiguration GetServiceConfiguration();
 
     }
 }

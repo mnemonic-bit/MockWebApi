@@ -1,25 +1,18 @@
-﻿using System;
-using System.Threading.Tasks;
-
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-
 using MockWebApi.Configuration;
 using MockWebApi.Configuration.Model;
 using MockWebApi.Data;
 using MockWebApi.Extension;
 using MockWebApi.Model;
 using MockWebApi.Routing;
+using System;
+using System.Threading.Tasks;
 
 namespace MockWebApi.Middleware
 {
     public class StoreRequestDataMiddleware
     {
-
-        private readonly RequestDelegate _nextDelegate;
-        private readonly IServiceConfiguration _serverConfig;
-        private readonly IRequestHistory _dataStore;
-        private readonly ILogger<StoreRequestDataMiddleware> _logger;
 
         public StoreRequestDataMiddleware(
             RequestDelegate next,
@@ -41,7 +34,7 @@ namespace MockWebApi.Middleware
 
             try
             {
-                context.Items.Add(MiddlewareConstants.MockWebApiHttpRequestInfomation, requestInfos);
+                context.SetRequestInformation(requestInfos);
 
                 bool skipStoringTheRequest = RequestShouldNotBeStored(request);
 
@@ -52,7 +45,7 @@ namespace MockWebApi.Middleware
                     return;
                 }
 
-                HttpResult? httpResult = GetHttpResultFromContext(context) ?? new HttpResult(); //TODO: change this, because an empty result does not hint at "found no response"
+                HttpResult httpResult = GetHttpResultFromContext(context) ?? new HttpResult(); //TODO: change this, because an empty result does not hint at "found no response"
 
                 StoreRequestAndResponse(requestInfos, httpResult);
             }
@@ -62,11 +55,22 @@ namespace MockWebApi.Middleware
             }
         }
 
+
+        private readonly RequestDelegate _nextDelegate;
+        private readonly IServiceConfiguration _serverConfig;
+        private readonly IRequestHistory _dataStore;
+        private readonly ILogger<StoreRequestDataMiddleware> _logger;
+
+
         private bool RequestShouldNotBeStored(HttpRequest request)
         {
-            bool trackServiceApiCalls = _serverConfig.ConfigurationCollection.Get<bool>(ConfigurationCollection.Parameters.TrackServiceApiCalls);
+            bool trackServiceApiCalls = _serverConfig.TrackServiceApiCalls;
             bool startsWithServiceApi = request.Path.StartsWithSegments($"/{DefaultValues.SERVICE_API_ROUTE_PREFIX}");
-            bool routeOptOut = _serverConfig.RouteMatcher.TryMatch(request.PathWithParameters(), out RouteMatch<IEndpointState>? routeMatch) && (!routeMatch?.RouteInformation.EndpointDescription.PersistRequestInformation ?? false);
+
+            // For REST calls, we also check the route with the RouteMatcher
+            bool routeOptOut = (_serverConfig is IRestServiceConfiguration restServiceConfig)
+                && restServiceConfig.RouteMatcher.TryMatch(request.PathWithParameters(), out RouteMatch<IEndpointState>? routeMatch)
+                && (!routeMatch?.RouteInformation.EndpointDescription.PersistRequestInformation ?? false);
 
             return startsWithServiceApi && !trackServiceApiCalls || routeOptOut;
         }

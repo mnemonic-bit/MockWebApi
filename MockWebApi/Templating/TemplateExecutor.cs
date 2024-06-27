@@ -7,8 +7,6 @@ namespace MockWebApi.Templating
     public class TemplateExecutor : ITemplateExecutor
     {
 
-        private readonly ITemplateParser _templateParser;
-
         public TemplateExecutor(ITemplateParser templateParser)
         {
             _templateParser = templateParser;
@@ -30,6 +28,10 @@ namespace MockWebApi.Templating
             return result;
         }
 
+
+        private readonly ITemplateParser _templateParser;
+
+
         private async Task<string> EvaluateFragment(ScriptEvaluator scriptEvaluator, Fragment fragment)
         {
             dynamic realFragment = fragment;
@@ -39,7 +41,7 @@ namespace MockWebApi.Templating
         private async Task<string> EvaluateFragment(ScriptEvaluator scriptEvaluator, ScriptFragment fragment)
         {
             object result = await scriptEvaluator.RunLineOfCodeAsync(fragment.ScriptText);
-            return result?.ToString() ?? "";
+            return result?.ToString() ?? string.Empty;
         }
 
         private Task<string> EvaluateFragment(ScriptEvaluator scriptEvaluator, StringFragment fragment)

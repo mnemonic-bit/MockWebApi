@@ -1,31 +1,34 @@
 ﻿using Microsoft.AspNetCore.Hosting;
-
 using MockWebApi.Configuration;
 using MockWebApi.Service.Rest;
-
-using Serilog;
 
 namespace MockWebApi.Extension
 {
     public static class IWebHostBuilderExtensions
     {
 
-        public static IWebHostBuilder SetupMockWebApi(this IWebHostBuilder webHostBuilder)
+        public static IWebHostBuilder SetupMockRestApi(this IWebHostBuilder webHostBuilder)
         {
             webHostBuilder
-                .UseStartup<MockServiceStartup>()
-                .UseSerilog();
+                .UseStartup<MockRestServiceStartup>();
 
             return webHostBuilder;
         }
 
-        public static IWebHostBuilder SetupMockWebApiService(this IWebHostBuilder webHostBuilder)
+        public static IWebHostBuilder SetupMockGrpcApi(this IWebHostBuilder webHostBuilder)
+        {
+            webHostBuilder
+                .UseStartup<MockGrpcServiceStartup>();
+
+            return webHostBuilder;
+        }
+
+        public static IWebHostBuilder SetupServiceConfigurationApi(this IWebHostBuilder webHostBuilder, string baseUrls = HostConfiguration.DEFAULT_HOST_IP_AND_PORT)
         {
             webHostBuilder
                 .UseStartup<Startup>()
                 .UseKestrel(options => { options.AddServerHeader = false; })
-                .UseUrls(HostConfiguration.DEFAULT_HOST_IP_AND_PORT) //TODO: configure this from outside config-sources
-                .UseSerilog();
+                .UseUrls(baseUrls);
 
             return webHostBuilder;
         }

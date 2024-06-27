@@ -1,4 +1,5 @@
-﻿using Microsoft.IdentityModel.JsonWebTokens;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using MockWebApi.Configuration;
 using MockWebApi.Configuration.Model;
@@ -16,14 +17,9 @@ namespace MockWebApi.Auth
     public class JwtService : IJwtService
     {
 
-        private readonly JwtServiceOptions _options;
-
-        private readonly SigningCredentials _signingCredentials;
-        private readonly JwtSecurityTokenHandler _jwtSecurityTokenHandler;
-
-        public JwtService(IServiceConfiguration serviceConfiguration)
+        public JwtService(IRestServiceConfiguration configuration)
         {
-            _options = serviceConfiguration.JwtServiceOptions;
+            _options = configuration.JwtServiceOptions;
             _signingCredentials = CreateSigningCredentials(_options.SigningKey);
             _jwtSecurityTokenHandler = new JwtSecurityTokenHandler();
         }
@@ -67,12 +63,7 @@ namespace MockWebApi.Auth
             return encodedJwt;
         }
 
-        public bool ValidateToken(string token, JwtCredentialUser credentialUser)
-        {
-            return ValidateToken(token, new JwtCredentialUser[] { credentialUser });
-        }
-
-        public bool ValidateToken(string token, JwtCredentialUser[] allowedUsers)
+        public bool ValidateToken(string token, params JwtCredentialUser[] allowedUsers)
         {
             if (!_jwtSecurityTokenHandler.CanReadToken(token))
             {
@@ -102,6 +93,12 @@ namespace MockWebApi.Auth
             //bool hasEmailClaim = claimsPrincipal.HasClaim(c => c.Type == ClaimTypes.Email);
             //var emailClaim = claimsPrincipal.Claims.Where(c => c.Type == ClaimTypes.Email).First().Value;
         }
+
+
+        private readonly JwtServiceOptions _options;
+        private readonly SigningCredentials _signingCredentials;
+        private readonly JwtSecurityTokenHandler _jwtSecurityTokenHandler;
+
 
         private bool TryValidateToken(string token, TokenValidationParameters validationParameters, out ClaimsPrincipal? claimsPrincipal, out SecurityToken? validatedToken)
         {

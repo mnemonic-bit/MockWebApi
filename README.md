@@ -3,25 +3,50 @@
 The MockWebApi is a REST API which provides mocked responses for REST calls.
 
 The service is configurable via a REST API of its own, running on a separate
-port which is 6000.
+port which is 6000 by default.
 
 
 ## Quick Start
 
-### Starting The MockWebApi server
+A general note, before we start: all ports and URLs given in the examples below
+are either default values the MockWebApi uses if not told otherwise, or values
+that are aligned with the Postman collection and environment to get you hit the
+ground running.
+
+
+### Starting The MockWebApi Server
 
 To start the MockWebApi you have to check it out, build it, and then start it,
 like this
 
 ```
-git clone https://github.com/mnemonic-bit/MockWebApi
-cd MockWebApi
-dotnet build
-cd MockWebApi
-dotnet run
+$> git clone https://github.com/mnemonic-bit/MockWebApi
+$> cd MockWebApi
+$> dotnet build
+$> cd MockWebApi
+$> dotnet run
 ```
 
-### Configuring The MockWebApi server
+As an alternative, you can use the docker image we've created from the sources
+and deploy this on your docker host. The corresponding docker command is
+
+```
+$> docker pull mnemonicbit/mockwebapi:latest
+$> docker run \
+     --name MockWebApi \
+     -p 6000:6000 -p 5000:5000 \
+     mnemonicbit/mockwebapi:latest
+```
+
+We map the port 6000 because the REST API of the MockWebApi will be exposed on that
+port by default, so we can use this port from outside the docker container to control
+the MockWebApi; the port 5000 is mapped in this example, because the MockWebApi
+server will start serving each mocked APIs on a different port which wouldn't be
+available to clients without mapping it. If you intend to start your API on another
+port, please change this value accordingly.
+
+
+### Configuring The MockWebApi Server
 
 The MockWebApi can configure two kinds of responses for any mocked service,
 which are:
@@ -33,7 +58,7 @@ We start our quick-start section with an example in which we will have two speci
 routes configured. We also will set the default response to a custom value to
 demonstrate how this can be done.
 
-#### Starting And Stopping A Mocked Service
+### Starting And Stopping A Mocked Service
 
 Before we start to configure a service, we need to start that new service. For
 this we choose the name `demo-service`, and the service is started with a REST
@@ -50,7 +75,7 @@ http://localhost:6000/api/{service-name}/{command}/{parameters...}
 A mocked service can be stopped by sending a REST call to
 `http://localhost:6000/api/demo-service/stop` with an empty body.
 
-#### Configuring a Response For a Specific URI
+### Configuring a Response For a Specific URI
 
 A specific URI can be configured with a call to the URL
 

@@ -1,14 +1,10 @@
 ﻿using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using MockWebApi.Configuration;
 using MockWebApi.Configuration.Extensions;
-using MockWebApi.Extension;
 using MockWebApi.Service;
-using MockWebApi.Service.Rest;
 using YamlDotNet.Serialization;
 
 namespace MockWebApi.Controller
@@ -20,12 +16,12 @@ namespace MockWebApi.Controller
 
         private readonly ILogger<ServiceConfigurationController> _logger;
         private readonly IHostService _hostService;
-        private readonly IConfigurationFileWriter _configurationWriter;
+        private readonly IConfigurationWriter _configurationWriter;
 
         public ServerConfigurationController(
             ILogger<ServiceConfigurationController> logger,
             IHostService hostService,
-            IConfigurationFileWriter configurationWriter)
+            IConfigurationWriter configurationWriter)
         {
             _logger = logger;
             _hostService = hostService;
@@ -54,26 +50,6 @@ namespace MockWebApi.Controller
             serializer.Serialize(stringWriter, addresses);
 
             return Ok(stringWriter.ToString());
-        }
-
-        private MockService StartMockApiService(IServiceConfiguration serviceConfiguration)
-        {
-            MockService mockService = new MockService(
-                MockHostBuilder.Create(serviceConfiguration.Url),
-                serviceConfiguration);
-
-            mockService.StartService();
-
-            _hostService.AddService(serviceConfiguration.ServiceName, mockService);
-
-            return mockService;
-        }
-
-        private async Task<string> GetBody()
-        {
-            string config = await Request.GetBody(Encoding.UTF8);
-            config = config.Replace("\r\n", "\n");
-            return config;
         }
 
     }

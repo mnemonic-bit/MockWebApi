@@ -23,7 +23,7 @@ namespace MockWebApi.FunctionalTests
             string serviceName = "TEST-SERVICE";
             string baseUrl = "http://localhost:5000";
 
-            IServiceConfiguration serviceConfiguration = ServiceConfigurationFactory.CreateBaseConfiguration(serviceName);
+            IRestServiceConfiguration serviceConfiguration = ServiceConfigurationFactory.CreateBaseConfiguration(serviceName);
 
             using ServiceApiTestServer serviceApiTestServer = new ServiceApiTestServer(serviceConfiguration);
 
@@ -40,7 +40,7 @@ namespace MockWebApi.FunctionalTests
                 statusCode,
                 expectedResponseBody);
 
-            MockedServiceConfiguration config = ServiceConfigurationFactory.CreateMockedServiceConfiguration();
+            MockedRestServiceConfiguration config = ServiceConfigurationFactory.CreateMockedServiceConfiguration();
 
             bool mockeApiHasStarted = await webApiClient.StartNewMockWebApi(serviceName, config);
 
@@ -66,7 +66,7 @@ namespace MockWebApi.FunctionalTests
             HttpStatusCode defaultStatusCode = HttpStatusCode.NotFound;
             string baseUrl = "http://localhost:5000";
 
-            IServiceConfiguration serviceConfiguration = ServiceConfigurationFactory.CreateBaseConfiguration(serviceName);
+            IRestServiceConfiguration serviceConfiguration = ServiceConfigurationFactory.CreateBaseConfiguration(serviceName);
             serviceConfiguration.DefaultEndpointDescription.Result.StatusCode = defaultStatusCode;
 
             using ServiceApiTestServer serviceApiTestServer = new ServiceApiTestServer(serviceConfiguration);
@@ -75,7 +75,7 @@ namespace MockWebApi.FunctionalTests
             MockWebApiClient webApiClient = new MockWebApiClient(httpClient);
             HttpTestClient httpTestClient = new HttpTestClient();
 
-            MockedServiceConfiguration config = ServiceConfigurationFactory.CreateMockedServiceConfiguration();
+            MockedRestServiceConfiguration config = ServiceConfigurationFactory.CreateMockedServiceConfiguration();
             config.DefaultEndpointDescription.Result.StatusCode = defaultStatusCode;
 
             // Act
@@ -103,7 +103,7 @@ namespace MockWebApi.FunctionalTests
             HttpStatusCode defaultStatusCode = HttpStatusCode.NotFound;
             string baseUrl = "http://localhost:5000";
 
-            IServiceConfiguration serviceConfiguration = ServiceConfigurationFactory.CreateBaseConfiguration(serviceName);
+            IRestServiceConfiguration serviceConfiguration = ServiceConfigurationFactory.CreateBaseConfiguration(serviceName);
             serviceConfiguration.DefaultEndpointDescription.Result.StatusCode = defaultStatusCode;
 
             using ServiceApiTestServer serviceApiTestServer = new ServiceApiTestServer(serviceConfiguration);
@@ -123,7 +123,7 @@ namespace MockWebApi.FunctionalTests
 
             endpointConfiguration.LifecyclePolicy = LifecyclePolicy.ApplyOnce;
 
-            MockedServiceConfiguration config = ServiceConfigurationFactory.CreateMockedServiceConfiguration();
+            MockedRestServiceConfiguration config = ServiceConfigurationFactory.CreateMockedServiceConfiguration();
             config.DefaultEndpointDescription.Result.StatusCode = defaultStatusCode;
 
             bool mockeApiHasStarted = await webApiClient.StartNewMockWebApi(serviceName, config);
@@ -148,7 +148,7 @@ namespace MockWebApi.FunctionalTests
             HttpStatusCode defaultStatusCode = HttpStatusCode.NotFound;
             string baseUrl = "http://localhost:5000";
 
-            IServiceConfiguration serviceConfiguration = ServiceConfigurationFactory.CreateBaseConfiguration(serviceName);
+            IRestServiceConfiguration serviceConfiguration = ServiceConfigurationFactory.CreateBaseConfiguration(serviceName);
 
             using ServiceApiTestServer serviceApiTestServer = new ServiceApiTestServer(serviceConfiguration);
 
@@ -167,7 +167,7 @@ namespace MockWebApi.FunctionalTests
 
             endpointConfiguration.LifecyclePolicy = LifecyclePolicy.Repeat;
 
-            MockedServiceConfiguration config = ServiceConfigurationFactory.CreateMockedServiceConfiguration();
+            MockedRestServiceConfiguration config = ServiceConfigurationFactory.CreateMockedServiceConfiguration();
             config.DefaultEndpointDescription.Result.StatusCode = defaultStatusCode;
 
             bool mockeApiHasStarted = await webApiClient.StartNewMockWebApi(serviceName, config);
@@ -199,7 +199,7 @@ namespace MockWebApi.FunctionalTests
             string expectedResponseBody = "some: body";
             HttpStatusCode statusCode = HttpStatusCode.Created;
 
-            IServiceConfiguration serviceConfiguration = ServiceConfigurationFactory.CreateBaseConfiguration(serviceName);
+            IRestServiceConfiguration serviceConfiguration = ServiceConfigurationFactory.CreateBaseConfiguration(serviceName);
 
             using ServiceApiTestServer serviceApiTestServer = new ServiceApiTestServer(serviceConfiguration);
 
@@ -214,7 +214,7 @@ namespace MockWebApi.FunctionalTests
 
             endpointConfiguration.LifecyclePolicy = LifecyclePolicy.Repeat;
 
-            MockedServiceConfiguration config = ServiceConfigurationFactory.CreateMockedServiceConfiguration();
+            MockedRestServiceConfiguration config = ServiceConfigurationFactory.CreateMockedServiceConfiguration();
 
             config.ServiceName = serviceName;
             config.BaseUrl = baseUrl;
@@ -245,7 +245,7 @@ namespace MockWebApi.FunctionalTests
             string expectedResponseBody = "some: body";
             HttpStatusCode statusCode = HttpStatusCode.Created;
 
-            IServiceConfiguration serviceConfiguration = ServiceConfigurationFactory.CreateBaseConfiguration(serviceName);
+            IRestServiceConfiguration serviceConfiguration = ServiceConfigurationFactory.CreateBaseConfiguration(serviceName);
 
             using ServiceApiTestServer serviceApiTestServer = new ServiceApiTestServer(serviceConfiguration);
 
@@ -260,7 +260,7 @@ namespace MockWebApi.FunctionalTests
 
             endpointConfiguration.LifecyclePolicy = LifecyclePolicy.Repeat;
 
-            MockedServiceConfiguration config = ServiceConfigurationFactory.CreateMockedServiceConfiguration();
+            MockedRestServiceConfiguration config = ServiceConfigurationFactory.CreateMockedServiceConfiguration();
 
             config.ServiceName = serviceName;
             config.BaseUrl = baseUrl;
@@ -295,7 +295,7 @@ namespace MockWebApi.FunctionalTests
             string expectedResponseBody = "some: body";
             HttpStatusCode statusCode = HttpStatusCode.Created;
 
-            IServiceConfiguration serviceConfiguration = ServiceConfigurationFactory.CreateBaseConfiguration(serviceName);
+            IRestServiceConfiguration serviceConfiguration = ServiceConfigurationFactory.CreateBaseConfiguration(serviceName);
 
             using ServiceApiTestServer serviceApiTestServer = new ServiceApiTestServer(serviceConfiguration);
 
@@ -317,7 +317,7 @@ namespace MockWebApi.FunctionalTests
 
             newEndpointConfiguration.LifecyclePolicy = LifecyclePolicy.Repeat;
 
-            MockedServiceConfiguration config = ServiceConfigurationFactory.CreateMockedServiceConfiguration();
+            MockedRestServiceConfiguration config = ServiceConfigurationFactory.CreateMockedServiceConfiguration();
 
             config.ServiceName = serviceName;
             config.BaseUrl = baseUrl;

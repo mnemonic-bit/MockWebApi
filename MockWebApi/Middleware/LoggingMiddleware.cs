@@ -1,25 +1,21 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using MockWebApi.Configuration;
 using MockWebApi.Configuration.Model;
 using MockWebApi.Data;
+using MockWebApi.Extension;
 using MockWebApi.Model;
 using MockWebApi.Routing;
-using System.Diagnostics.CodeAnalysis;
-using System.Threading.Tasks;
 
 namespace MockWebApi.Middleware
 {
     public class LoggingMiddleware
     {
 
-        private readonly RequestDelegate _nextDelegate;
-        private readonly IServiceConfiguration _serverConfig;
-        private readonly ILogger<StoreRequestDataMiddleware> _logger;
-
         public LoggingMiddleware(
             RequestDelegate next,
-            IServiceConfiguration serverConfig,
+            IRestServiceConfiguration serverConfig,
             ILogger<StoreRequestDataMiddleware> logger)
         {
             _nextDelegate = next;
@@ -44,6 +40,12 @@ namespace MockWebApi.Middleware
             LogResponseInformatoin(context);
         }
 
+
+        private readonly RequestDelegate _nextDelegate;
+        private readonly IRestServiceConfiguration _serverConfig;
+        private readonly ILogger<StoreRequestDataMiddleware> _logger;
+
+
         private bool RequestShouldBeLogged(HttpRequest request)
         {
             bool logServiceApiCalls = _serverConfig.ConfigurationCollection.Get<bool>(ConfigurationCollection.Parameters.LogServiceApiCalls);
@@ -56,11 +58,11 @@ namespace MockWebApi.Middleware
 
         private void LogRequestInformatoin(HttpContext context)
         {
-            context.Items.TryGetValue(MiddlewareConstants.MockWebApiHttpRequestInfomation, out object? sharedInformation);
+            RequestInformation? requestInformation = context.GetRequestInformation();
 
-            if (sharedInformation is RequestInformation requestInfos)
+            if (requestInformation != null)
             {
-                _logger.LogInformation($"Received HTTP request\n{requestInfos}");
+                _logger.LogInformation($"Received HTTP request\n{requestInformation}");
             }
         }
 

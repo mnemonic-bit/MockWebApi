@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Text;
 using MockWebApi.Configuration;
 using MockWebApi.Configuration.Model;
-using MockWebApi.Service.Rest;
 
 namespace MockWebApi.Extension
 {
@@ -27,6 +25,7 @@ namespace MockWebApi.Extension
                 throw new ArgumentNullException(nameof(str), $"No string instance is given to split.");
             }
 
+
             if (index < 0 || index > str.Length)
             {
                 throw new ArgumentException(nameof(index), $"The position to split the given string, which is {index}, is outside the bounds of the string (0..{str.Length - 1}).");
@@ -40,26 +39,22 @@ namespace MockWebApi.Extension
             return string.IsNullOrEmpty(str);
         }
 
-        public static IServiceConfiguration DeserializeServiceConfiguration(this string config, string serviceName)
+        public static void DeserializeServiceConfiguration(this string config, string serviceName, [NotNull] ref IServiceConfiguration? serviceConfiguration)
         {
-            MockedServiceConfiguration mockedServiceConfiguration = config.DeserializeYaml<MockedServiceConfiguration>() ?? new MockedServiceConfiguration();
-            mockedServiceConfiguration.ServiceName = serviceName;
-            mockedServiceConfiguration.BaseUrl ??= DefaultValues.DEFAULT_MOCK_BASE_URL;
+            MockedServiceConfiguration mockedServiceConfiguration = ConfigurationProvider.Deserialize(config);
 
-            IServiceConfiguration serviceConfiguration = new ServiceConfiguration(
-                mockedServiceConfiguration.ServiceName,
-                mockedServiceConfiguration.BaseUrl);
+            // By default we provide a mocked REST service.
+            //TODO: this might not be a good place where and how the default service
+            // type should be encoded. Please redesign this.
+            if (mockedServiceConfiguration == null)
+            {
+                mockedServiceConfiguration = new MockedRestServiceConfiguration();
+                mockedServiceConfiguration.ServiceName = serviceName;
+                mockedServiceConfiguration.BaseUrl ??= DefaultValues.DEFAULT_MOCK_BASE_URL;
+            }
 
-            ServiceConfigurationReader serviceConfigurationReader = new ServiceConfigurationReader(serviceConfiguration);
-            serviceConfigurationReader.ConfigureService(mockedServiceConfiguration, true);
-
-            return serviceConfiguration;
-        }
-
-        public static IServiceConfiguration DeserializeServerConfiguration(this string config)
-        {
-            //TODO: implement a converter for the full server configuration.
-            throw new NotImplementedException();
+            ServiceConfigurationReader serviceConfigurationReader = new ServiceConfigurationReader();
+            serviceConfigurationReader.Load(mockedServiceConfiguration, ref serviceConfiguration);
         }
 
     }

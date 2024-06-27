@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -29,7 +27,7 @@ namespace MockWebApi.Middleware
 
         public MockedRestServiceMiddleware(
             RequestDelegate next,
-            IServiceConfiguration serverConfiguration,
+            IRestServiceConfiguration serverConfiguration,
             IAuthorizationService authorizationService,
             ITemplateExecutor templateExecutor,
             ILogger<StoreRequestDataMiddleware> logger)
@@ -57,7 +55,7 @@ namespace MockWebApi.Middleware
                 }
             }
 
-            RequestInformation? requestInformation = GetRequestInformation(context);
+            RequestInformation? requestInformation = context.GetRequestInformation();
             requestInformation!.PathMatchedTemplate = requestUriDidMatch;
 
             if (!CheckRequest(context, endpointState))
@@ -70,7 +68,7 @@ namespace MockWebApi.Middleware
 
 
         private readonly RequestDelegate _nextDelegate;
-        private readonly IServiceConfiguration _serviceConfiguration;
+        private readonly IRestServiceConfiguration _serviceConfiguration;
         private readonly IAuthorizationService _authorizationService;
         private readonly ITemplateExecutor _templateExecutor;
         private readonly ILogger<StoreRequestDataMiddleware> _logger;
@@ -105,14 +103,15 @@ namespace MockWebApi.Middleware
                 return true;
             }
 
-            string authorizationHeader = httpContext.Request.Headers.FirstOrDefault(header => header.Key == "Authorization").Value;
+            var authorizationHeader = httpContext.Request.Headers.FirstOrDefault(header => header.Key == "Authorization");
+            string? authorizationHeaderValue = authorizationHeader.Value;
 
-            if (string.IsNullOrEmpty(authorizationHeader))
+            if (string.IsNullOrEmpty(authorizationHeaderValue))
             {
                 return false;
             }
 
-            if (!_authorizationService.CkeckAuthorization(authorizationHeader, endpointDescription))
+            if (!_authorizationService.CkeckAuthorization(authorizationHeaderValue, endpointDescription))
             {
                 return false;
             }
@@ -189,13 +188,6 @@ namespace MockWebApi.Middleware
             await FillResponse(context, endpointState.EndpointDescription, response);
         }
 
-        private RequestInformation? GetRequestInformation(HttpContext context)
-        {
-            context.Items.TryGetValue(MiddlewareConstants.MockWebApiHttpRequestInfomation, out object? contextItem);
-            RequestInformation? requestInformation = contextItem as RequestInformation;
-            return requestInformation;
-        }
-
         private async Task FillResponse(HttpContext context, EndpointDescription endpointDescription, HttpResult? response)
         {
             if (response == null)
@@ -233,60 +225,18 @@ namespace MockWebApi.Middleware
         private static async Task<byte[]> CreateBodyBuffer(HttpResult httpResult, HttpContentType httpContentType, string body)
         {
             Encoding encoding = httpContentType.CharacterEncoding;
-            byte[] bodyArray = encoding.GetBytes(body);
-            using Stream sourceStream = new MemoryStream(bodyArray);
+            byte[] bodyBuffer = encoding.GetBytes(body);
+            using Stream sourceStream = new MemoryStream(bodyBuffer);
 
             using Stream destStream = new MemoryStream();
-            using Stream compressStream = CreateNestedCompressionStream(destStream, httpResult.ContentEncoding);
+            using Stream bodyCompressionStream = destStream.CreateCompressionStream(httpResult.ContentEncoding);
 
-            sourceStream.CopyTo(compressStream);
-            await compressStream.FlushAsync();
+            await sourceStream.CopyToAsync(bodyCompressionStream);
+            await bodyCompressionStream.FlushAsync();
 
             destStream.Position = 0;
-            byte[] bodyBuffer = await destStream.ReadToEndAsync();
-            return bodyBuffer;
-        }
-
-        private static Stream CreateNestedCompressionStream(Stream destStream, string contentEncodings)
-        {
-            // Split the comma-separated list of encodings, and create
-            // a compression stream for each, starting with the last one,
-            // because the last compression mentioned in the encodings-list
-            // will receive the compression result of its predecessor.
-            Stream compressionStream = (contentEncodings ?? "")
-                .Split(',')
-                .Select(contentEncoding => contentEncoding.Trim())
-                .Reverse()
-                .Where(x => !string.IsNullOrEmpty(x))
-                .Aggregate(destStream, CreateCompressionStream);
-
-            return compressionStream;
-        }
-
-        private static Stream CreateCompressionStream(Stream destStream, string contentEncoding)
-        {
-            switch (contentEncoding)
-            {
-                case "br":
-                    // Brotli compression
-                    destStream = new BrotliStream(destStream, CompressionMode.Compress, true);
-                    break;
-                case "compress":
-                    // LZW compression
-                    break;
-                case "deflate":
-                    // zlib structure with deflate compression
-                    destStream = new DeflateStream(destStream, CompressionMode.Compress, true);
-                    break;
-                case "gzip":
-                    // LZ77 compression
-                    destStream = new GZipStream(destStream, CompressionMode.Compress, true);
-                    break;
-                default:
-                    throw new Exception($"Compression '{contentEncoding}' not supported by this server");
-            }
-
-            return destStream;
+            byte[] bodyResultBuffer = await destStream.ReadToEndAsync();
+            return bodyResultBuffer;
         }
 
         private static void FillResponseWithCookies(HttpContext context, EndpointDescription endpointDescription, HttpResult response)

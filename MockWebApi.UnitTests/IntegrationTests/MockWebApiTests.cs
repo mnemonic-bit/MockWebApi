@@ -33,7 +33,7 @@ namespace MockWebApi.Tests.IntegrationTests
                 statusCode,
                 responseBody);
 
-            IServiceConfiguration serviceConfiguration = ServiceConfigurationFactory.CreateBaseConfiguration(serviceName);
+            IRestServiceConfiguration serviceConfiguration = ServiceConfigurationFactory.CreateBaseConfiguration(serviceName);
             serviceConfiguration.AddEndpointDescription(endpointConfiguration);
 
             using MockWebApiTestServer integrationTestServer = new MockWebApiTestServer(serviceConfiguration);
@@ -66,7 +66,7 @@ namespace MockWebApi.Tests.IntegrationTests
                 statusCode,
                 responseBody);
 
-            IServiceConfiguration serviceConfiguration = ServiceConfigurationFactory.CreateBaseConfiguration(serviceName);
+            IRestServiceConfiguration serviceConfiguration = ServiceConfigurationFactory.CreateBaseConfiguration(serviceName);
             serviceConfiguration.DefaultEndpointDescription = defaultEndpointConfiguration;
             serviceConfiguration.AddEndpointDescription(endpointConfiguration);
 
@@ -101,7 +101,7 @@ namespace MockWebApi.Tests.IntegrationTests
 
             endpointConfiguration.LifecyclePolicy = LifecyclePolicy.ApplyOnce;
 
-            IServiceConfiguration serviceConfiguration = ServiceConfigurationFactory.CreateBaseConfiguration(serviceName);
+            IRestServiceConfiguration serviceConfiguration = ServiceConfigurationFactory.CreateBaseConfiguration(serviceName);
             serviceConfiguration.DefaultEndpointDescription = defaultEndpointConfiguration;
             serviceConfiguration.AddEndpointDescription(endpointConfiguration);
 
@@ -141,7 +141,7 @@ namespace MockWebApi.Tests.IntegrationTests
 
             endpointConfiguration.LifecyclePolicy = LifecyclePolicy.Repeat;
 
-            IServiceConfiguration serviceConfiguration = ServiceConfigurationFactory.CreateBaseConfiguration(serviceName);
+            IRestServiceConfiguration serviceConfiguration = ServiceConfigurationFactory.CreateBaseConfiguration(serviceName);
             serviceConfiguration.DefaultEndpointDescription = defaultEndpointConfiguration;
             serviceConfiguration.AddEndpointDescription(endpointConfiguration);
 
@@ -181,13 +181,13 @@ namespace MockWebApi.Tests.IntegrationTests
             endpointConfiguration.CheckAuthorization = true;
             endpointConfiguration.AllowedUsers = new string[] { userName };
 
-            IServiceConfiguration serviceConfiguration = ServiceConfigurationFactory.CreateBaseConfiguration(serviceName);
+            IRestServiceConfiguration serviceConfiguration = ServiceConfigurationFactory.CreateBaseConfiguration(serviceName);
             serviceConfiguration.AddEndpointDescription(endpointConfiguration);
             serviceConfiguration.ErrorResponseEndpointDescription = new DefaultEndpointDescription()
             {
                 Result = new HttpResult()
                 {
-                    Body = "",
+                    Body = string.Empty,
                     StatusCode = HttpStatusCode.Unauthorized
                 }
             };
@@ -234,13 +234,13 @@ namespace MockWebApi.Tests.IntegrationTests
             endpointConfiguration.CheckAuthorization = true;
             endpointConfiguration.AllowedUsers = new string[] { authorizedUserName };
 
-            IServiceConfiguration serviceConfiguration = ServiceConfigurationFactory.CreateBaseConfiguration(serviceName);
+            IRestServiceConfiguration serviceConfiguration = ServiceConfigurationFactory.CreateBaseConfiguration(serviceName);
             serviceConfiguration.AddEndpointDescription(endpointConfiguration);
             serviceConfiguration.ErrorResponseEndpointDescription = new DefaultEndpointDescription()
             {
                 Result = new HttpResult()
                 {
-                    Body = "",
+                    Body = string.Empty,
                     StatusCode = HttpStatusCode.Unauthorized
                 }
             };

@@ -51,6 +51,18 @@ namespace MockWebApi.Service
             _services.Add(serviceName, service);
         }
 
+        public void AddService<TConfig>(string serviceName, IService<TConfig> service)
+            where TConfig : IServiceConfiguration
+        {
+            _hostConfiguration.AddConfiguration(serviceName, service.ServiceConfiguration);
+            _services.Add(serviceName, service);
+        }
+
+        public bool ContainsService(string serviceName)
+        {
+            return _services.ContainsKey(serviceName);
+        }
+
         public bool RemoveService(string serviceName)
         {
             _hostConfiguration.RemoveConfiguration(serviceName);
@@ -72,6 +84,20 @@ namespace MockWebApi.Service
         public bool TryGetService(string serviceName, [NotNullWhen(true)] out IService? service)
         {
             return _services.TryGetValue(serviceName, out service);
+        }
+
+        public bool TryGetService<TConfig>(string serviceName, [NotNullWhen(true)] out IService<TConfig>? service)
+            where TConfig : IServiceConfiguration
+        {
+            service = default;
+
+            if (_services.TryGetValue(serviceName, out IService? serviceInstance) && serviceInstance is IService<TConfig> configuredService)
+            {
+                service = configuredService;
+                return true;
+            }
+
+            return false;
         }
 
         private readonly IHostConfiguration _hostConfiguration;

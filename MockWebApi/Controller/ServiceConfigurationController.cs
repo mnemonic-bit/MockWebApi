@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using System.Text;
+﻿using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -9,7 +8,6 @@ using MockWebApi.Configuration.Extensions;
 using MockWebApi.Configuration.Model;
 using MockWebApi.Extension;
 using MockWebApi.Service;
-using MockWebApi.Service.Rest;
 
 namespace MockWebApi.Controller
 {
@@ -24,14 +22,10 @@ namespace MockWebApi.Controller
     public class ServiceConfigurationController : ControllerBase
     {
 
-        private readonly ILogger<ServiceConfigurationController> _logger;
-        private readonly IHostService _hostService;
-        private readonly IConfigurationFileWriter _configurationWriter;
-
         public ServiceConfigurationController(
             ILogger<ServiceConfigurationController> logger,
             IHostService hostService,
-            IConfigurationFileWriter configurationWriter)
+            IConfigurationWriter configurationWriter)
         {
             _logger = logger;
             _hostService = hostService;
@@ -47,18 +41,7 @@ namespace MockWebApi.Controller
             }
 
             IServiceConfiguration serviceConfiguration = service.ServiceConfiguration;
-
-            MockedServiceConfiguration config = new MockedServiceConfiguration()
-            {
-                ServiceName = serviceConfiguration.ServiceName,
-                BaseUrl = serviceConfiguration.Url,
-                DefaultEndpointDescription = serviceConfiguration.DefaultEndpointDescription,
-                JwtServiceOptions = serviceConfiguration.JwtServiceOptions,
-                EndpointDescriptions = serviceConfiguration.RouteMatcher
-                    .GetAllRoutes()
-                    .Select(s => s.EndpointDescription)
-                    .ToArray()
-            };
+            MockedServiceConfiguration config = ConfigurationModelProvider.Transform(serviceConfiguration);
 
             string configYaml = config.SerializeToYaml();
 
@@ -68,37 +51,25 @@ namespace MockWebApi.Controller
         [HttpPost("{serviceName}/configure")]
         public async Task<IActionResult> ConfigureService(string serviceName)
         {
-            string body = await HttpContext.Request.GetBody(Encoding.UTF8);
+            //TODO: test this new implementation; configure and re-configure a service.
+            string messageBody = await GetBody();
 
-            IServiceConfiguration config = body.DeserializeServiceConfiguration(serviceName);
-
-            string serviceUrl = config.Url ?? DefaultValues.DEFAULT_MOCK_BASE_URL;
-
-            if (!_hostService.TryGetService(serviceName, out IService? service) || service == null)
+            if (!_hostService.TryGetService(serviceName, out IService? service))
             {
-                service = StartMockApiService(config);
+                IServiceConfiguration? config = default;
+                messageBody.DeserializeServiceConfiguration(serviceName, ref config);
+                if (config == null)
+                {
+                    return BadRequest($"Unable to deserialize configuration.");
+                }
+                service = _hostService.StartMockApiService(config);
                 return Ok($"A new mock web API '{service.ServiceConfiguration.ServiceName}' has been started successfully, listening on '{service.ServiceConfiguration.Url}'.");
             }
 
+            // Update the old service configuration here, because there already is a service
+            // running with the same name.
             IServiceConfiguration oldServiceConfiguration = service.ServiceConfiguration;
-
-            // First set all null fields of the uploaded config to the values
-            // which are currently used on this server if they were not provided.
-            // This helps in not overwriting existing configuartion values with
-            // null-values.
-            config.JwtServiceOptions ??= oldServiceConfiguration.JwtServiceOptions;
-            config.DefaultEndpointDescription ??= oldServiceConfiguration.DefaultEndpointDescription;
-
-            // Then overwrite all config values of the server with what
-            // the merge of both configs now is.
-            oldServiceConfiguration.DefaultEndpointDescription = config.DefaultEndpointDescription;
-            oldServiceConfiguration.JwtServiceOptions = config.JwtServiceOptions;
-
-            oldServiceConfiguration.RouteMatcher.RemoveAll();
-            foreach (EndpointDescription endpointDescription in (config.RouteMatcher.GetAllRoutes().Select(s => s.EndpointDescription).ToArray() ?? new EndpointDescription[] { }))
-            {
-                oldServiceConfiguration.RouteMatcher.AddRoute(endpointDescription.Route, new EndpointState(endpointDescription));
-            }
+            messageBody.DeserializeServiceConfiguration(serviceName, ref oldServiceConfiguration);
 
             return Ok($"The mock web API '{service.ServiceConfiguration.ServiceName}' listening on '{service.ServiceConfiguration.Url}' has been reconfigured.");
         }
@@ -124,8 +95,12 @@ namespace MockWebApi.Controller
                 return BadRequest($"The service '{serviceName}' cannot be found.");
             }
 
-            DefaultEndpointDescription defaultEndpointDescription = service.ServiceConfiguration.DefaultEndpointDescription;
+            if (service.ServiceConfiguration is not MockedRestServiceConfiguration restServiceConfiguration)
+            {
+                return BadRequest($"Cannot set the default endpoint configuration for the service '{serviceName}'. The service is not a REST service. Its service type is '{service.ServiceConfiguration.ServiceType}'.");
+            }
 
+            DefaultEndpointDescription defaultEndpointDescription = restServiceConfiguration.DefaultEndpointDescription;
             string defaultConfigAsYaml = defaultEndpointDescription.SerializeToYaml();
 
             return Ok(defaultConfigAsYaml);
@@ -139,6 +114,11 @@ namespace MockWebApi.Controller
                 return BadRequest($"The service '{serviceName}' cannot be found.");
             }
 
+            if (service.ServiceConfiguration is not MockedRestServiceConfiguration restServiceConfiguration)
+            {
+                return BadRequest($"Cannot set the default endpoint configuration for the service '{serviceName}'. The service is not a REST service. Its service type is '{service.ServiceConfiguration.ServiceType}'.");
+            }
+
             string configAsString = await GetBody();
             DefaultEndpointDescription defaultEndpointDescription = configAsString.DeserializeYaml<DefaultEndpointDescription>();
 
@@ -147,7 +127,7 @@ namespace MockWebApi.Controller
                 return BadRequest($"Unable to deserialize the request-body YAML into a default endpoint configuration.");
             }
 
-            service.ServiceConfiguration.DefaultEndpointDescription = defaultEndpointDescription;
+            restServiceConfiguration.DefaultEndpointDescription = defaultEndpointDescription;
 
             return Ok($"Configured mocked default response.");
         }
@@ -155,27 +135,42 @@ namespace MockWebApi.Controller
         [HttpGet("{serviceName}/configure/route")]
         public IActionResult GetServiceRoutes([FromRoute] string serviceName, [FromQuery] string outputFormat = "YAML")
         {
+            if (!_hostService.ContainsService(serviceName))
+            {
+                return BadRequest($"The service '{serviceName}' cannot be found.");
+            }
+
             if (!_hostService.TryGetService(serviceName, out IService? service) || service == null)
             {
                 return BadRequest($"The service '{serviceName}' cannot be found.");
             }
 
             IServiceConfiguration serviceConfiguration = service.ServiceConfiguration;
+            MockedServiceConfiguration config = ConfigurationModelProvider.Transform(serviceConfiguration);
 
-            IServiceConfigurationWriter serviceConfigurationWriter = new ServiceConfigurationWriter(_configurationWriter, serviceConfiguration);
-            MockedServiceConfiguration mockedWebApiServiceConfiguration = serviceConfigurationWriter.GetServiceConfiguration();
-            string endpointDescriptionsAsString = mockedWebApiServiceConfiguration.EndpointDescriptions.Serialize(outputFormat);
+            if (config is not MockedRestServiceConfiguration restServiceConfiguration)
+            {
+                return BadRequest($"Cannot load the routing configuration for the service '{serviceName}'. The service is not a REST service. Its service type is '{serviceConfiguration.ServiceType}'.");
+            }
 
+            string endpointDescriptionsAsString = restServiceConfiguration.EndpointDescriptions.Serialize(outputFormat);
             return Ok(endpointDescriptionsAsString);
         }
 
         [HttpPost("{serviceName}/configure/route")]
         public async Task<IActionResult> ConfigureServiceRoute([FromRoute] string serviceName)
         {
-            if (!_hostService.TryGetService(serviceName, out IService? service) || service == null)
+            if(!_hostService.ContainsService(serviceName))
             {
                 return BadRequest($"The service '{serviceName}' cannot be found.");
             }
+
+            if (!_hostService.TryGetService(serviceName, out IService<IRestServiceConfiguration>? service) || service == null)
+            {
+                return BadRequest($"Cannot set the routing configuration for the service '{serviceName}'. The service is not a REST service.");
+            }
+
+            IRestServiceConfiguration restServiceConfiguration = service.ServiceConfiguration;
 
             string configAsString = await GetBody();
             EndpointDescription endpointDescription = configAsString.DeserializeYaml<EndpointDescription>();
@@ -185,8 +180,7 @@ namespace MockWebApi.Controller
                 return BadRequest($"Unable to deserialize the request-body YAML into an endpoint configuration.");
             }
 
-            IServiceConfiguration serviceConfiguration = service.ServiceConfiguration;
-            serviceConfiguration.RouteMatcher.AddRoute(endpointDescription.Route, new EndpointState(endpointDescription));
+            restServiceConfiguration.RouteMatcher.AddRoute(endpointDescription.Route, new EndpointState(endpointDescription));
 
             return Ok($"Configured route '{endpointDescription.Route}'.");
         }
@@ -194,22 +188,27 @@ namespace MockWebApi.Controller
         [HttpDelete("{serviceName}/configure/route")]
         public async Task<IActionResult> DeleteServiceRoute([FromRoute] string serviceName)
         {
-            if (!_hostService.TryGetService(serviceName, out IService? service) || service == null)
+            if (!_hostService.ContainsService(serviceName))
             {
                 return BadRequest($"The service '{serviceName}' cannot be found.");
             }
 
-            IServiceConfiguration serviceConfiguration = service.ServiceConfiguration;
+            if (!_hostService.TryGetService(serviceName, out IService<IRestServiceConfiguration>? service) || service == null)
+            {
+                return BadRequest($"Cannot delete the routing key from the service '{serviceName}'. The service is not a REST service.");
+            }
+
+            IRestServiceConfiguration restServiceConfiguration = service.ServiceConfiguration;
 
             string routeKey = await GetBody();
 
             if (string.IsNullOrEmpty(routeKey))
             {
-                serviceConfiguration.RouteMatcher.RemoveAll();
+                restServiceConfiguration.RouteMatcher.RemoveAll();
                 return Ok("All routes have been deleted.");
             }
 
-            if (!serviceConfiguration.RouteMatcher.Remove(routeKey))
+            if (!restServiceConfiguration.RouteMatcher.Remove(routeKey))
             {
                 return BadRequest($"The route '{routeKey}' was not configured, so nothing was deleted.");
             }
@@ -217,22 +216,16 @@ namespace MockWebApi.Controller
             return Ok($"The route '{routeKey}' has been deleted.");
         }
 
-        private MockService StartMockApiService(IServiceConfiguration serviceConfiguration)
+
+        private readonly ILogger<ServiceConfigurationController> _logger;
+        private readonly IHostService _hostService;
+        private readonly IConfigurationWriter _configurationWriter;
+
+
+        private async Task<string> GetBody(Encoding encoding = null)
         {
-            MockService mockService = new MockService(
-                MockHostBuilder.Create(serviceConfiguration.Url),
-                serviceConfiguration);
-
-            mockService.StartService();
-
-            _hostService.AddService(serviceConfiguration.ServiceName, mockService);
-
-            return mockService;
-        }
-
-        private async Task<string> GetBody()
-        {
-            string config = await Request.GetBody(Encoding.UTF8);
+            encoding ??= Encoding.UTF8;
+            string config = await Request.GetBody(encoding);
             config = config.Replace("\r\n", "\n");
             return config;
         }

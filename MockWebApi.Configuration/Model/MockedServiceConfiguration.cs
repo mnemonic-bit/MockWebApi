@@ -1,10 +1,16 @@
-﻿namespace MockWebApi.Configuration.Model
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using YamlDotNet.Serialization;
+
+namespace MockWebApi.Configuration.Model
 {
     /// <summary>
-    /// This class is used for reading and writing out the configuration
-    /// of the MockWebApi.
+    /// Defines the configuration of mocked services in general. This class is
+    /// the base-class of all configuration classes for all kinds of mocked
+    /// services.
     /// </summary>
-    public class MockedServiceConfiguration
+    public abstract class MockedServiceConfiguration
     {
 
         /// <summary>
@@ -22,23 +28,28 @@
         public string BaseUrl { get; set; }
 
         /// <summary>
-        /// The default values for the mocked endpoint including the
-        /// HTTP result which will be returned by default.
+        /// The ServiceType defines the kind of service to start up.
+        /// The possible values are
+        ///   1) REST
+        ///   2) gRPC
+        ///   3) PROXY
         /// </summary>
-        public DefaultEndpointDescription DefaultEndpointDescription { get; set; }
-
+        public string ServiceType { get; set; }
+        
         /// <summary>
-        /// Options describing basic parameters needed for JWT generation.
-        /// This options include the secret to be used when new tokens are
-        /// generated.
+        /// Initializes a new instance of configuration. The service type
+        /// must be given as an argument.
         /// </summary>
-        public JwtServiceOptions JwtServiceOptions { get; set; }
+        /// <param name="serviceType"></param>
+        protected MockedServiceConfiguration(string serviceType)
+        {
+            if (string.IsNullOrWhiteSpace(serviceType))
+            {
+                throw new ArgumentNullException(nameof(serviceType));
+            }
 
-        /// <summary>
-        /// An array of endpoint descriptions which define what set of URLs will
-        /// trigger a response, and how this response looks like.
-        /// </summary>
-        public EndpointDescription[] EndpointDescriptions { get; set; }
+            ServiceType = serviceType;
+        }
 
     }
 }

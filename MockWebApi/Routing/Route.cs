@@ -24,7 +24,7 @@ namespace MockWebApi.Routing
         public string FixedPartsBitmap()
         {
             var resultElements = Parts.Select(part => part is LiteralPart ? "1" : "0");
-            return string.Join("", resultElements);
+            return string.Join(string.Empty, resultElements);
         }
 
         /// <summary>

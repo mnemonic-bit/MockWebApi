@@ -14,9 +14,6 @@ namespace MockWebApi.Routing
     public class MockedApiDescriptionGroupCollectionProvider : IApiDescriptionGroupCollectionProvider
     {
 
-        private readonly int _apiVersion;
-        private readonly IHostConfiguration _hostConfiguration;
-
         public ApiDescriptionGroupCollection ApiDescriptionGroups
         {
             get
@@ -55,30 +52,10 @@ namespace MockWebApi.Routing
             return _apiDescriptionGroups.TryGetValue(groupName, out apiDescriptionGroup);
         }
 
-        private IReadOnlyList<ApiDescriptionGroup> CreateApiDescriptionGroups()
-        {
-            return _hostConfiguration.Configurations
-                .Select(CreateApiDescriptionGroup)
-                .ToList()
-                .AsReadOnly();
-        }
 
-        private ApiDescriptionGroup CreateApiDescriptionGroup(IServiceConfiguration serviceConfiguration)
-        {
-            IReadOnlyList<ApiDescription> items = new List<ApiDescription>();
+        private readonly int _apiVersion;
+        private readonly IHostConfiguration _hostConfiguration;
 
-            string serviceName = serviceConfiguration.ServiceName;
-
-            items = serviceConfiguration.RouteMatcher
-                .GetAllRoutes()
-                .Select(endpointState => CreateApiDescription(serviceName, endpointState.EndpointDescription))
-                .ToList()
-                .AsReadOnly();
-
-            ApiDescriptionGroup apiDescriptionGroup = new ApiDescriptionGroup(serviceName, items);
-
-            return apiDescriptionGroup;
-        }
 
         private ApiDescription CreateApiDescription(string serviceName, EndpointDescription endpointDescription)
         {
@@ -90,6 +67,34 @@ namespace MockWebApi.Routing
             apiDescription.RelativePath = endpointDescription.Route.TrimStart('/');
 
             return apiDescription;
+        }
+
+        private ApiDescriptionGroup CreateApiDescriptionGroup(IServiceConfiguration serviceConfiguration)
+        {
+            IReadOnlyList<ApiDescription> items = new List<ApiDescription>();
+
+            string serviceName = serviceConfiguration.ServiceName;
+
+            if (serviceConfiguration is IRestServiceConfiguration restServiceConfiguration)
+            {
+                items = restServiceConfiguration.RouteMatcher
+                    .GetAllRoutes()
+                    .Select(endpointState => CreateApiDescription(serviceName, endpointState.EndpointDescription))
+                    .ToList()
+                    .AsReadOnly();
+            }
+
+            ApiDescriptionGroup apiDescriptionGroup = new ApiDescriptionGroup(serviceName, items);
+
+            return apiDescriptionGroup;
+        }
+
+        private IReadOnlyList<ApiDescriptionGroup> CreateApiDescriptionGroups()
+        {
+            return _hostConfiguration.Configurations
+                .Select(CreateApiDescriptionGroup)
+                .ToList()
+                .AsReadOnly();
         }
 
         private ActionDescriptor CreateActionDescriptor(EndpointDescription endpointDescription)
@@ -113,5 +118,6 @@ namespace MockWebApi.Routing
 
             return actionDescriptor;
         }
+
     }
 }

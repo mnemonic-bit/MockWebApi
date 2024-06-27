@@ -17,7 +17,7 @@ namespace MockWebApi.Test
         private readonly TestServer _testServer;
         private ServiceConfigurationProxy _serviceConfigurationProxy;
 
-        public ServiceApiTestServer(IServiceConfiguration serviceConfiguration)
+        public ServiceApiTestServer(IRestServiceConfiguration serviceConfiguration)
         {
             _serviceConfigurationProxy = new ServiceConfigurationProxy(serviceConfiguration);
             _testServer = CreateTestServer();
@@ -44,7 +44,7 @@ namespace MockWebApi.Test
         private TestServer CreateTestServer()
         {
             IWebHostBuilder hostBuilder = new WebHostBuilder()
-                .SetupMockWebApiService()
+                .SetupServiceConfigurationApi()
                 .ConfigureServices(services =>
                 {
                     services.AddSingleton<IServiceConfiguration>(_serviceConfigurationProxy);

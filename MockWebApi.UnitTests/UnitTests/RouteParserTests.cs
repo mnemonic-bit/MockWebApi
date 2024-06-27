@@ -10,6 +10,7 @@ namespace MockWebApi.Tests.UnitTests
         [InlineData("/some/path")]
         [InlineData("/some/path/")]
         [InlineData("/some/{variable}/path")]
+        [InlineData("/some/path?key1")]
         [InlineData("/some/path?key1=123")]
         [InlineData("/some/path/?key1=123")]
         [InlineData("/some/path?key1=123&key2=hello")]

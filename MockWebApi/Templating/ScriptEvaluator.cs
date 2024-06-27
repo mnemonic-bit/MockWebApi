@@ -21,8 +21,8 @@ namespace MockWebApi.Templating
                 .AddImportReference("System.Collections")
                 .AddImportReference("System.Collections.Generic");
 
-            _script = CSharpScript.Create(scriptInitCode ?? "", _options);
-            _lineInitCode = lineInitCode ?? "";
+            _script = CSharpScript.Create(scriptInitCode ?? string.Empty, _options);
+            _lineInitCode = lineInitCode ?? string.Empty;
         }
 
         private readonly ScriptOptions _options;

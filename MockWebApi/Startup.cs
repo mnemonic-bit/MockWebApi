@@ -39,6 +39,12 @@ namespace MockWebApi
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger)
         {
+            // We do not use this, because this is app is a testing-device
+            // which should not make our lives easier by coercing any user
+            // into using a certain protocol. Using HTTP for debugging of
+            // connectivity issues is after all a valid use-case.
+            //app.UseHttpsRedirection();
+
             app.UseMiddleware<ExceptionLoggerMiddleware>();
 
             //app.UseSwagger();
@@ -55,7 +61,7 @@ namespace MockWebApi
 
             app.UseAuthorization();
 
-            string configurationFileName = Configuration.GetValue<string>("ServiceConfigurationFileName", "MockWebApiConfiguration.yml");
+            string configurationFileName = Configuration.GetValue("ServiceConfigurationFileName", "MockWebApiConfiguration.yml") ?? "MockWebApiConfiguration.yml";
             app.LoadServiceConfiguration(configurationFileName, false);
 
             app.UseEndpoints(endpoints =>

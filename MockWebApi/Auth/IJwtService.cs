@@ -10,9 +10,7 @@ namespace MockWebApi.Auth
 
         string CreateToken(JwtCredentialUser credentialUser);
 
-        bool ValidateToken(string token, JwtCredentialUser credentialUser);
-
-        bool ValidateToken(string token, JwtCredentialUser[] credentialUser);
+        bool ValidateToken(string token, params JwtCredentialUser[] credentialUser);
 
     }
 }

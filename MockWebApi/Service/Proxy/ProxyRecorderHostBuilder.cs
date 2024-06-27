@@ -6,15 +6,14 @@ using MockWebApi.Extension;
 using Serilog;
 using Serilog.Filters;
 
-namespace MockWebApi.Service.Rest
+namespace MockWebApi.Service.Proxy
 {
-    /// <summary>
-    /// Provides a host builder for creating the MockService.
-    /// </summary>
-    public class MockHostBuilder
+    public class ProxyRecorderHostBuilder
     {
 
-        public static IHostBuilder Create(string baseUrls = DefaultValues.DEFAULT_MOCK_BASE_URL, string environment = "Development")
+        public static IHostBuilder Create(
+            string baseUrls = DefaultValues.DEFAULT_MOCK_BASE_URL,
+            string environment = DefaultValues.DEFAULT_HOSTING_ENVIRONMENT_NAME)
         {
             string[] args = new string[] { };
 
@@ -29,13 +28,14 @@ namespace MockWebApi.Service.Rest
                 {
                     logBuilder.AddConsole();
                 })
+                .UseSerilog()
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder
                         .UseEnvironment(environment)
                         .UseKestrel(options => { options.AddServerHeader = false; })
                         .UseUrls(baseUrls)
-                        .SetupMockWebApi();
+                        .UseStartup<ProxyRecorderStartup>();
                 });
         }
 

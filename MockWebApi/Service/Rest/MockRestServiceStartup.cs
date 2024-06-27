@@ -11,10 +11,10 @@ using MockWebApi.Templating;
 
 namespace MockWebApi.Service.Rest
 {
-    public class MockServiceStartup
+    public class MockRestServiceStartup
     {
 
-        public MockServiceStartup(IConfiguration configuration)
+        public MockRestServiceStartup(IConfiguration configuration)
         {
             Configuration = configuration;
         }
@@ -28,7 +28,7 @@ namespace MockWebApi.Service.Rest
             services.AddTransient<IServiceConfigurationReader, ServiceConfigurationReader>();
             services.AddTransient<IServiceConfigurationWriter, ServiceConfigurationWriter>();
 
-            services.AddTransient<IConfigurationFileWriter, ConfigurationFileWriter>();
+            services.AddTransient<IConfigurationWriter, ConfigurationWriter>();
 
             services.AddTransient<IJwtService, JwtService>();
             services.AddTransient<IAuthorizationService, AuthorizationService>();
@@ -37,7 +37,7 @@ namespace MockWebApi.Service.Rest
             services.AddTransient<ITemplateParser, TemplateParser>();
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<MockServiceStartup> logger)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<MockRestServiceStartup> logger)
         {
             app.UseMiddleware<TimeMeasurementMiddleware>();
             app.UseMiddleware<StoreRequestDataMiddleware>();

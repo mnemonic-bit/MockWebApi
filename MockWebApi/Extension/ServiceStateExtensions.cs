@@ -1,5 +1,5 @@
-﻿using MockWebApi.Service;
-using System.Threading;
+﻿using System.Threading;
+using MockWebApi.Service;
 
 namespace MockWebApi.Extension
 {
@@ -13,7 +13,7 @@ namespace MockWebApi.Extension
                 return ServiceState.NotStarted;
             }
 
-            if ((threadState & ThreadState.Running) > 0)
+            if ((threadState & (ThreadState.Running | ThreadState.Background | ThreadState.WaitSleepJoin)) > 0)
             {
                 return ServiceState.Running;
             }

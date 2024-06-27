@@ -8,14 +8,14 @@ namespace MockWebApi.FunctionalTests.TestUtils
     internal static class ServiceConfigurationFactory
     {
 
-        public static void AddEndpointDescription(this IServiceConfiguration serviceConfiguration, EndpointDescription endpointDescription)
+        public static void AddEndpointDescription(this IRestServiceConfiguration serviceConfiguration, EndpointDescription endpointDescription)
         {
             serviceConfiguration.RouteMatcher.AddRoute(endpointDescription.Route, new EndpointState(endpointDescription));
         }
 
-        public static IServiceConfiguration CreateBaseConfiguration(string serviceName)
+        public static IRestServiceConfiguration CreateBaseConfiguration(string serviceName)
         {
-            IServiceConfiguration serviceConfiguration = new ServiceConfiguration(serviceName, DefaultValues.DEFAULT_MOCK_BASE_URL)
+            IRestServiceConfiguration serviceConfiguration = new RestServiceConfiguration(serviceName, DefaultValues.DEFAULT_MOCK_BASE_URL)
             {
                 JwtServiceOptions = new JwtServiceOptions()
                 {
@@ -29,9 +29,9 @@ namespace MockWebApi.FunctionalTests.TestUtils
             return serviceConfiguration;
         }
 
-        public static MockedServiceConfiguration CreateMockedServiceConfiguration()
+        public static MockedRestServiceConfiguration CreateMockedServiceConfiguration()
         {
-            MockedServiceConfiguration config = new MockedServiceConfiguration();
+            MockedRestServiceConfiguration config = new MockedRestServiceConfiguration();
 
             config.ServiceName = "TEST-SERVICE";
             config.BaseUrl = DefaultValues.DEFAULT_MOCK_BASE_URL;
@@ -41,7 +41,7 @@ namespace MockWebApi.FunctionalTests.TestUtils
                 CheckAuthorization = false,
                 Result = new HttpResult()
                 {
-                    Body = "",
+                    Body = string.Empty,
                     ContentType = "text/plain",
                     StatusCode = System.Net.HttpStatusCode.OK
                 },

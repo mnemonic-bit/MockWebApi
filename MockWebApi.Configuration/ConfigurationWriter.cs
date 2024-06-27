@@ -3,14 +3,14 @@ using MockWebApi.Configuration.Model;
 
 namespace MockWebApi.Configuration
 {
-    public class ConfigurationFileWriter : IConfigurationFileWriter
+    public class ConfigurationWriter : IConfigurationWriter
     {
 
-        public ConfigurationFileWriter()
+        public ConfigurationWriter()
         {
         }
 
-        public string WriteConfiguration(MockedServiceConfiguration serviceConfiguration, string outputFormat = "YAML")
+        public string WriteConfiguration(MockedRestServiceConfiguration serviceConfiguration, string outputFormat = "YAML")
         {
             switch (outputFormat.ToUpper())
             {
@@ -50,7 +50,7 @@ namespace MockWebApi.Configuration
             }
         }
 
-        public string WriteToJson(MockedServiceConfiguration serviceConfiguration)
+        public string WriteToJson(MockedRestServiceConfiguration serviceConfiguration)
         {
             return serviceConfiguration.SerializeToJson();
         }
@@ -60,7 +60,7 @@ namespace MockWebApi.Configuration
             return hostConfiguration.SerializeToJson();
         }
 
-        public string WriteToYaml(MockedServiceConfiguration serviceConfiguration)
+        public string WriteToYaml(MockedRestServiceConfiguration serviceConfiguration)
         {
             return serviceConfiguration.SerializeToYaml();
         }

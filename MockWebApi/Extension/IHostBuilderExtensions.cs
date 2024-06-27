@@ -8,17 +8,20 @@ namespace MockWebApi.Extension
     public static class IHostBuilderExtensions
     {
 
-        public static IHostBuilder ConfigureLogging(this IHostBuilder hostBuilder)
+        public static IHostBuilder ConfigureLogging(this IHostBuilder hostBuilder, bool enableConsoleLogging = false)
         {
             Log.Logger = new LoggerConfiguration()
                 .WriteTo.Console()
                 .Filter.ByExcluding(Matching.FromSource("Microsoft"))
                 .CreateLogger();
 
-            hostBuilder.ConfigureLogging(logBuilder =>
+            if (enableConsoleLogging)
             {
-                logBuilder.AddConsole();
-            });
+                hostBuilder.ConfigureLogging(logBuilder =>
+                {
+                    logBuilder.AddConsole();
+                });
+            }
 
             return hostBuilder;
         }
