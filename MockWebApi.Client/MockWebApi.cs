@@ -1,4 +1,5 @@
-﻿using MockWebApi.Client.Model;
+﻿using MockWebApi.Client.Extensions;
+using MockWebApi.Client.Model;
 using MockWebApi.Client.RestEase;
 using MockWebApi.Configuration;
 using MockWebApi.Configuration.Model;
@@ -13,8 +14,6 @@ namespace MockWebApi.Client
 {
     public class MockWebApi : IDisposable
     {
-
-        private readonly IMockWebApiClient _webApi;
 
         /// <summary>
         /// Inits a new instance of the MockWebApi client with the URL
@@ -136,17 +135,17 @@ namespace MockWebApi.Client
 
             if (!response.ResponseMessage.IsSuccessStatusCode)
             {
-                return new EndpointDescription[0];
+                return Array.Empty<EndpointDescription>();
             }
 
             string? responseBody = response.StringContent;
 
             if (string.IsNullOrEmpty(responseBody))
             {
-                return new EndpointDescription[0];
+                return Array.Empty<EndpointDescription>();
             }
 
-            EndpointDescription[] endpointConfigurations = DeserializeYaml<EndpointDescription[]>(responseBody);
+            EndpointDescription[] endpointConfigurations = responseBody.DeserializeYaml<EndpointDescription[]>();
 
             return endpointConfigurations;
         }
@@ -192,17 +191,17 @@ namespace MockWebApi.Client
 
             if (!response.ResponseMessage.IsSuccessStatusCode)
             {
-                return new RequestHistoryItem[0];
+                return Array.Empty<RequestHistoryItem>();
             }
 
             string? responseBody = response.StringContent;
 
             if (responseBody == null)
             {
-                return new RequestHistoryItem[0];
+                return Array.Empty<RequestHistoryItem>();
             }
 
-            RequestHistoryItem[] requestInformation = DeserializeYaml<RequestHistoryItem[]>(responseBody);
+            RequestHistoryItem[] requestInformation = responseBody.DeserializeYaml<RequestHistoryItem[]>();
             return requestInformation;
         }
 
@@ -217,6 +216,10 @@ namespace MockWebApi.Client
             return token;
         }
 
+
+        private readonly IMockWebApiClient _webApi;
+
+
         private string SerializeToYaml<TObject>(TObject value)
             where TObject : class
         {
@@ -224,15 +227,6 @@ namespace MockWebApi.Client
             Serializer serializer = new Serializer();
             serializer.Serialize(stringWriter, value);
             return stringWriter.ToString();
-        }
-
-        private T DeserializeYaml<T>(string yamlText)
-        {
-            IDeserializer deserializer = new DeserializerBuilder()
-                //.WithNamingConvention(CamelCaseNamingConvention.Instance)
-                .Build();
-
-            return deserializer.Deserialize<T>(yamlText);
         }
 
     }

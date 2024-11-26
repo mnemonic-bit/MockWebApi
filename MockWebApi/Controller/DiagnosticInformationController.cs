@@ -1,5 +1,7 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MockWebApi.Configuration;
 using MockWebApi.Configuration.Extensions;
@@ -17,10 +19,12 @@ namespace MockWebApi.Controller
 
         public DiagnosticInformationController(
             ILogger<ServiceConfigurationController> logger,
-            IHostService hostService)
+            IHostService hostService,
+            IConfiguration configuration)
         {
             _logger = logger;
             _hostService = hostService;
+            _configuration = configuration;
         }
 
         [HttpGet("ping")]
@@ -45,7 +49,7 @@ namespace MockWebApi.Controller
 
             ClientInformation clientInformation = new ClientInformation()
             {
-                ClientIp = clientIpAddress,
+                ClientIp = clientIpAddress ?? "The header value of X-Forwarded-For was not set.",
                 ClientPort = clientPortNumber,
                 LocalServerPort = localServerPort,
             };
@@ -54,6 +58,17 @@ namespace MockWebApi.Controller
                 .SerializeToYaml();
 
             return Ok(clientInfoAsYaml);
+        }
+
+        [HttpGet("server-configuration")]
+        public IActionResult GetServerConfiguration()
+        {
+            var result = _configuration
+                .AsEnumerable(true)
+                .ToList()
+                .SerializeToYaml();
+
+            return Ok(result);
         }
 
         [HttpGet("request-infos")]
@@ -70,6 +85,7 @@ namespace MockWebApi.Controller
 
         private readonly ILogger<ServiceConfigurationController> _logger;
         private readonly IHostService _hostService;
+        private readonly IConfiguration _configuration;
 
 
     }
