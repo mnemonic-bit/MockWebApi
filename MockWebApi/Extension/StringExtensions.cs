@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Net;
 using MockWebApi.Configuration;
 using MockWebApi.Configuration.Model;
 
@@ -8,6 +9,29 @@ namespace MockWebApi.Extension
     public static class StringExtensions
     {
 
+        public static HttpStatusCode? ConvertToHttpStatusCode(this string? value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return null;
+            }
+
+            if (!int.TryParse(value, out int numericalValue))
+            {
+                return null;
+            }
+
+            try
+            {
+                return (HttpStatusCode)numericalValue;
+            }
+            catch (Exception)
+            {
+
+            }
+
+            return null;
+        }
         public static T? ParseInto<T>(this string value)
         {
             if (string.IsNullOrEmpty(value))

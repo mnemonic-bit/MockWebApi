@@ -1,6 +1,5 @@
-﻿using MockWebApi.Configuration.Model;
-using MockWebApi.Data;
-using System.Linq;
+﻿using System;
+using MockWebApi.Configuration.Model;
 
 namespace MockWebApi.Configuration
 {
@@ -29,8 +28,8 @@ namespace MockWebApi.Configuration
             {
                 TrackServiceApiCalls = _hostConfiguration.TrackServiceApiCalls,
                 LogServiceApiCalls = _hostConfiguration.LogServiceApiCalls,
-
-                Services = null
+                //TODO: write code which loads the configs from _hostConfiguration?
+                Services = Array.Empty<MockedRestServiceConfiguration>()
             };
 
             return serviceConfiguration;

@@ -337,7 +337,7 @@ namespace MockWebApi.Middleware
             result.ContentType = await ExecuteTemplate(result.ContentType, variables);
 
             string? httpStatusCodeString = await ExecuteTemplate($"{(int)(result.StatusCode)}", variables);
-            HttpStatusCode? newHttpStatusCode = ConvertToHttpStatusCode(httpStatusCodeString);
+            HttpStatusCode? newHttpStatusCode = httpStatusCodeString.ConvertToHttpStatusCode();
             if (newHttpStatusCode.HasValue)
             {
                 result.StatusCode = newHttpStatusCode.Value;
@@ -346,40 +346,15 @@ namespace MockWebApi.Middleware
             return result;
         }
 
-        private async Task<string?> ExecuteTemplate(string templateText, IDictionary<string, string> variables)
+        private async Task<string> ExecuteTemplate(string templateText, IDictionary<string, string> variables)
         {
             if (string.IsNullOrEmpty(templateText))
             {
-                return null;
+                return string.Empty;
             }
 
             return await _templateExecutor.Execute(templateText, variables);
         }
-
-        private HttpStatusCode? ConvertToHttpStatusCode(string? value)
-        {
-            if (string.IsNullOrEmpty(value))
-            {
-                return null;
-            }
-
-            if (!int.TryParse(value, out int numericalValue))
-            {
-                return null;
-            }
-
-            try
-            {
-                return (HttpStatusCode)numericalValue;
-            }
-            catch (Exception)
-            {
-
-            }
-
-            return null;
-        }
-
 
     }
 }

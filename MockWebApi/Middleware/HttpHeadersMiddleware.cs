@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 
 namespace MockWebApi.Middleware
@@ -41,7 +42,7 @@ namespace MockWebApi.Middleware
         {
             foreach (var headerPair in policy.HeadersToSet)
             {
-                context.Response.Headers.Add(headerPair.Key, headerPair.Value);
+                SetHeader(context, headerPair.Key, headerPair.Value);
             }
 
             foreach (var headerName in policy.HeadersToRemove)
@@ -50,6 +51,19 @@ namespace MockWebApi.Middleware
             }
 
             await _requestDelegate(context);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void SetHeader(HttpContext context, string key, string value)
+        {
+            if (context.Response.Headers.ContainsKey(key))
+            {
+                context.Response.Headers[key] = value;
+            }
+            else
+            {
+                context.Response.Headers.Append(key, value);
+            }
         }
 
     }
