@@ -222,7 +222,7 @@ namespace MockWebApi.Controller
         private readonly IConfigurationWriter _configurationWriter;
 
 
-        private async Task<string> GetBody(Encoding encoding = null)
+        private async Task<string> GetBody(Encoding? encoding = null)
         {
             encoding ??= Encoding.UTF8;
             string config = await Request.GetBody(encoding);

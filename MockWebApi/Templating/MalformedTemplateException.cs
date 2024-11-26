@@ -12,7 +12,5 @@ namespace MockWebApi.Templating
 
         public MalformedTemplateException(string message, Exception innerException) : base(message, innerException) { }
 
-        public MalformedTemplateException(SerializationInfo info, StreamingContext context) : base(info, context) { }
-
     }
 }

@@ -9,11 +9,11 @@ namespace MockWebApi.Extension
     public static class StringExtensions
     {
 
-        public static string IndentLines(this string lines, string indention)
+        public static string IndentLines(this string? lines, string indention)
         {
-            if (string.IsNullOrEmpty(lines))
+            if (lines == null)
             {
-                return null;
+                return string.Empty;
             }
 
             IEnumerable<string> splitLines = lines
@@ -29,7 +29,7 @@ namespace MockWebApi.Extension
 
             if (indexOfTheDot < 0)
             {
-                return null;
+                return string.Empty;
             }
 
             return fileName.Substring(indexOfTheDot, fileName.Length - indexOfTheDot - 1);

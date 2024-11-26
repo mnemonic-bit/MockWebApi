@@ -9,7 +9,7 @@ namespace MockWebApi.Model
     {
         public override Stream Body { get; set; } = Stream.Null;
         public override long? ContentLength { get; set; } = 0;
-        public override string ContentType { get; set; } = "text/plain";
+        public override string? ContentType { get; set; } = "text/plain";
 
         public override IResponseCookies Cookies => throw new NotImplementedException();
 

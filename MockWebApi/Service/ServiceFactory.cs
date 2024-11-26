@@ -46,8 +46,10 @@ namespace MockWebApi.Service
         private static IService<IGrpcServiceConfiguration> CreateGrpcService(IGrpcServiceConfiguration serviceConfiguration)
         {
             //TODO: implement with the correct IHostBuilder here, otherwise
-            // this will not work!
-            var service = new MockGrpcService(null, serviceConfiguration);
+            // this will not work! This should be MockGrpcHostBuilder instead...
+            IHostBuilder hostBuilder = MockRestHostBuilder.Create(serviceConfiguration.Url);
+
+            var service = new MockGrpcService(hostBuilder, serviceConfiguration);
 
             return service;
         }
